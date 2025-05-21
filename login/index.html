@@ -47,8 +47,18 @@
   
   <!-- Messenger Chat Plugin Code -->
   <div id="fb-root"></div>
-  <div class="fb-customerchat" attribution="biz_inbox" page_id="391239610738088" theme_color="#0084ff" logged_in_greeting="Hi! How can we help you?" logged_out_greeting="Hi! How can we help you?" greeting_dialog_display="show" greeting_dialog_delay="0" ref="fb-customer-chat">
-  </div>
+  <div id="fb-customer-chat" class="fb-customerchat"></div>
+
+  <script>
+    var chatbox = document.getElementById('fb-customer-chat');
+    chatbox.setAttribute("page_id", "391239610738088");
+    chatbox.setAttribute("attribution", "biz_inbox");
+    chatbox.setAttribute("theme_color", "#0084ff");
+    chatbox.setAttribute("logged_in_greeting", "Hi! How can we help you?");
+    chatbox.setAttribute("logged_out_greeting", "Hi! How can we help you?");
+    chatbox.setAttribute("greeting_dialog_display", "show");
+    chatbox.setAttribute("greeting_dialog_delay", "0");
+  </script>
 
   <!-- Load Facebook SDK -->
   <script>
@@ -65,13 +75,6 @@
       // Force refresh the chat plugin
       FB.XFBML.parse();
       console.log('Initial FB.XFBML.parse() called');
-      
-      // Check if customer chat is available
-      if (FB.CustomerChat) {
-        console.log('FB.CustomerChat is available');
-      } else {
-        console.log('FB.CustomerChat is not available');
-      }
     };
 
     // Load the SDK asynchronously
@@ -79,7 +82,7 @@
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
       js = d.createElement(s); js.id = id;
-      js.src = 'https://connect.facebook.net/en_US/sdk.js';
+      js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
       js.async = true;
       js.defer = true;
       js.crossOrigin = "anonymous";
@@ -92,7 +95,7 @@
       console.log('Page loaded, checking chat initialization...');
       
       // Check for chat element
-      var chatElement = document.querySelector('.fb-customerchat');
+      var chatElement = document.querySelector('#fb-customer-chat');
       if (chatElement) {
         console.log('Chat element found:', chatElement);
         console.log('Chat element styles:', window.getComputedStyle(chatElement));
@@ -119,7 +122,7 @@
             console.log('Second parse attempt completed');
             
             // Check chat element again
-            var chatElement = document.querySelector('.fb-customerchat');
+            var chatElement = document.querySelector('#fb-customer-chat');
             if (chatElement) {
               console.log('Chat element after parse:', {
                 display: window.getComputedStyle(chatElement).display,
@@ -136,4 +139,4 @@
 <link rel="modulepreload" href="chunk-ZW3FBCW5.js">
 
 
-<script id="ng-state" type="application/json">{"__nghData__":[{},{"t":{"8":"t0","13":"t1","18":"t2","19":"t3"},"c":{"8":[],"13":[],"18":[],"19":[]}},{"c":{"2":[{"i":"c245094665","r":1}]}}]}</script></body></html>
+<script id="ng-state" type="application/json">{"__nghData__":[{},{"t":{"8":"t1","13":"t2","18":"t3","19":"t4"},"c":{"8":[],"13":[],"18":[],"19":[]}},{"c":{"2":[{"i":"c245094665","r":1}]}}]}</script></body></html>
