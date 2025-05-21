@@ -1,1 +1,0 @@
-import{Ha as n,Va as t,Wa as i,gb as p}from"./chunk-GLNNVTSZ.js";var a=class e{static \u0275fac=function(o){return new(o||e)};static \u0275cmp=n({type:e,selectors:[["app-booking"]],decls:2,vars:0,template:function(o,m){o&1&&(t(0,"p"),p(1,"booking works!"),i())},encapsulation:2})};export{a as BookingComponent};

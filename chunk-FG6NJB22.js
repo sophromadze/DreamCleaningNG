@@ -1,1 +1,0 @@
-import{Ha as n,Va as o,Wa as a,gb as i}from"./chunk-GLNNVTSZ.js";var p=class t{static \u0275fac=function(e){return new(e||t)};static \u0275cmp=n({type:t,selectors:[["app-service-page"]],decls:2,vars:0,template:function(e,s){e&1&&(o(0,"p"),i(1,"service-page works!"),a())},encapsulation:2})};export{p as ServicePageComponent};
