@@ -147,7 +147,7 @@
       </div>
     </section>
     <section class="google-reviews">
-      <h2>Real client reviews</h2>
+      <h2>Real Client Reviews</h2>
       <div class="overall-rating">
         <div class="rating-stars">
           <span class="star">⭐</span>
@@ -166,12 +166,25 @@
             </div>
           </div>
           <div class="rating">
-            <span class="star" *ngFor="let star of [1,2,3,4,5]">⭐</span>
+            <span class="star" *ngFor="let star of [1,2,3,4,5]" [class.filled]="star <= review.rating">⭐</span>
           </div>
           <p class="review-text" [class.expanded]="review.isExpanded">{{review.text}}</p>
           <span class="see-more" *ngIf="review.text.length > 100" (click)="review.isExpanded = !review.isExpanded">
             {{review.isExpanded ? 'Show less' : 'See more'}}
           </span>
+        </div>
+      </div>
+    </section>
+    <section class="about-section">
+      <div class="about-content">
+        <div class="about-image">
+          <img src="./images/mainImage.png" alt="Dream Cleaning Team" />
+        </div>
+        <div class="about-text">
+          <h2>About Us</h2>
+          <p>We are a professional cleaning service dedicated to making your home or office spotless. With over 5 years of experience, our team of trained professionals uses eco-friendly products and modern cleaning techniques to deliver exceptional results.</p>
+          <p>Our commitment to quality, reliability, and customer satisfaction has made us one of the most trusted cleaning services in New York City.</p>
+          <a routerLink="/about" class="learn-more-btn">Learn More</a>
         </div>
       </div>
     </section>
