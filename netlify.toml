@@ -8,7 +8,11 @@
 [[plugins]]
   package = "@netlify/angular-runtime"
 
+[functions]
+  directory = "netlify/functions"
+
 [[redirects]]
   from = "/*"
-  to = "/index.html"
-  status = 200 
+  to = "/.netlify/functions/ssr"
+  status = 200
+  force = true 
