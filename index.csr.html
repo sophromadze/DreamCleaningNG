@@ -10,22 +10,6 @@
   <!-- Content Security Policy -->
   <meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://*.facebook.com https://*.fbcdn.net https://*.googleapis.com https://maps.googleapis.com; frame-src 'self' https://*.facebook.com https://*.fbcdn.net https://*.google.com; connect-src 'self' https://*.facebook.com https://*.fbcdn.net https://*.googleapis.com wss://*.facebook.com wss://*.fbcdn.net; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https:;">
 
-  <!-- Facebook SDK -->
-  <script>
-    window.fbAsyncInit = function() {
-      FB.init({
-        xfbml: true,
-        version: 'v18.0'
-      });
-      console.log('FB SDK initialized');
-      
-      // Force refresh the chat plugin after SDK initialization
-      FB.XFBML.parse();
-      console.log('Initial FB.XFBML.parse() called');
-    };
-  </script>
-  <script async="" defer="" crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
-
   <!-- Google Maps -->
   <script>
     (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries","places");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
@@ -65,55 +49,85 @@
   <div id="fb-root"></div>
   <div class="fb-customerchat" attribution="biz_inbox" page_id="391239610738088" theme_color="#0084ff" logged_in_greeting="Hi! How can we help you?" logged_out_greeting="Hi! How can we help you?" greeting_dialog_display="show" greeting_dialog_delay="0" ref="fb-customer-chat">
   </div>
+
+  <!-- Load Facebook SDK -->
   <script>
-    // Force refresh the chat plugin
-    window.addEventListener('load', function() {
-      console.log('Page loaded, initializing chat...');
+    window.fbAsyncInit = function() {
+      FB.init({
+        xfbml: true,
+        version: 'v18.0'
+      });
+      console.log('FB SDK initialized');
       
-      // Initial check for chat element
+      // Debug FB object
+      console.log('FB object:', FB);
+      
+      // Force refresh the chat plugin
+      FB.XFBML.parse();
+      console.log('Initial FB.XFBML.parse() called');
+      
+      // Check if customer chat is available
+      if (FB.CustomerChat) {
+        console.log('FB.CustomerChat is available');
+      } else {
+        console.log('FB.CustomerChat is not available');
+      }
+    };
+
+    // Load the SDK asynchronously
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = 'https://connect.facebook.net/en_US/sdk.js';
+      js.async = true;
+      js.defer = true;
+      js.crossOrigin = "anonymous";
+      fjs.parentNode.insertBefore(js, fjs);
+      console.log('Facebook SDK script added to page');
+    }(document, 'script', 'facebook-jssdk'));
+
+    // Additional initialization check
+    window.addEventListener('load', function() {
+      console.log('Page loaded, checking chat initialization...');
+      
+      // Check for chat element
       var chatElement = document.querySelector('.fb-customerchat');
       if (chatElement) {
-        chatElement.style.display = 'block';
-        console.log('Initial chat element found and displayed');
+        console.log('Chat element found:', chatElement);
+        console.log('Chat element styles:', window.getComputedStyle(chatElement));
+      } else {
+        console.log('Chat element not found in DOM');
       }
 
-      // Wait for FB SDK to load
+      // Check for FB object periodically
       var checkFB = setInterval(function() {
         if (typeof FB !== 'undefined') {
           clearInterval(checkFB);
-          console.log('FB SDK detected, parsing XFBML...');
+          console.log('FB SDK detected, current state:', {
+            xfbml: FB.XFBML,
+            customerChat: !!FB.CustomerChat,
+            initialized: !!FB._initialized
+          });
           
-          // Multiple parse attempts to ensure widget loads
+          // Multiple parse attempts
           FB.XFBML.parse();
-          console.log('First FB.XFBML.parse() called');
+          console.log('First parse attempt completed');
           
           setTimeout(function() {
             FB.XFBML.parse();
-            console.log('Second FB.XFBML.parse() called');
+            console.log('Second parse attempt completed');
             
-            // Additional check to ensure chat is visible
+            // Check chat element again
             var chatElement = document.querySelector('.fb-customerchat');
             if (chatElement) {
-              chatElement.style.display = 'block';
-              chatElement.style.visibility = 'visible';
-              chatElement.style.opacity = '1';
-              console.log('Chat element styles updated');
+              console.log('Chat element after parse:', {
+                display: window.getComputedStyle(chatElement).display,
+                visibility: window.getComputedStyle(chatElement).visibility,
+                opacity: window.getComputedStyle(chatElement).opacity
+              });
             }
           }, 1000);
-          
-          // Final check after a longer delay
-          setTimeout(function() {
-            FB.XFBML.parse();
-            console.log('Final FB.XFBML.parse() called');
-            
-            var chatElement = document.querySelector('.fb-customerchat');
-            if (chatElement) {
-              chatElement.style.display = 'block';
-              chatElement.style.visibility = 'visible';
-              chatElement.style.opacity = '1';
-              console.log('Final chat element check completed');
-            }
-          }, 3000);
         }
       }, 100);
     });
