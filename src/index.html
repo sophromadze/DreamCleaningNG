@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>DreamCleaning</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- Facebook SDK -->
+  <script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        xfbml: true,
+        version: 'v18.0',
+        debug: true // Enable debug mode
+      });
+      
+      // Log initialization
+      console.log('FB SDK initialized');
+    };
+
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+  </script>
+  <script>
+    (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries","places");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+      key: "AIzaSyDwFb_tyXDY8TVH7LJ1NeR72j8b6VWC13k",
+      v: "weekly"
+    });
+  </script>
+  <style>
+    .fb-customerchat {
+      position: fixed !important;
+      bottom: 20px !important;
+      right: 20px !important;
+      z-index: 9999 !important;
+      display: block !important;
+    }
+  </style>
+</head>
+<body>
+  <app-root></app-root>
+  
+  <!-- Messenger Chat Plugin Code -->
+  <div id="fb-root"></div>
+  <div class="fb-customerchat"
+    attribution="biz_inbox"
+    page_id="391239610738088"
+    theme_color="#0084ff"
+    logged_in_greeting="Hi! How can we help you?"
+    logged_out_greeting="Hi! How can we help you?"
+    greeting_dialog_display="show"
+    greeting_dialog_delay="0"
+    ref="fb-customer-chat">
+  </div>
+  <script>
+    // Force refresh the chat plugin
+    window.addEventListener('load', function() {
+      console.log('Page loaded, initializing chat...');
+      if (typeof FB !== 'undefined') {
+        FB.XFBML.parse();
+        console.log('FB.XFBML.parse() called');
+      } else {
+        console.log('FB is not defined yet');
+      }
+    });
+
+    // Additional check after a short delay
+    setTimeout(function() {
+      if (typeof FB !== 'undefined') {
+        FB.XFBML.parse();
+        console.log('FB.XFBML.parse() called after delay');
+      }
+    }, 2000);
+  </script>
+</body>
+</html>
