@@ -6,125 +6,12 @@
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  
-  <!-- Content Security Policy -->
-  <meta http-equiv="Content-Security-Policy" content="
-    default-src 'self';
-    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://connect.facebook.net https://www.facebook.com https://www.googletagmanager.com https://www.google-analytics.com;
-    style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-    img-src 'self' data: https: http:;
-    font-src 'self' https://fonts.gstatic.com;
-    frame-src 'self' https://www.facebook.com https://www.google.com;
-    connect-src 'self' https://*.facebook.com https://*.fbcdn.net https://www.google-analytics.com;
-    worker-src 'self' blob:;
-    child-src 'self' blob:;
-    object-src 'none';
-    base-uri 'self';
-    form-action 'self';
-    frame-ancestors 'self';
-    upgrade-insecure-requests;
-  ">
 
   <!-- Google Maps -->
   <script>
     (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries","places");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
       key: "AIzaSyDwFb_tyXDY8TVH7LJ1NeR72j8b6VWC13k",
       v: "weekly"
-    });
-  </script>
-
-  <!-- Facebook SDK -->
-  <script>
-    window.fbAsyncInit = function() {
-      FB.init({
-        xfbml: true,
-        version: 'v19.0'
-      });
-      console.log('FB SDK initialized');
-      console.log('FB object:', FB);
-      
-      // Initial parse
-      FB.XFBML.parse();
-      console.log('Initial FB.XFBML.parse() called');
-    };
-
-    (function(d, s, id) {
-      var js, fjs = d.getElementsByTagName(s)[0];
-      if (d.getElementById(id)) return;
-      js = d.createElement(s);
-      js.id = id;
-      js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
-      js.crossOrigin = "anonymous";
-      js.nonce = "DV5kJ6aG";
-      fjs.parentNode.insertBefore(js, fjs);
-      console.log('Facebook SDK script added to page');
-    }(document, 'script', 'facebook-jssdk'));
-  </script>
-
-  <!-- Facebook Customer Chat Plugin -->
-  <div id="fb-root"></div>
-  <div id="fb-customer-chat" class="fb-customerchat"
-    page_id="391239610738088"
-    attribution="biz_inbox"
-    theme_color="#0084ff"
-    logged_in_greeting="Hi! How can we help you?"
-    logged_out_greeting="Hi! How can we help you?"
-    greeting_dialog_display="show"
-    greeting_dialog_delay="0">
-  </div>
-
-  <style>
-    .fb-customerchat {
-      position: fixed !important;
-      bottom: 20px !important;
-      right: 20px !important;
-      z-index: 9999 !important;
-      display: block !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-  </style>
-
-  <script>
-    // Additional initialization check
-    window.addEventListener('load', function() {
-      console.log('Page loaded, checking chat initialization...');
-      
-      // Check if chat element exists
-      const chatElement = document.getElementById('fb-customer-chat');
-      if (chatElement) {
-        console.log('Chat element found:', chatElement);
-        console.log('Chat element styles:', window.getComputedStyle(chatElement));
-        
-        // Check FB SDK state
-        if (window.FB) {
-          console.log('FB SDK detected, current state:', {
-            xfbml: FB.XFBML,
-            customerChat: !!FB.CustomerChat,
-            initialized: !!FB._initialized
-          });
-        }
-        
-        // Try parsing again
-        if (window.FB && FB.XFBML) {
-          FB.XFBML.parse();
-          console.log('First parse attempt completed');
-          
-          // Second parse attempt after a short delay
-          setTimeout(() => {
-            FB.XFBML.parse();
-            console.log('Second parse attempt completed');
-            
-            // Check final state
-            const finalStyles = window.getComputedStyle(chatElement);
-            console.log('Chat element after parse:', {
-              display: finalStyles.display,
-              visibility: finalStyles.visibility,
-              opacity: finalStyles.opacity
-            });
-          }, 1000);
-        }
-      }
     });
   </script>
 </head>
