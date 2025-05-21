@@ -11,11 +11,8 @@
     window.fbAsyncInit = function() {
       FB.init({
         xfbml: true,
-        version: 'v18.0',
-        debug: true // Enable debug mode
+        version: 'v18.0'
       });
-      
-      // Log initialization
       console.log('FB SDK initialized');
     };
 
@@ -54,21 +51,15 @@
     // Force refresh the chat plugin
     window.addEventListener('load', function() {
       console.log('Page loaded, initializing chat...');
-      if (typeof FB !== 'undefined') {
-        FB.XFBML.parse();
-        console.log('FB.XFBML.parse() called');
-      } else {
-        console.log('FB is not defined yet');
-      }
+      // Wait for FB SDK to load
+      var checkFB = setInterval(function() {
+        if (typeof FB !== 'undefined') {
+          clearInterval(checkFB);
+          FB.XFBML.parse();
+          console.log('FB.XFBML.parse() called');
+        }
+      }, 100);
     });
-
-    // Additional check after a short delay
-    setTimeout(function() {
-      if (typeof FB !== 'undefined') {
-        FB.XFBML.parse();
-        console.log('FB.XFBML.parse() called after delay');
-      }
-    }, 2000);
   </script>
 <link rel="modulepreload" href="chunk-AUKC3SRO.js"><link rel="modulepreload" href="chunk-GLNNVTSZ.js"><script src="polyfills-FFHMD2TL.js" type="module"></script><script src="main-3V54M4MP.js" type="module"></script></body>
 </html>
