@@ -87,6 +87,19 @@
       console.log('Facebook SDK script added to page');
     }(document, 'script', 'facebook-jssdk'));
 
+    // Load Customer Chat SDK
+    (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
+      js.async = true;
+      js.defer = true;
+      js.crossOrigin = "anonymous";
+      fjs.parentNode.insertBefore(js, fjs);
+      console.log('Facebook Customer Chat SDK script added to page');
+    }(document, 'script', 'facebook-customerchat-jssdk'));
+
     // Additional initialization check
     window.addEventListener('load', function() {
       console.log('Page loaded, checking chat initialization...');
