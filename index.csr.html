@@ -82,12 +82,23 @@
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
       js = d.createElement(s); js.id = id;
-      js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
+      js.src = 'https://connect.facebook.net/en_US/sdk.js';
       js.async = true;
       js.defer = true;
       js.crossOrigin = "anonymous";
       fjs.parentNode.insertBefore(js, fjs);
       console.log('Facebook SDK script added to page');
+
+      // Load Customer Chat SDK after main SDK
+      js.onload = function() {
+        var customerChat = document.createElement('script');
+        customerChat.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
+        customerChat.async = true;
+        customerChat.defer = true;
+        customerChat.crossOrigin = "anonymous";
+        fjs.parentNode.insertBefore(customerChat, fjs);
+        console.log('Facebook Customer Chat SDK script added to page');
+      };
     }(document, 'script', 'facebook-jssdk'));
 
     // Additional initialization check

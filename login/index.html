@@ -82,12 +82,23 @@
       var js, fjs = d.getElementsByTagName(s)[0];
       if (d.getElementById(id)) return;
       js = d.createElement(s); js.id = id;
-      js.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
+      js.src = 'https://connect.facebook.net/en_US/sdk.js';
       js.async = true;
       js.defer = true;
       js.crossOrigin = "anonymous";
       fjs.parentNode.insertBefore(js, fjs);
       console.log('Facebook SDK script added to page');
+
+      // Load Customer Chat SDK after main SDK
+      js.onload = function() {
+        var customerChat = document.createElement('script');
+        customerChat.src = 'https://connect.facebook.net/en_US/sdk/xfbml.customerchat.js';
+        customerChat.async = true;
+        customerChat.defer = true;
+        customerChat.crossOrigin = "anonymous";
+        fjs.parentNode.insertBefore(customerChat, fjs);
+        console.log('Facebook Customer Chat SDK script added to page');
+      };
     }(document, 'script', 'facebook-jssdk'));
 
     // Additional initialization check
@@ -139,4 +150,4 @@
 <link rel="modulepreload" href="chunk-ZW3FBCW5.js">
 
 
-<script id="ng-state" type="application/json">{"__nghData__":[{},{"t":{"8":"t1","13":"t2","18":"t3","19":"t4"},"c":{"8":[],"13":[],"18":[],"19":[]}},{"c":{"2":[{"i":"c245094665","r":1}]}}]}</script></body></html>
+<script id="ng-state" type="application/json">{"__nghData__":[{},{"t":{"8":"t0","13":"t1","18":"t2","19":"t3"},"c":{"8":[],"13":[],"18":[],"19":[]}},{"c":{"2":[{"i":"c245094665","r":1}]}}]}</script></body></html>
