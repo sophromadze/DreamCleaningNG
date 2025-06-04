@@ -1,0 +1,21 @@
+<header class="header">
+    <div class="container">
+      <nav class="nav">
+        <a routerLink="/" class="logo">DreamCleaning</a>
+        <div class="nav-links">
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
+          <a routerLink="/about" routerLinkActive="active">About</a>
+          <a routerLink="/service-page" routerLinkActive="active">Services</a>
+          <a routerLink="/booking" routerLinkActive="active">Book Now</a>
+          <a routerLink="/contact" routerLinkActive="active">Contact</a>
+          <a routerLink="/login" class="login-btn">Login</a>
+        </div>
+        <button class="mobile-menu-btn" (click)="toggleMenu()">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </nav>
+    </div>
+  </header>
+  

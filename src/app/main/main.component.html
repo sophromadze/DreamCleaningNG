@@ -1,0 +1,210 @@
+<main class="container">
+    <section class="main-container">
+      <div class="main-content-description">
+        <h1>We Clean. You Relax.</h1>
+        <p>Save Time, Maintain Energy and Revel in a Spotless, Comfortable Home in NYC.</p>
+        <hgroup>
+          <h2>Manhattan</h2>
+          <h2>Brooklyn</h2>
+          <h2>Queens</h2>
+        </hgroup>
+        <div class="btn-container">
+          <a routerLink="/booking" class="book-now-btn">Book Now</a>
+          <a href="tel:+1 929-930-1525" class="call-btn">Call: (929) 930-1525</a>
+        </div>
+        <p  class="tagline">More than 5 years of experience in cleaning services.</p>
+        <p  class="tagline">100% Satisfaction Guarantee!</p>
+      </div>
+      <div class="main-image-container">
+        <img src="./images/mainImage.png" alt="logo" />
+      </div>
+    </section>
+    <section class="services-container">
+      <h1>Our Cleaning Services</h1>
+      <div class="service-cards">
+        <!-- Regular Cleaning -->
+        <div class="service-card">
+          <h3>Regular Cleaning</h3>
+          <div class="price">From $120</div>
+          <p class="description">Perfect for maintaining a clean and healthy home environment with our weekly or bi-weekly cleaning service.</p>
+          <ul class="benefits">
+            <li>Dusting and wiping surfaces</li>
+            <li>Vacuuming and mopping floors</li>
+            <li>Bathroom and kitchen cleaning</li>
+            <li>Bed making and linen changes</li>
+          </ul>
+          <div class="button-group">
+            <a routerLink="/booking" class="book-now-btn">Book Now</a>
+            <a routerLink="/service-page" [fragment]="'regular-cleaning'" class="read-more-btn">Read More</a>
+          </div>
+        </div>
+
+        <!-- Deep Cleaning -->
+        <div class="service-card">
+          <h3>Deep Cleaning</h3>
+          <div class="price">From $250</div>
+          <p class="description">Comprehensive cleaning service that reaches every corner of your home for a thorough refresh.</p>
+          <ul class="benefits">
+            <li>Detailed cleaning of all rooms</li>
+            <li>Inside cabinets and appliances</li>
+            <li>Baseboards and window sills</li>
+            <li>Deep sanitization</li>
+          </ul>
+          <div class="button-group">
+            <a routerLink="/booking" class="book-now-btn">Book Now</a>
+            <a routerLink="/service-page" [fragment]="'deep-cleaning'" class="read-more-btn">Read More</a>
+          </div>
+        </div>
+
+        <!-- Move In Service -->
+        <div class="service-card">
+          <h3>Move In Service</h3>
+          <div class="price">From $300</div>
+          <p class="description">Start your new chapter in a spotless home with our comprehensive move-in cleaning service.</p>
+          <ul class="benefits">
+            <li>Complete home sanitization</li>
+            <li>Detailed cleaning of all surfaces</li>
+            <li>Cabinet and closet cleaning</li>
+            <li>Floor and carpet deep cleaning</li>
+          </ul>
+          <div class="button-group">
+            <a routerLink="/booking" class="book-now-btn">Book Now</a>
+            <a routerLink="/service-page" [fragment]="'move-in'" class="read-more-btn">Read More</a>
+          </div>
+        </div>
+
+        <!-- Move Out Service -->
+        <div class="service-card">
+          <h3>Move Out Service</h3>
+          <div class="price">From $300</div>
+          <p class="description">Leave your old home in perfect condition with our thorough move-out cleaning service.</p>
+          <ul class="benefits">
+            <li>Complete home cleaning</li>
+            <li>Wall and floor cleaning</li>
+            <li>Appliance cleaning</li>
+            <li>Final inspection</li>
+          </ul>
+          <div class="button-group">
+            <a routerLink="/booking" class="book-now-btn">Book Now</a>
+            <a routerLink="/service-page" [fragment]="'move-out'" class="read-more-btn">Read More</a>
+          </div>
+        </div>
+
+        <!-- Renovation Cleaning -->
+        <div class="service-card">
+          <h3>Renovation Cleaning</h3>
+          <div class="price">From $350</div>
+          <p class="description">Remove all construction debris and dust to reveal your newly renovated space.</p>
+          <ul class="benefits">
+            <li>Construction debris removal</li>
+            <li>Dust and particle cleaning</li>
+            <li>Detailed surface cleaning</li>
+            <li>Final polish and inspection</li>
+          </ul>
+          <div class="button-group">
+            <a routerLink="/booking" class="book-now-btn">Book Now</a>
+            <a routerLink="/service-page" [fragment]="'renovation'" class="read-more-btn">Read More</a>
+          </div>
+        </div>
+
+        <!-- Office Cleaning -->
+        <div class="service-card">
+          <h3>Office Cleaning</h3>
+          <div class="price">From $200</div>
+          <p class="description">Professional cleaning services for your workplace to maintain a healthy and productive environment.</p>
+          <ul class="benefits">
+            <li>Daily or weekly cleaning</li>
+            <li>Sanitization of common areas</li>
+            <li>Restroom maintenance</li>
+            <li>Kitchen and break room cleaning</li>
+          </ul>
+          <div class="button-group">
+            <a routerLink="/booking" class="book-now-btn">Book Now</a>
+            <a routerLink="/service-page" [fragment]="'office'" class="read-more-btn">Read More</a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="why-choose-us">
+      <h2>Why Choose Dream Cleaning?</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">⭐</div>
+          <h3>Consistent & Dependable</h3>
+          <p>Expect the same level of quality and detail every time, on-time, and no surprises. We always show up and deliver exactly what we promise—every single time.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">👥</div>
+          <h3>Experienced & Trained</h3>
+          <p>Our team consists of professional cleaners with extensive experience. We invest in continuous training to ensure the highest quality service.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Safe & Vetted</h3>
+          <p>Every cleaner is background-checked, reference-checked, and thoroughly trained. Your safety is our top priority.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">✅</div>
+          <h3>100% Satisfaction Guarantee</h3>
+          <p>Not completely satisfied? We'll come back and make it right—no questions asked. Your satisfaction is our top priority.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">🌿</div>
+          <h3>Eco-Friendly Products</h3>
+          <p>We use family and eco-friendly cleaning products that are safe for your home, children, and pets.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="feature-icon">📞</div>
+          <h3>Always Available</h3>
+          <p>Need something? Reach us by phone, text, or email. Our office is fully staffed to assist you with any questions or concerns.</p>
+        </div>
+      </div>
+    </section>
+    <section class="google-reviews">
+      <h2>Real Client Reviews</h2>
+      <div class="overall-rating">
+        <div class="rating-stars">
+          <span class="star">⭐</span>
+          <span class="rating-number">{{overallRating.toFixed(1)}}</span>
+          <img src="https://cdn.nicejob.co/icons/google-2025.svg" alt="Google" class="google-icon">
+        </div>
+        <a href="https://g.page/r/CSmN7-QdmiyoEAE/review" target="_blank" class="reviews-link">Based on {{totalReviews}} reviews</a>
+      </div>
+      <div class="reviews-grid">
+        <div class="review-card" *ngFor="let review of reviews">
+          <div class="reviewer-info">
+            <img [src]="review.profilePhotoUrl" alt="Reviewer" class="reviewer-avatar" *ngIf="review.profilePhotoUrl">
+            <div class="reviewer-details">
+              <h3>{{review.authorName}}</h3>
+              <div class="review-date">{{review.time | date}}</div>
+            </div>
+          </div>
+          <div class="rating">
+            <span class="star" *ngFor="let star of [1,2,3,4,5]" [class.filled]="star <= review.rating">⭐</span>
+          </div>
+          <p class="review-text" [class.expanded]="review.isExpanded">{{review.text}}</p>
+          <span class="see-more" *ngIf="review.text.length > 100" (click)="review.isExpanded = !review.isExpanded">
+            {{review.isExpanded ? 'Show less' : 'See more'}}
+          </span>
+        </div>
+      </div>
+    </section>
+    <section class="about-section">
+      <div class="about-content">
+        <div class="about-image">
+          <img src="./images/mainImage.png" alt="Dream Cleaning Team" />
+        </div>
+        <div class="about-text">
+          <h2>About Us</h2>
+          <p>We are a professional cleaning service dedicated to making your home or office spotless. With over 5 years of experience, our team of trained professionals uses eco-friendly products and modern cleaning techniques to deliver exceptional results.</p>
+          <p>Our commitment to quality, reliability, and customer satisfaction has made us one of the most trusted cleaning services in New York City.</p>
+          <a routerLink="/about" class="learn-more-btn">Learn More</a>
+        </div>
+      </div>
+    </section>
+  </main>

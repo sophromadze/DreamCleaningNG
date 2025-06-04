@@ -1,0 +1,16 @@
+.main-content {
+    padding-top: 80px; // Same as header height
+    min-height: calc(100vh - 80px - 300px); // Subtract header and footer height
+    padding-bottom: 40px;
+  }
+  
+  :host {
+    display: block;
+    min-height: 100vh;
+  }
+  
+  router-outlet + * {
+    display: block;
+    padding-top: 80px; // Same as header height
+  }
+  
