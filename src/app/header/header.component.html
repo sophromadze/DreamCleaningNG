@@ -6,9 +6,27 @@
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
           <a routerLink="/about" routerLinkActive="active">About</a>
           <a routerLink="/service-page" routerLinkActive="active">Services</a>
-          <a routerLink="/booking" routerLinkActive="active">Book Now</a>
+          <a routerLink="/booking" routerLinkActive="active">Booking</a>
           <a routerLink="/contact" routerLinkActive="active">Contact</a>
-          <a routerLink="/login" class="login-btn">Login</a>
+          <ng-container *ngIf="!currentUser; else userMenu">
+            <a routerLink="/login" routerLinkActive="active" class="login-btn">Login</a>
+          </ng-container>
+          <ng-template #userMenu>
+            <div class="user-menu" (click)="toggleUserMenu()">
+              <div class="user-avatar">
+                {{ userInitials }}
+              </div>
+              <i class="fas fa-chevron-down"></i>
+              <div class="dropdown-menu" *ngIf="isUserMenuOpen">
+                <div class="user-info">
+                  {{ currentUser.firstName }} {{ currentUser.lastName }}
+                </div>
+                <a routerLink="/profile">Profile</a>
+                <a routerLink="/change-password">Change Password</a>
+                <a (click)="logout()">Logout</a>
+              </div>
+            </div>
+          </ng-template>
         </div>
         <button class="mobile-menu-btn" (click)="toggleMenu()">
           <span></span>

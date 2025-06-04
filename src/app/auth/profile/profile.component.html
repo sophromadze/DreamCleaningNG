@@ -1,0 +1,198 @@
+<div class="profile-container">
+    <div class="profile-header">
+      <h1>My Profile</h1>
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </div>
+  
+    <div *ngIf="isLoading" class="loading">Loading...</div>
+  
+    <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+  
+    <div *ngIf="!isLoading && profile" class="profile-content">
+      <!-- Profile Information Section -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Personal Information</h2>
+          <button *ngIf="!isEditingProfile" class="edit-btn" (click)="startEditProfile()">Edit</button>
+        </div>
+  
+        <div *ngIf="!isEditingProfile" class="info-display">
+          <div class="info-row">
+            <label>First Name:</label>
+            <span>{{ profile.firstName }}</span>
+          </div>
+          <div class="info-row">
+            <label>Last Name:</label>
+            <span>{{ profile.lastName }}</span>
+          </div>
+          <div class="info-row">
+            <label>Email:</label>
+            <span>{{ profile.email }}</span>
+          </div>
+          <div class="info-row">
+            <label>Phone:</label>
+            <span>{{ profile.phone || 'Not provided' }}</span>
+          </div>
+          <div class="info-row">
+            <label>Subscription:</label>
+            <span>{{ profile.subscriptionName || 'No active subscription' }}</span>
+          </div>
+          <div class="info-row" *ngIf="profile.firstTimeOrder">
+            <label>Special Offer:</label>
+            <span class="special-offer">20% off on your first order!</span>
+          </div>
+        </div>
+  
+        <div *ngIf="isEditingProfile" class="edit-form">
+          <div class="form-group">
+            <label>First Name</label>
+            <input type="text" [(ngModel)]="editProfileForm.firstName" required>
+          </div>
+          <div class="form-group">
+            <label>Last Name</label>
+            <input type="text" [(ngModel)]="editProfileForm.lastName" required>
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="editProfileForm.email" required>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" [(ngModel)]="editProfileForm.phone">
+          </div>
+          <div class="form-actions">
+            <button class="save-btn" (click)="saveProfile()">Save</button>
+            <button class="cancel-btn" (click)="cancelEditProfile()">Cancel</button>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Apartments Section -->
+      <div class="section">
+        <div class="section-header">
+          <h2>My Apartments</h2>
+          <button *ngIf="!isAddingApartment" class="add-btn" (click)="startAddApartment()">Add Apartment</button>
+        </div>
+  
+        <!-- Add New Apartment Form -->
+        <div *ngIf="isAddingApartment" class="apartment-form">
+          <h3>Add New Apartment</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Name *</label>
+              <input type="text" [(ngModel)]="newApartment.name" placeholder="e.g., My Home" required>
+            </div>
+            <div class="form-group">
+              <label>Address *</label>
+              <input type="text" [(ngModel)]="newApartment.address" required>
+            </div>
+            <div class="form-group">
+              <label>City</label>
+              <input type="text" [(ngModel)]="newApartment.city">
+            </div>
+            <div class="form-group">
+              <label>Postal Code</label>
+              <input type="text" [(ngModel)]="newApartment.postalCode">
+            </div>
+            <div class="form-group">
+              <label>Number of Rooms</label>
+              <input type="number" [(ngModel)]="newApartment.numberOfRooms" min="1">
+            </div>
+            <div class="form-group">
+              <label>Number of Bathrooms</label>
+              <input type="number" [(ngModel)]="newApartment.numberOfBathrooms" min="1">
+            </div>
+            <div class="form-group">
+              <label>Square Meters</label>
+              <input type="number" [(ngModel)]="newApartment.squareMeters" min="1">
+            </div>
+            <div class="form-group full-width">
+              <label>Special Instructions</label>
+              <textarea [(ngModel)]="newApartment.specialInstructions" rows="3"></textarea>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="save-btn" (click)="addApartment()">Add Apartment</button>
+            <button class="cancel-btn" (click)="cancelAddApartment()">Cancel</button>
+          </div>
+        </div>
+  
+        <!-- Apartments List -->
+        <div class="apartments-list" *ngIf="!isAddingApartment">
+          <div *ngFor="let apartment of profile.apartments" class="apartment-card">
+            <div *ngIf="editingApartmentId !== apartment.id">
+              <h3>{{ apartment.name }}</h3>
+              <p><strong>Address:</strong> {{ apartment.address }}</p>
+              <p *ngIf="apartment.city"><strong>City:</strong> {{ apartment.city }}</p>
+              <p *ngIf="apartment.postalCode"><strong>Postal Code:</strong> {{ apartment.postalCode }}</p>
+              <div class="apartment-details">
+                <span *ngIf="apartment.numberOfRooms">{{ apartment.numberOfRooms }} rooms</span>
+                <span *ngIf="apartment.numberOfBathrooms">{{ apartment.numberOfBathrooms }} bathrooms</span>
+                <span *ngIf="apartment.squareMeters">{{ apartment.squareMeters }} m²</span>
+              </div>
+              <p *ngIf="apartment.specialInstructions" class="special-instructions">
+                <strong>Special Instructions:</strong> {{ apartment.specialInstructions }}
+              </p>
+              <div class="apartment-actions">
+                <button class="edit-btn" (click)="startEditApartment(apartment)">Edit</button>
+                <button class="delete-btn" (click)="deleteApartment(apartment)">Delete</button>
+              </div>
+            </div>
+  
+            <!-- Edit Apartment Form -->
+            <div *ngIf="editingApartmentId === apartment.id && editingApartment" class="edit-apartment-form">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Name *</label>
+                  <input type="text" [(ngModel)]="editingApartment.name" required>
+                </div>
+                <div class="form-group">
+                  <label>Address *</label>
+                  <input type="text" [(ngModel)]="editingApartment.address" required>
+                </div>
+                <div class="form-group">
+                  <label>City</label>
+                  <input type="text" [(ngModel)]="editingApartment.city">
+                </div>
+                <div class="form-group">
+                  <label>Postal Code</label>
+                  <input type="text" [(ngModel)]="editingApartment.postalCode">
+                </div>
+                <div class="form-group">
+                  <label>Number of Rooms</label>
+                  <input type="number" [(ngModel)]="editingApartment.numberOfRooms" min="1">
+                </div>
+                <div class="form-group">
+                  <label>Number of Bathrooms</label>
+                  <input type="number" [(ngModel)]="editingApartment.numberOfBathrooms" min="1">
+                </div>
+                <div class="form-group">
+                  <label>Square Meters</label>
+                  <input type="number" [(ngModel)]="editingApartment.squareMeters" min="1">
+                </div>
+                <div class="form-group full-width">
+                  <label>Special Instructions</label>
+                  <textarea [(ngModel)]="editingApartment.specialInstructions" rows="3"></textarea>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="save-btn" (click)="saveApartment()">Save</button>
+                <button class="cancel-btn" (click)="cancelEditApartment()">Cancel</button>
+              </div>
+            </div>
+          </div>
+  
+          <div *ngIf="profile.apartments.length === 0" class="no-apartments">
+            <p>You haven't added any apartments yet.</p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Navigation Links -->
+      <div class="section navigation-links">
+        <a routerLink="/change-password" class="nav-link">Change Password</a>
+        <a routerLink="/booking" class="nav-link">Book a Cleaning</a>
+      </div>
+    </div>
+  </div>
