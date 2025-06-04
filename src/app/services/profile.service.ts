@@ -18,11 +18,10 @@ export interface Apartment {
   id: number;
   name: string;
   address: string;
-  city?: string;
-  postalCode?: string;
-  numberOfRooms?: number;
-  numberOfBathrooms?: number;
-  squareMeters?: number;
+  aptSuite?: string;
+  city: string;
+  state: string;
+  postalCode: string;
   specialInstructions?: string;
 }
 
@@ -36,11 +35,10 @@ export interface UpdateProfile {
 export interface CreateApartment {
   name: string;
   address: string;
-  city?: string;
-  postalCode?: string;
-  numberOfRooms?: number;
-  numberOfBathrooms?: number;
-  squareMeters?: number;
+  aptSuite?: string;
+  city: string;
+  state: string;
+  postalCode: string;
   specialInstructions?: string;
 }
 

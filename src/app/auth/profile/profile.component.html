@@ -83,30 +83,36 @@
               <label>Name *</label>
               <input type="text" [(ngModel)]="newApartment.name" placeholder="e.g., My Home" required>
             </div>
-            <div class="form-group">
+            <div class="form-group full-width">
               <label>Address *</label>
               <input type="text" [(ngModel)]="newApartment.address" required>
             </div>
             <div class="form-group">
-              <label>City</label>
-              <input type="text" [(ngModel)]="newApartment.city">
+              <label>Apt/Suite</label>
+              <input type="text" [(ngModel)]="newApartment.aptSuite">
             </div>
             <div class="form-group">
-              <label>Postal Code</label>
-              <input type="text" [(ngModel)]="newApartment.postalCode">
+              <label>State *</label>
+              <select [(ngModel)]="newApartment.state" (change)="onStateChange(newApartment.state)" required>
+                <option value="">Select state</option>
+                <option *ngFor="let state of states" [value]="state">{{ state }}</option>
+              </select>
             </div>
             <div class="form-group">
-              <label>Number of Rooms</label>
-              <input type="number" [(ngModel)]="newApartment.numberOfRooms" min="1">
+              <label>City *</label>
+              <select [(ngModel)]="newApartment.city" required>
+                <option value="">Select city</option>
+                <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+              </select>
             </div>
             <div class="form-group">
-              <label>Number of Bathrooms</label>
-              <input type="number" [(ngModel)]="newApartment.numberOfBathrooms" min="1">
-            </div>
-            <div class="form-group">
-              <label>Square Meters</label>
-              <input type="number" [(ngModel)]="newApartment.squareMeters" min="1">
-            </div>
+              <label>Zip Code *</label>
+              <input type="text" [(ngModel)]="newApartment.postalCode" 
+                     pattern="[0-9]{5}" 
+                     maxlength="5" 
+                     placeholder="12345" 
+                     required>
+            </div>            
             <div class="form-group full-width">
               <label>Special Instructions</label>
               <textarea [(ngModel)]="newApartment.specialInstructions" rows="3"></textarea>
@@ -123,14 +129,10 @@
           <div *ngFor="let apartment of profile.apartments" class="apartment-card">
             <div *ngIf="editingApartmentId !== apartment.id">
               <h3>{{ apartment.name }}</h3>
-              <p><strong>Address:</strong> {{ apartment.address }}</p>
-              <p *ngIf="apartment.city"><strong>City:</strong> {{ apartment.city }}</p>
-              <p *ngIf="apartment.postalCode"><strong>Postal Code:</strong> {{ apartment.postalCode }}</p>
-              <div class="apartment-details">
-                <span *ngIf="apartment.numberOfRooms">{{ apartment.numberOfRooms }} rooms</span>
-                <span *ngIf="apartment.numberOfBathrooms">{{ apartment.numberOfBathrooms }} bathrooms</span>
-                <span *ngIf="apartment.squareMeters">{{ apartment.squareMeters }} m²</span>
-              </div>
+              <p><strong>Address:</strong> {{ apartment.address }}<span *ngIf="apartment.aptSuite">, {{ apartment.aptSuite }}</span></p>
+              <p><strong>City:</strong> {{ apartment.city }}, {{ apartment.state }} {{ apartment.postalCode }}</p>
+              <p><strong>State:</strong> {{ apartment.state }}</p>
+              <p><strong>Postal Code:</strong> {{ apartment.postalCode }}</p>
               <p *ngIf="apartment.specialInstructions" class="special-instructions">
                 <strong>Special Instructions:</strong> {{ apartment.specialInstructions }}
               </p>
@@ -147,29 +149,35 @@
                   <label>Name *</label>
                   <input type="text" [(ngModel)]="editingApartment.name" required>
                 </div>
-                <div class="form-group">
+                <div class="form-group full-width">
                   <label>Address *</label>
                   <input type="text" [(ngModel)]="editingApartment.address" required>
                 </div>
                 <div class="form-group">
-                  <label>City</label>
-                  <input type="text" [(ngModel)]="editingApartment.city">
+                  <label>Apt/Suite</label>
+                  <input type="text" [(ngModel)]="editingApartment.aptSuite">
                 </div>
                 <div class="form-group">
-                  <label>Postal Code</label>
-                  <input type="text" [(ngModel)]="editingApartment.postalCode">
+                  <label>State *</label>
+                  <select [(ngModel)]="editingApartment.state" (change)="onStateChange(editingApartment.state)" required>
+                    <option value="">Select state</option>
+                    <option *ngFor="let state of states" [value]="state">{{ state }}</option>
+                  </select>
                 </div>
                 <div class="form-group">
-                  <label>Number of Rooms</label>
-                  <input type="number" [(ngModel)]="editingApartment.numberOfRooms" min="1">
+                  <label>City *</label>
+                  <select [(ngModel)]="editingApartment.city" required>
+                    <option value="">Select city</option>
+                    <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+                  </select>
                 </div>
                 <div class="form-group">
-                  <label>Number of Bathrooms</label>
-                  <input type="number" [(ngModel)]="editingApartment.numberOfBathrooms" min="1">
-                </div>
-                <div class="form-group">
-                  <label>Square Meters</label>
-                  <input type="number" [(ngModel)]="editingApartment.squareMeters" min="1">
+                  <label>Zip Code *</label>
+                  <input type="text" [(ngModel)]="editingApartment.postalCode" 
+                         pattern="[0-9]{5}" 
+                         maxlength="5" 
+                         placeholder="12345" 
+                         required>
                 </div>
                 <div class="form-group full-width">
                   <label>Special Instructions</label>

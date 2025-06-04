@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { ProfileService, Profile, Apartment, CreateApartment } from '../../services/profile.service';
 import { AuthService } from '../../services/auth.service';
+import { LocationService } from '../../services/location.service';
 
 @Component({
   selector: 'app-profile',
@@ -29,15 +30,18 @@ export class ProfileComponent implements OnInit {
     phone: ''
   };
 
+  // Location data
+  states: string[] = [];
+  cities: string[] = [];
+
   // New apartment form
   newApartment: CreateApartment = {
     name: '',
     address: '',
+    aptSuite: '',
     city: '',
+    state: '',
     postalCode: '',
-    numberOfRooms: undefined,
-    numberOfBathrooms: undefined,
-    squareMeters: undefined,
     specialInstructions: ''
   };
 
@@ -46,11 +50,42 @@ export class ProfileComponent implements OnInit {
 
   constructor(
     private profileService: ProfileService,
-    private authService: AuthService
+    private authService: AuthService,
+    private locationService: LocationService
   ) {}
 
   ngOnInit() {
     this.loadProfile();
+    this.loadLocationData();
+  }
+
+  loadLocationData() {
+    this.locationService.getStates().subscribe({
+      next: (states) => {
+        this.states = states;
+        if (states.length > 0) {
+          this.loadCities(states[0]);
+        }
+      }
+    });
+  }
+
+  loadCities(state: string) {
+    this.locationService.getCities(state).subscribe({
+      next: (cities) => {
+        this.cities = cities;
+      }
+    });
+  }
+
+  onStateChange(state: string) {
+    this.loadCities(state);
+    // Reset city selection when state changes
+    if (this.isAddingApartment) {
+      this.newApartment.city = '';
+    } else if (this.editingApartment) {
+      this.editingApartment.city = '';
+    }
   }
 
   loadProfile() {
@@ -103,13 +138,15 @@ export class ProfileComponent implements OnInit {
     this.newApartment = {
       name: '',
       address: '',
+      aptSuite: '',
       city: '',
+      state: this.states.length > 0 ? this.states[0] : '',
       postalCode: '',
-      numberOfRooms: undefined,
-      numberOfBathrooms: undefined,
-      squareMeters: undefined,
       specialInstructions: ''
     };
+    if (this.newApartment.state) {
+      this.onStateChange(this.newApartment.state);
+    }
   }
 
   cancelAddApartment() {
@@ -135,6 +172,9 @@ export class ProfileComponent implements OnInit {
   startEditApartment(apartment: Apartment) {
     this.editingApartmentId = apartment.id;
     this.editingApartment = { ...apartment };
+    if (this.editingApartment.state) {
+      this.onStateChange(this.editingApartment.state);
+    }
   }
 
   cancelEditApartment() {

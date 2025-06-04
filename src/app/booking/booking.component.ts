@@ -6,6 +6,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { BookingService, ServiceType, Service, ExtraService, Frequency, BookingCalculation } from '../services/booking.service';
 import { AuthService } from '../services/auth.service';
 import { ProfileService } from '../services/profile.service';
+import { LocationService } from '../services/location.service';
 
 interface SelectedService {
   service: Service;
@@ -75,31 +76,21 @@ export class BookingComponent implements OnInit {
     'Other'
   ];
   
-  // States
-  states = [
-    'New York',
-    'New Jersey',
-    'Connecticut'
-  ];
   
-  // Cities
-  cities = [
-    'Manhattan',
-    'Brooklyn',
-    'Queens',
-    'Bronx',
-    'Staten Island'
-  ];
+  // States and Cities - will be loaded from backend
+  states: string[] = [];
+  cities: string[] = [];
 
   constructor(
     private fb: FormBuilder,
     private bookingService: BookingService,
     private authService: AuthService,
     private profileService: ProfileService,
+    private locationService: LocationService,
     private router: Router
   ) {
     this.bookingForm = this.fb.group({
-      serviceDate: ['', Validators.required],
+      serviceDate: [{value: '', disabled: false}, Validators.required],
       serviceTime: ['', Validators.required],
       entryMethod: ['', Validators.required],
       customEntryMethod: [''],
@@ -116,7 +107,7 @@ export class BookingComponent implements OnInit {
       state: ['', Validators.required],
       zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
       promoCode: [''],
-      tips: [0, [Validators.required, Validators.min(0)]]
+      tips: [10, [Validators.required, Validators.min(10)]]
     });
   }
 
@@ -126,20 +117,28 @@ export class BookingComponent implements OnInit {
   }
 
   private loadInitialData() {
-    // Load service types
-    this.bookingService.getServiceTypes().subscribe({
-      next: (types) => {
-        this.serviceTypes = types;
-      },
-      error: (error) => {
-        this.errorMessage = 'Failed to load service types';
+    // Load location data
+    this.locationService.getStates().subscribe({
+      next: (states) => {
+        this.states = states;
+        if (states.length > 0) {
+          this.bookingForm.patchValue({ state: states[0] });
+          this.loadCities(states[0]);
+        }
       }
     });
+
+    
 
     // Load frequencies
     this.bookingService.getFrequencies().subscribe({
       next: (frequencies) => {
         this.frequencies = frequencies;
+        // Set "One Time" as default selected frequency
+        if (frequencies.length > 0) {
+          const oneTimeFrequency = frequencies.find(f => f.name === 'One Time') || frequencies[0];
+          this.selectedFrequency = oneTimeFrequency;
+        }
       },
       error: (error) => {
         this.errorMessage = 'Failed to load frequencies';
@@ -166,6 +165,19 @@ export class BookingComponent implements OnInit {
         });
       }
     });
+  }
+
+  loadCities(state: string) {
+    this.locationService.getCities(state).subscribe({
+      next: (cities) => {
+        this.cities = cities;
+      }
+    });
+  }
+
+  onStateChange(state: string) {
+    this.loadCities(state);
+    this.bookingForm.patchValue({ city: '' });
   }
 
   private setupFormListeners() {
@@ -254,7 +266,7 @@ export class BookingComponent implements OnInit {
 
   updateExtraServiceQuantity(extraService: ExtraService, quantity: number) {
     const selected = this.selectedExtraServices.find(s => s.extraService.id === extraService.id);
-    if (selected) {
+    if (selected && quantity >= 1) {
       selected.quantity = quantity;
       this.calculateTotal();
     }
@@ -262,7 +274,7 @@ export class BookingComponent implements OnInit {
 
   updateExtraServiceHours(extraService: ExtraService, hours: number) {
     const selected = this.selectedExtraServices.find(s => s.extraService.id === extraService.id);
-    if (selected) {
+    if (selected && hours >= 0.5) {
       selected.hours = hours;
       this.calculateTotal();
     }
@@ -316,6 +328,9 @@ export class BookingComponent implements OnInit {
   private updateDateRestrictions() {
     if (this.isSameDaySelected) {
       this.serviceDate.setValue(new Date().toISOString().split('T')[0]);
+      this.serviceDate.disable();
+    } else {
+      this.serviceDate.enable();
     }
   }
 
@@ -325,9 +340,9 @@ export class BookingComponent implements OnInit {
       this.bookingForm.patchValue({
         serviceAddress: apartment.address,
         aptSuite: apartment.aptSuite || '',
-        city: apartment.city || '',
-        state: apartment.state || 'New York',
-        zipCode: apartment.postalCode || ''
+        city: apartment.city,
+        state: apartment.state,
+        zipCode: apartment.postalCode
       });
     }
   }
@@ -402,10 +417,7 @@ export class BookingComponent implements OnInit {
     }
 
     // Apply first time discount (20%) only if explicitly applied
-    if (this.hasFirstTimeDiscount && !this.currentUser?.firstTimeOrder) {
-      // First time discount has been used
-      discountAmount = 0;
-    } else if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
+    if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
       discountAmount += subTotal * 0.20;
     }
 
@@ -423,7 +435,7 @@ export class BookingComponent implements OnInit {
     const tax = discountedSubTotal * this.salesTaxRate;
 
     // Get tips
-    const tips = this.tips.value || 0;
+    const tips = this.tips.value || 10;
 
     // Calculate total
     const total = discountedSubTotal + tax + tips;
@@ -436,6 +448,19 @@ export class BookingComponent implements OnInit {
       total,
       totalDuration
     };
+  }
+
+  // Get cleaner pricing text
+  getCleanerPricingText(): string {
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+    
+    if (superDeepCleaning) {
+      return 'Hourly Service: $80 per hour/per cleaner <span class="cleaning-type-red">(Super Deep Cleaning)</span>';
+    } else if (deepCleaning) {
+      return 'Hourly Service: $60 per hour/per cleaner <span class="cleaning-type-red">(Deep Cleaning)</span>';
+    }
+    return 'Hourly Service: $40 per hour/per cleaner';
   }
 
   isFormValid(): boolean {
