@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Profile {
   id: number;
@@ -46,31 +47,31 @@ export interface CreateApartment {
   providedIn: 'root'
 })
 export class ProfileService {
-  private baseUrl = 'https://localhost:7292/api/profile';
+  private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) { }
 
   getProfile(): Observable<Profile> {
-    return this.http.get<Profile>(this.baseUrl);
+    return this.http.get<Profile>(`${this.apiUrl}/profile`);
   }
 
   updateProfile(profile: UpdateProfile): Observable<Profile> {
-    return this.http.put<Profile>(this.baseUrl, profile);
+    return this.http.put<Profile>(`${this.apiUrl}/profile`, profile);
   }
 
   getApartments(): Observable<Apartment[]> {
-    return this.http.get<Apartment[]>(`${this.baseUrl}/apartments`);
+    return this.http.get<Apartment[]>(`${this.apiUrl}/profile/apartments`);
   }
 
   addApartment(apartment: CreateApartment): Observable<Apartment> {
-    return this.http.post<Apartment>(`${this.baseUrl}/apartments`, apartment);
+    return this.http.post<Apartment>(`${this.apiUrl}/profile/apartments`, apartment);
   }
 
   updateApartment(id: number, apartment: Apartment): Observable<Apartment> {
-    return this.http.put<Apartment>(`${this.baseUrl}/apartments/${id}`, apartment);
+    return this.http.put<Apartment>(`${this.apiUrl}/profile/apartments/${id}`, apartment);
   }
 
   deleteApartment(id: number): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/apartments/${id}`);
+    return this.http.delete(`${this.apiUrl}/profile/apartments/${id}`);
   }
 }

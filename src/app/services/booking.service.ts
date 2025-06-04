@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface ServiceType {
   id: number;
@@ -93,32 +94,32 @@ export interface BookingCalculation {
   providedIn: 'root'
 })
 export class BookingService {
-  private baseUrl = 'https://localhost:7292/api';
+  private apiUrl = environment.apiUrl;
 
   constructor(private http: HttpClient) { }
 
   getServiceTypes(): Observable<ServiceType[]> {
-    return this.http.get<ServiceType[]>(`${this.baseUrl}/booking/service-types`);
+    return this.http.get<ServiceType[]>(`${this.apiUrl}/booking/service-types`);
   }
 
   getFrequencies(): Observable<Frequency[]> {
-    return this.http.get<Frequency[]>(`${this.baseUrl}/booking/frequencies`);
+    return this.http.get<Frequency[]>(`${this.apiUrl}/booking/frequencies`);
   }
 
   validatePromoCode(code: string): Observable<PromoCodeValidation> {
-    return this.http.post<PromoCodeValidation>(`${this.baseUrl}/booking/validate-promo`, { code });
+    return this.http.post<PromoCodeValidation>(`${this.apiUrl}/booking/validate-promo`, { code });
   }
 
   calculateBooking(bookingData: Partial<BookingData>): Observable<BookingCalculation> {
-    return this.http.post<BookingCalculation>(`${this.baseUrl}/booking/calculate`, bookingData);
+    return this.http.post<BookingCalculation>(`${this.apiUrl}/booking/calculate`, bookingData);
   }
 
   createBooking(bookingData: BookingData): Observable<any> {
-    return this.http.post(`${this.baseUrl}/booking/create`, bookingData);
+    return this.http.post(`${this.apiUrl}/booking/create`, bookingData);
   }
 
   getAvailableTimeSlots(date: Date, serviceTypeId: number): Observable<string[]> {
     const dateStr = date.toISOString().split('T')[0];
-    return this.http.get<string[]>(`${this.baseUrl}/booking/available-times?date=${dateStr}&serviceTypeId=${serviceTypeId}`);
+    return this.http.get<string[]>(`${this.apiUrl}/booking/available-times?date=${dateStr}&serviceTypeId=${serviceTypeId}`);
   }
 }

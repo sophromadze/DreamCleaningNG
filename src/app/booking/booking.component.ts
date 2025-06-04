@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { BookingService, ServiceType, Service, ExtraService, Frequency, BookingCalculation } from '../services/booking.service';
@@ -66,6 +66,7 @@ export class BookingComponent implements OnInit {
   // Constants
   salesTaxRate = 0.088; // 8.8%
   minDate = new Date();
+  minTipAmount = 10; // Minimum tip amount when user enters a custom value
   
   // Entry methods
   entryMethods = [
@@ -107,7 +108,14 @@ export class BookingComponent implements OnInit {
       state: ['', Validators.required],
       zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
       promoCode: [''],
-      tips: [10, [Validators.required, Validators.min(10)]]
+      tips: [0, [
+        Validators.min(0),
+        (control: AbstractControl): ValidationErrors | null => {
+          const value = control.value;
+          if (value === 0) return null; // Allow 0 as default
+          return value >= this.minTipAmount ? null : { minTipAmount: true };
+        }
+      ]]
     });
   }
 
@@ -117,6 +125,17 @@ export class BookingComponent implements OnInit {
   }
 
   private loadInitialData() {
+    // Load service types
+    this.bookingService.getServiceTypes().subscribe({
+      next: (serviceTypes) => {
+        this.serviceTypes = serviceTypes;
+      },
+      error: (error) => {
+        console.error('Failed to load service types:', error);
+        this.errorMessage = 'Failed to load service types';
+      }
+    });
+
     // Load location data
     this.locationService.getStates().subscribe({
       next: (states) => {
@@ -127,8 +146,6 @@ export class BookingComponent implements OnInit {
         }
       }
     });
-
-    
 
     // Load frequencies
     this.bookingService.getFrequencies().subscribe({
@@ -435,7 +452,7 @@ export class BookingComponent implements OnInit {
     const tax = discountedSubTotal * this.salesTaxRate;
 
     // Get tips
-    const tips = this.tips.value || 10;
+    const tips = this.tips.value || 0;
 
     // Calculate total
     const total = discountedSubTotal + tax + tips;

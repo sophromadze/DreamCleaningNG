@@ -4,6 +4,7 @@ import { Observable, BehaviorSubject } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
+import { environment } from '../../environments/environment';
 
 interface User {
   id: number;
@@ -40,7 +41,7 @@ interface RegisterData {
   providedIn: 'root'
 })
 export class AuthService {
-  private baseUrl = 'https://localhost:7292/api/auth';
+  private apiUrl = environment.apiUrl;
   private currentUserSubject: BehaviorSubject<User | null>;
   public currentUser: Observable<User | null>;
   private isBrowser: boolean;
@@ -72,7 +73,7 @@ export class AuthService {
   }
 
   login(loginData: LoginData): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.baseUrl}/login`, loginData)
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, loginData)
       .pipe(map(response => {
         // Store user details and token in local storage
         if (this.isBrowser) {
@@ -94,7 +95,7 @@ export class AuthService {
       delete dataToSend.phone;
     }
     
-    return this.http.post<AuthResponse>(`${this.baseUrl}/register`, dataToSend)
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, dataToSend)
       .pipe(map(response => {
         // Store user details and token in local storage
         if (this.isBrowser) {
@@ -119,7 +120,7 @@ export class AuthService {
   }
 
   checkEmailExists(email: string): Observable<{ exists: boolean }> {
-    return this.http.get<{ exists: boolean }>(`${this.baseUrl}/check-email/${email}`);
+    return this.http.get<{ exists: boolean }>(`${this.apiUrl}/auth/check-email/${email}`);
   }
 
   isLoggedIn(): boolean {
@@ -141,7 +142,7 @@ export class AuthService {
       throw new Error('No tokens available');
     }
     
-    return this.http.post<AuthResponse>(`${this.baseUrl}/refresh-token`, {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh-token`, {
       token,
       refreshToken
     }).pipe(map(response => {
@@ -156,7 +157,7 @@ export class AuthService {
   }
   
   changePassword(currentPassword: string, newPassword: string): Observable<any> {
-    return this.http.post(`${this.baseUrl}/change-password`, {
+    return this.http.post(`${this.apiUrl}/auth/change-password`, {
       currentPassword,
       newPassword
     });

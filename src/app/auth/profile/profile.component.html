@@ -130,7 +130,7 @@
             <div *ngIf="editingApartmentId !== apartment.id">
               <h3>{{ apartment.name }}</h3>
               <p><strong>Address:</strong> {{ apartment.address }}<span *ngIf="apartment.aptSuite">, {{ apartment.aptSuite }}</span></p>
-              <p><strong>City:</strong> {{ apartment.city }}, {{ apartment.state }} {{ apartment.postalCode }}</p>
+              <p><strong>City:</strong> {{ apartment.city }}</p>
               <p><strong>State:</strong> {{ apartment.state }}</p>
               <p><strong>Postal Code:</strong> {{ apartment.postalCode }}</p>
               <p *ngIf="apartment.specialInstructions" class="special-instructions">

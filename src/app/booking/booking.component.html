@@ -189,6 +189,8 @@
             <div class="tips-section">
               <p>Your cleaners work hard to make your space shine!</p>
               <div class="tip-options">
+                <button [class.selected]="tips.value === 0" 
+                        (click)="tips.setValue(0)">$0</button>
                 <button [class.selected]="tips.value === 10" 
                         (click)="tips.setValue(10)">$10</button>
                 <button [class.selected]="tips.value === 15" 
@@ -198,7 +200,10 @@
                 <button [class.selected]="tips.value === 25" 
                         (click)="tips.setValue(25)">$25</button>
                 <div class="custom-tip">
-                  <input type="number" [formControl]="tips" min="10" placeholder="Custom amount">
+                  <input type="number" [formControl]="tips" min="0" placeholder="Custom amount">
+                  <div class="error-message" *ngIf="tips.errors?.['minTipAmount']">
+                    Custom tip amount must be at least $10
+                  </div>
                 </div>
               </div>
             </div>
