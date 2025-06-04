@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { MainComponent } from './main/main.component';
 import { authGuard } from './guards/auth.guard';
 import { noAuthGuard } from './guards/no-auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -26,7 +27,7 @@ export const routes: Routes = [
   },
   {
     path: 'login',
-    canActivate: [noAuthGuard], // Add this guard
+    canActivate: [noAuthGuard],
     loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)
   },
   {
@@ -38,5 +39,10 @@ export const routes: Routes = [
     path: 'change-password',
     canActivate: [authGuard],
     loadComponent: () => import('./auth/change-password/change-password.component').then(m => m.ChangePasswordComponent)
+  },
+  {
+    path: 'admin',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./auth/admin/admin.component').then(m => m.AdminComponent)
   }
 ];

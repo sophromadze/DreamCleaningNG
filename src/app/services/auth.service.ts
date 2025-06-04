@@ -15,6 +15,7 @@ interface User {
   firstTimeOrder: boolean;
   subscriptionId?: number;
   authProvider?: string;
+  role: string;
 }
 
 interface AuthResponse {

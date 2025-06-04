@@ -1,0 +1,628 @@
+<div class="admin-container">
+    <h1>Admin Panel</h1>
+    
+    <!-- Tab Navigation -->
+    <div class="admin-tabs">
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'services'"
+        (click)="switchTab('services')">
+        Booking Services
+      </button>
+      <button 
+        class="tab-btn" 
+        [class.active]="activeTab === 'users'"
+        (click)="switchTab('users')">
+        User Info
+      </button>
+    </div>
+  
+    <!-- Messages -->
+    <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+  
+    <!-- Booking Services Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'services'">
+      <div class="services-layout">
+        <!-- Service Types Section -->
+        <div class="service-types-section">
+          <div class="section-header">
+            <h2>Service Types</h2>
+            <button class="add-btn" (click)="startAddingServiceType()">Add New</button>
+          </div>
+  
+          <!-- Add Service Type Form -->
+          <div class="service-type-form" *ngIf="isAddingServiceType">
+            <h3>Add New Service Type</h3>
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" [(ngModel)]="newServiceType.name" placeholder="e.g., Residential Cleaning">
+            </div>
+            <div class="form-group">
+              <label>Base Price</label>
+              <input type="number" [(ngModel)]="newServiceType.basePrice" placeholder="120">
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea [(ngModel)]="newServiceType.description" rows="3"></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="save-btn" (click)="addServiceType()">Create</button>
+              <button class="cancel-btn" (click)="cancelAddServiceType()">Cancel</button>
+            </div>
+          </div>
+  
+          <div class="service-types-list">
+            <div 
+              class="service-type-item" 
+              *ngFor="let type of serviceTypes"
+              [class.selected]="selectedServiceType?.id === type.id"
+              (click)="selectServiceType(type)">
+              <h3>{{ type.name }}</h3>
+              <p>${{ type.basePrice }}</p>
+              <div class="item-actions">
+                <button class="action-btn delete" (click)="deleteServiceType(type); $event.stopPropagation()">Delete</button>
+              </div>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Service Type Details -->
+        <div class="service-details-section" *ngIf="selectedServiceType">
+          <h2>Service Type Details</h2>
+          
+          <div class="service-type-form" *ngIf="isEditingServiceType">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" [(ngModel)]="selectedServiceType.name">
+            </div>
+            <div class="form-group">
+              <label>Base Price</label>
+              <input type="number" [(ngModel)]="selectedServiceType.basePrice">
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <textarea [(ngModel)]="selectedServiceType.description" rows="3"></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="save-btn" (click)="saveServiceType()">Save</button>
+              <button class="cancel-btn" (click)="cancelEditServiceType()">Cancel</button>
+            </div>
+          </div>
+  
+          <div class="service-type-info" *ngIf="!isEditingServiceType">
+            <div class="info-row">
+              <label>Name:</label>
+              <span>{{ selectedServiceType.name }}</span>
+            </div>
+            <div class="info-row">
+              <label>Base Price:</label>
+              <span>${{ selectedServiceType.basePrice }}</span>
+            </div>
+            <div class="info-row">
+              <label>Description:</label>
+              <span>{{ selectedServiceType.description || 'No description' }}</span>
+            </div>
+            <button class="edit-btn" (click)="editServiceType()">Edit</button>
+          </div>
+  
+          <!-- Services List -->
+          <div class="services-subsection">
+            <div class="section-header">
+              <h3>Services</h3>
+              <button class="add-btn" (click)="startAddingService()">Add Service</button>
+            </div>
+  
+            <!-- Add Service Form -->
+            <div class="service-form" *ngIf="isAddingService">
+              <h4>Add New Service</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Name</label>
+                  <input type="text" [(ngModel)]="newService.name" placeholder="e.g., Bedrooms">
+                </div>
+                <div class="form-group">
+                  <label>Service Key</label>
+                  <input type="text" [(ngModel)]="newService.serviceKey" placeholder="e.g., bedrooms">
+                </div>
+                <div class="form-group">
+                  <label>Cost</label>
+                  <input type="number" [(ngModel)]="newService.cost" step="0.01">
+                </div>
+                <div class="form-group">
+                  <label>Duration (minutes)</label>
+                  <input type="number" [(ngModel)]="newService.timeDuration">
+                </div>
+                <div class="form-group">
+                  <label>Input Type</label>
+                  <select [(ngModel)]="newService.inputType">
+                    <option value="dropdown">Dropdown</option>
+                    <option value="slider">Slider</option>
+                    <option value="number">Number</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Min Value</label>
+                  <input type="number" [(ngModel)]="newService.minValue">
+                </div>
+                <div class="form-group">
+                  <label>Max Value</label>
+                  <input type="number" [(ngModel)]="newService.maxValue">
+                </div>
+                <div class="form-group">
+                  <label>Step Value</label>
+                  <input type="number" [(ngModel)]="newService.stepValue">
+                </div>
+                <div class="form-group">
+                  <label>Unit</label>
+                  <input type="text" [(ngModel)]="newService.unit" placeholder="e.g., per hour">
+                </div>
+                <div class="form-group">
+                  <label>
+                    <input type="checkbox" [(ngModel)]="newService.isRangeInput">
+                    Is Range Input
+                  </label>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="save-btn" (click)="addService()">Create</button>
+                <button class="cancel-btn" (click)="cancelAddService()">Cancel</button>
+              </div>
+            </div>
+  
+            <div class="services-list">
+              <div class="service-item" *ngFor="let service of selectedServiceType.services">
+                <div class="service-info" *ngIf="editingServiceId !== service.id">
+                  <h4>{{ service.name }}</h4>
+                  <p>Cost: ${{ service.cost }} | Duration: {{ service.timeDuration }}min | Type: {{ service.inputType }}</p>
+                  <div class="item-actions">
+                    <button class="action-btn edit" (click)="editService(service)">Edit</button>
+                    <button class="action-btn delete" (click)="deleteService(service)">Delete</button>
+                  </div>
+                </div>
+  
+                <!-- Edit Service Form -->
+                <div class="service-form inline-edit" *ngIf="editingServiceId === service.id">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label>Name</label>
+                      <input type="text" [(ngModel)]="service.name">
+                    </div>
+                    <div class="form-group">
+                      <label>Cost</label>
+                      <input type="number" [(ngModel)]="service.cost" step="0.01">
+                    </div>
+                    <div class="form-group">
+                      <label>Duration</label>
+                      <input type="number" [(ngModel)]="service.timeDuration">
+                    </div>
+                    <div class="form-group">
+                      <label>Input Type</label>
+                      <select [(ngModel)]="service.inputType">
+                        <option value="dropdown">Dropdown</option>
+                        <option value="slider">Slider</option>
+                        <option value="number">Number</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <button class="save-btn" (click)="saveService(service)">Save</button>
+                    <button class="cancel-btn" (click)="cancelEditService()">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Extra Services List -->
+          <div class="extra-services-subsection">
+            <div class="section-header">
+              <h3>Extra Services</h3>
+              <button class="add-btn" (click)="startAddingExtraService()">Add Extra Service</button>
+            </div>
+  
+            <!-- Add Extra Service Form -->
+            <div class="service-form" *ngIf="isAddingExtraService">
+              <h4>Add New Extra Service</h4>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>Name</label>
+                  <input type="text" [(ngModel)]="newExtraService.name">
+                </div>
+                <div class="form-group">
+                  <label>Description</label>
+                  <input type="text" [(ngModel)]="newExtraService.description">
+                </div>
+                <div class="form-group">
+                  <label>Price</label>
+                  <input type="number" [(ngModel)]="newExtraService.price" step="0.01">
+                </div>
+                <div class="form-group">
+                  <label>Duration (minutes)</label>
+                  <input type="number" [(ngModel)]="newExtraService.duration">
+                </div>
+                <div class="form-group">
+                  <label>Price Multiplier</label>
+                  <input type="number" [(ngModel)]="newExtraService.priceMultiplier" step="0.1">
+                </div>
+                <div class="form-group full-width">
+                  <label>Options</label>
+                  <div class="checkbox-group">
+                    <label>
+                      <input type="checkbox" [(ngModel)]="newExtraService.hasQuantity">
+                      Has Quantity
+                    </label>
+                    <label>
+                      <input type="checkbox" [(ngModel)]="newExtraService.hasHours">
+                      Has Hours
+                    </label>
+                    <label>
+                      <input type="checkbox" [(ngModel)]="newExtraService.isDeepCleaning">
+                      Is Deep Cleaning
+                    </label>
+                    <label>
+                      <input type="checkbox" [(ngModel)]="newExtraService.isSuperDeepCleaning">
+                      Is Super Deep Cleaning
+                    </label>
+                    <label>
+                      <input type="checkbox" [(ngModel)]="newExtraService.isSameDayService">
+                      Is Same Day Service
+                    </label>
+                    <label>
+                      <input type="checkbox" [(ngModel)]="newExtraService.isAvailableForAll">
+                      Available for All Service Types
+                    </label>
+                  </div>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button class="save-btn" (click)="addExtraService()">Create</button>
+                <button class="cancel-btn" (click)="cancelAddExtraService()">Cancel</button>
+              </div>
+            </div>
+  
+            <div class="extra-services-list">
+              <div class="extra-service-item" *ngFor="let extra of selectedServiceType.extraServices">
+                <div class="extra-service-info" *ngIf="editingExtraServiceId !== extra.id">
+                  <h4>{{ extra.name }}</h4>
+                  <p>Price: ${{ extra.price }} | Duration: {{ extra.duration }}min</p>
+                  <p *ngIf="extra.description">{{ extra.description }}</p>
+                  <div class="extra-flags">
+                    <span class="flag" *ngIf="extra.hasQuantity">Has Quantity</span>
+                    <span class="flag" *ngIf="extra.hasHours">Has Hours</span>
+                    <span class="flag" *ngIf="extra.isDeepCleaning">Deep Cleaning</span>
+                    <span class="flag" *ngIf="extra.isSuperDeepCleaning">Super Deep</span>
+                    <span class="flag" *ngIf="extra.isSameDayService">Same Day</span>
+                  </div>
+                  <div class="item-actions">
+                    <button class="action-btn edit" (click)="editExtraService(extra)">Edit</button>
+                    <button class="action-btn delete" (click)="deleteExtraService(extra)">Delete</button>
+                  </div>
+                </div>
+  
+                <!-- Edit Extra Service Form -->
+                <div class="service-form inline-edit" *ngIf="editingExtraServiceId === extra.id">
+                  <div class="form-grid">
+                    <div class="form-group">
+                      <label>Name</label>
+                      <input type="text" [(ngModel)]="extra.name">
+                    </div>
+                    <div class="form-group">
+                      <label>Price</label>
+                      <input type="number" [(ngModel)]="extra.price" step="0.01">
+                    </div>
+                    <div class="form-group">
+                      <label>Duration</label>
+                      <input type="number" [(ngModel)]="extra.duration">
+                    </div>
+                    <div class="form-group full-width">
+                      <label>Options</label>
+                      <div class="checkbox-group">
+                        <label>
+                          <input type="checkbox" [(ngModel)]="extra.hasQuantity">
+                          Has Quantity
+                        </label>
+                        <label>
+                          <input type="checkbox" [(ngModel)]="extra.hasHours">
+                          Has Hours
+                        </label>
+                        <label>
+                          <input type="checkbox" [(ngModel)]="extra.isDeepCleaning">
+                          Is Deep Cleaning
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="form-actions">
+                    <button class="save-btn" (click)="saveExtraService(extra)">Save</button>
+                    <button class="cancel-btn" (click)="cancelEditExtraService()">Cancel</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Frequencies Section -->
+      <div class="frequencies-section">
+        <div class="section-header">
+          <h2>Frequencies</h2>
+          <button class="add-btn" (click)="startAddingFrequency()">Add Frequency</button>
+        </div>
+  
+        <!-- Add Frequency Form -->
+        <div class="frequency-form" *ngIf="isAddingFrequency">
+          <h3>Create New Frequency</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Name</label>
+              <input type="text" [(ngModel)]="newFrequency.name" placeholder="e.g., Weekly">
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" [(ngModel)]="newFrequency.description">
+            </div>
+            <div class="form-group">
+              <label>Discount Percentage</label>
+              <input type="number" [(ngModel)]="newFrequency.discountPercentage" min="0" max="100">
+            </div>
+            <div class="form-group">
+              <label>Frequency Days</label>
+              <input type="number" [(ngModel)]="newFrequency.frequencyDays" min="0">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="save-btn" (click)="addFrequency()">Create</button>
+            <button class="cancel-btn" (click)="cancelAddFrequency()">Cancel</button>
+          </div>
+        </div>
+  
+        <!-- Frequencies List -->
+        <div class="frequencies-list">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Discount</th>
+                <th>Days</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let frequency of frequencies">
+                <td *ngIf="editingFrequencyId !== frequency.id">{{ frequency.name }}</td>
+                <td *ngIf="editingFrequencyId !== frequency.id">{{ frequency.description || '-' }}</td>
+                <td *ngIf="editingFrequencyId !== frequency.id">{{ frequency.discountPercentage }}%</td>
+                <td *ngIf="editingFrequencyId !== frequency.id">{{ frequency.frequencyDays === 0 ? 'One Time' : frequency.frequencyDays }}</td>
+                <td *ngIf="editingFrequencyId !== frequency.id">
+                  <button class="action-btn edit" (click)="editFrequency(frequency)">Edit</button>
+                  <button class="action-btn delete" (click)="deleteFrequency(frequency)">Delete</button>
+                </td>
+                
+                <!-- Edit mode -->
+                <td colspan="5" *ngIf="editingFrequencyId === frequency.id">
+                  <div class="inline-edit-form">
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" [(ngModel)]="frequency.name">
+                      </div>
+                      <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" [(ngModel)]="frequency.description">
+                      </div>
+                      <div class="form-group">
+                        <label>Discount %</label>
+                        <input type="number" [(ngModel)]="frequency.discountPercentage" min="0" max="100">
+                      </div>
+                      <div class="form-group">
+                        <label>Days</label>
+                        <input type="number" [(ngModel)]="frequency.frequencyDays" min="0">
+                      </div>
+                    </div>
+                    <div class="form-actions">
+                      <button class="save-btn" (click)="saveFrequency(frequency)">Save</button>
+                      <button class="cancel-btn" (click)="cancelEditFrequency()">Cancel</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+  
+      <!-- Promo Codes Section -->
+      <div class="promo-codes-section">
+        <div class="section-header">
+          <h2>Promo Codes</h2>
+          <button class="add-btn" (click)="startAddingPromoCode()">Add Promo Code</button>
+        </div>
+  
+        <!-- Add Promo Code Form -->
+        <div class="promo-code-form" *ngIf="isAddingPromoCode">
+          <h3>Create New Promo Code</h3>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Code</label>
+              <input type="text" [(ngModel)]="newPromoCode.code" placeholder="SUMMER20">
+            </div>
+            <div class="form-group">
+              <label>Description</label>
+              <input type="text" [(ngModel)]="newPromoCode.description">
+            </div>
+            <div class="form-group">
+              <label>Discount Type</label>
+              <select [(ngModel)]="newPromoCode.isPercentage">
+                <option [value]="true">Percentage</option>
+                <option [value]="false">Fixed Amount</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Discount Value</label>
+              <input type="number" [(ngModel)]="newPromoCode.discountValue">
+            </div>
+            <div class="form-group">
+              <label>Max Usage Count</label>
+              <input type="number" [(ngModel)]="newPromoCode.maxUsageCount">
+            </div>
+            <div class="form-group">
+              <label>Max Usage Per User</label>
+              <input type="number" [(ngModel)]="newPromoCode.maxUsagePerUser">
+            </div>
+            <div class="form-group">
+              <label>Valid From</label>
+              <input type="date" [(ngModel)]="newPromoCode.validFrom">
+            </div>
+            <div class="form-group">
+              <label>Valid To</label>
+              <input type="date" [(ngModel)]="newPromoCode.validTo">
+            </div>
+            <div class="form-group">
+              <label>Minimum Order Amount</label>
+              <input type="number" [(ngModel)]="newPromoCode.minimumOrderAmount">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button class="save-btn" (click)="addPromoCode()">Create</button>
+            <button class="cancel-btn" (click)="cancelAddPromoCode()">Cancel</button>
+          </div>
+        </div>
+  
+        <!-- Promo Codes List -->
+        <div class="promo-codes-list">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Description</th>
+                <th>Discount</th>
+                <th>Usage</th>
+                <th>Valid From</th>
+                <th>Valid To</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let promo of promoCodes">
+                <td *ngIf="editingPromoCodeId !== promo.id">{{ promo.code }}</td>
+                <td *ngIf="editingPromoCodeId !== promo.id">{{ promo.description || '-' }}</td>
+                <td *ngIf="editingPromoCodeId !== promo.id">
+                  {{ promo.isPercentage ? promo.discountValue + '%' : '
+           + promo.discountValue }}
+                </td>
+                <td *ngIf="editingPromoCodeId !== promo.id">
+                  {{ promo.currentUsageCount }}{{ promo.maxUsageCount ? '/' + promo.maxUsageCount : '' }}
+                </td>
+                <td *ngIf="editingPromoCodeId !== promo.id">{{ promo.validFrom ? (promo.validFrom | date) : '-' }}</td>
+                <td *ngIf="editingPromoCodeId !== promo.id">{{ promo.validTo ? (promo.validTo | date) : '-' }}</td>
+                <td *ngIf="editingPromoCodeId !== promo.id">
+                  <span class="status" [class.active]="promo.isActive" [class.inactive]="!promo.isActive">
+                    {{ promo.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td *ngIf="editingPromoCodeId !== promo.id">
+                  <button class="action-btn edit" (click)="editPromoCode(promo)">Edit</button>
+                  <button class="action-btn delete" (click)="deletePromoCode(promo)">Delete</button>
+                </td>
+                
+                <!-- Edit mode -->
+                <td colspan="8" *ngIf="editingPromoCodeId === promo.id">
+                  <div class="inline-edit-form">
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>Description</label>
+                        <input type="text" [(ngModel)]="promo.description">
+                      </div>
+                      <div class="form-group">
+                        <label>Type</label>
+                        <select [(ngModel)]="promo.isPercentage">
+                          <option [value]="true">Percentage</option>
+                          <option [value]="false">Fixed Amount</option>
+                        </select>
+                      </div>
+                      <div class="form-group">
+                        <label>Value</label>
+                        <input type="number" [(ngModel)]="promo.discountValue">
+                      </div>
+                      <div class="form-group">
+                        <label>Active</label>
+                        <select [(ngModel)]="promo.isActive">
+                          <option [value]="true">Yes</option>
+                          <option [value]="false">No</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="form-actions">
+                      <button class="save-btn" (click)="savePromoCode(promo)">Save</button>
+                      <button class="cancel-btn" (click)="cancelEditPromoCode()">Cancel</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Users Tab -->
+    <div class="tab-content" *ngIf="activeTab === 'users'">
+      <div class="users-section">
+        <h2>Registered Users</h2>
+        
+        <div class="users-list">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Role</th>
+                <th>Auth Provider</th>
+                <th>Subscription</th>
+                <th>First Time Order</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of users">
+                <td>{{ user.firstName }} {{ user.lastName }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.phone || '-' }}</td>
+                <td>
+                  <select [value]="user.role" (change)="updateUserRole(user, $any($event.target).value)">
+                    <option value="Customer">Customer</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </td>
+                <td>{{ user.authProvider || 'Local' }}</td>
+                <td>{{ user.subscriptionName || '-' }}</td>
+                <td>{{ user.firstTimeOrder ? 'Yes' : 'No' }}</td>
+                <td>
+                  <span class="status" [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                    {{ user.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td>{{ user.createdAt | date }}</td>
+                <td>
+                  <button 
+                    class="action-btn" 
+                    [class.activate]="!user.isActive"
+                    [class.deactivate]="user.isActive"
+                    (click)="toggleUserStatus(user)">
+                    {{ user.isActive ? 'Deactivate' : 'Activate' }}
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>

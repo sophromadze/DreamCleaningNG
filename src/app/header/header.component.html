@@ -23,6 +23,7 @@
                 </div>
                 <a routerLink="/profile">Profile</a>
                 <a routerLink="/change-password">Change Password</a>
+                <a routerLink="/admin" *ngIf="currentUser.role === 'Admin'">Admin Panel</a>
                 <a (click)="logout()">Logout</a>
               </div>
             </div>
