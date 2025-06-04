@@ -47,7 +47,7 @@ export class BookingComponent implements OnInit {
     subTotal: 0,
     tax: 0,
     discountAmount: 0,
-    tips: 10,
+    tips: 0,
     total: 0,
     totalDuration: 0
   };
@@ -57,8 +57,10 @@ export class BookingComponent implements OnInit {
   errorMessage = '';
   isSameDaySelected = false;
   hasFirstTimeDiscount = false;
+  firstTimeDiscountApplied = false;
   promoCodeApplied = false;
   promoDiscount = 0;
+  promoIsPercentage = true;
   
   // Constants
   salesTaxRate = 0.088; // 8.8%
@@ -114,7 +116,7 @@ export class BookingComponent implements OnInit {
       state: ['', Validators.required],
       zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
       promoCode: [''],
-      tips: [10, [Validators.required, Validators.min(10)]]
+      tips: [0, [Validators.required, Validators.min(0)]]
     });
   }
 
@@ -294,6 +296,7 @@ export class BookingComponent implements OnInit {
         if (validation.isValid) {
           this.promoCodeApplied = true;
           this.promoDiscount = validation.discountValue;
+          this.promoIsPercentage = validation.isPercentage;
           this.calculateTotal();
         } else {
           this.errorMessage = validation.message || 'Invalid promo code';
@@ -306,7 +309,7 @@ export class BookingComponent implements OnInit {
   }
 
   applyFirstTimeDiscount() {
-    this.hasFirstTimeDiscount = false;
+    this.firstTimeDiscountApplied = true;
     this.calculateTotal();
   }
 
@@ -351,22 +354,44 @@ export class BookingComponent implements OnInit {
 
     // Calculate service costs
     this.selectedServices.forEach(selected => {
-      const cost = selected.service.cost * selected.quantity * priceMultiplier;
-      subTotal += cost;
-      totalDuration += selected.service.timeDuration * selected.quantity;
+      // Special handling for office cleaning - cost is per cleaner per hour
+      if (selected.service.serviceKey === 'cleaners' && this.selectedServiceType?.name === 'Office Cleaning') {
+        // Find the hours service
+        const hoursService = this.selectedServices.find(s => s.service.serviceKey === 'hours');
+        if (hoursService) {
+          const hours = hoursService.quantity;
+          const cleaners = selected.quantity;
+          const costPerCleanerPerHour = selected.service.cost * priceMultiplier;
+          const cost = costPerCleanerPerHour * cleaners * hours;
+          subTotal += cost;
+          totalDuration += hours * 60; // Convert hours to minutes
+        }
+      } else if (selected.service.serviceKey === 'bedrooms' && selected.quantity === 0) {
+        // Studio apartment - flat rate of $20
+        const cost = 20 * priceMultiplier;
+        subTotal += cost;
+        totalDuration += 20; // 20 minutes for studio
+      } else if (selected.service.serviceKey !== 'hours') {
+        // Regular service calculation (not hours)
+        const cost = selected.service.cost * selected.quantity * priceMultiplier;
+        subTotal += cost;
+        totalDuration += selected.service.timeDuration * selected.quantity;
+      }
     });
 
-    // Calculate extra service costs
+    // Calculate extra service costs (excluding deep cleaning multipliers)
     this.selectedExtraServices.forEach(selected => {
-      if (selected.extraService.hasHours) {
-        subTotal += selected.extraService.price * selected.hours;
-        totalDuration += selected.extraService.duration * selected.hours;
-      } else if (selected.extraService.hasQuantity) {
-        subTotal += selected.extraService.price * selected.quantity;
-        totalDuration += selected.extraService.duration * selected.quantity;
-      } else {
-        subTotal += selected.extraService.price;
-        totalDuration += selected.extraService.duration;
+      if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
+        if (selected.extraService.hasHours) {
+          subTotal += selected.extraService.price * selected.hours;
+          totalDuration += selected.extraService.duration * selected.hours;
+        } else if (selected.extraService.hasQuantity) {
+          subTotal += selected.extraService.price * selected.quantity;
+          totalDuration += selected.extraService.duration * selected.quantity;
+        } else {
+          subTotal += selected.extraService.price;
+          totalDuration += selected.extraService.duration;
+        }
       }
     });
 
@@ -376,15 +401,21 @@ export class BookingComponent implements OnInit {
       discountAmount = subTotal * (this.selectedFrequency.discountPercentage / 100);
     }
 
-    // Apply first time discount (20%)
-    if (this.hasFirstTimeDiscount) {
+    // Apply first time discount (20%) only if explicitly applied
+    if (this.hasFirstTimeDiscount && !this.currentUser?.firstTimeOrder) {
+      // First time discount has been used
+      discountAmount = 0;
+    } else if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
       discountAmount += subTotal * 0.20;
     }
 
     // Apply promo code discount
     if (this.promoCodeApplied) {
-      // Implement based on percentage or fixed amount
-      discountAmount += this.promoDiscount;
+      if (this.promoIsPercentage) {
+        discountAmount += subTotal * (this.promoDiscount / 100);
+      } else {
+        discountAmount += this.promoDiscount;
+      }
     }
 
     // Calculate tax on discounted subtotal
@@ -392,7 +423,7 @@ export class BookingComponent implements OnInit {
     const tax = discountedSubTotal * this.salesTaxRate;
 
     // Get tips
-    const tips = this.tips.value || 10;
+    const tips = this.tips.value || 0;
 
     // Calculate total
     const total = discountedSubTotal + tax + tips;
@@ -405,6 +436,12 @@ export class BookingComponent implements OnInit {
       total,
       totalDuration
     };
+  }
+
+  isFormValid(): boolean {
+    return this.bookingForm.valid && 
+           this.selectedServiceType !== null && 
+           this.selectedFrequency !== null;
   }
 
   onSubmit() {

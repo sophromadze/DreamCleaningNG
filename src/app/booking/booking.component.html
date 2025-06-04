@@ -33,19 +33,23 @@
                 <label>{{ selected.service.name }}</label>
                 
                 <!-- Dropdown Input -->
-                <div class="service-input" *ngIf="selected.service.inputType === 'dropdown'">
-                  <select [(ngModel)]="selected.quantity" 
+                <select [(ngModel)]="selected.quantity" 
                           (change)="updateServiceQuantity(selected.service, +selected.quantity)">
                     <option *ngFor="let option of getServiceOptions(selected.service)"
                             [value]="option">
-                      {{ option }}
+                      <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
+                      <ng-container *ngIf="!(selected.service.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
                     </option>
                   </select>
                   <span class="service-cost">
-                    +${{ selected.service.cost * selected.quantity }}
-                    <span *ngIf="selected.service.unit">({{ selected.service.unit }})</span>
+                    <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity === 0">
+                      +$20 (Studio)
+                    </ng-container>
+                    <ng-container *ngIf="!(selected.service.serviceKey === 'bedrooms' && selected.quantity === 0)">
+                      +${{ selected.service.cost * selected.quantity }}
+                      <span *ngIf="selected.service.unit">({{ selected.service.unit }})</span>
+                    </ng-container>
                   </span>
-                </div>
   
                 <!-- Slider Input for Square Feet -->
                 <div class="service-input slider-input" *ngIf="selected.service.isRangeInput">
