@@ -1,0 +1,597 @@
+.booking-container {
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    padding: 100px 20px 40px;
+  }
+  
+  .booking-content {
+    max-width: 1400px;
+    margin: 0 auto;
+  
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 2rem;
+      font-size: 2.5rem;
+    }
+  }
+  
+  .error-message {
+    background-color: #fee;
+    color: #c33;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  
+  .booking-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 2rem;
+    align-items: start;
+  
+    @media (max-width: 1200px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .booking-form {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+  }
+  
+  .booking-section {
+    margin-bottom: 3rem;
+  
+    h2 {
+      color: #333;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+  
+  // Service Type Selection
+  .service-types {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+  
+  .service-type-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  
+    &:hover {
+      border-color: #007bff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+    }
+  
+    &.selected {
+      border-color: #007bff;
+      background-color: #f0f8ff;
+    }
+  
+    .service-icon {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+  
+    h3 {
+      margin: 0.5rem 0;
+      color: #333;
+    }
+  
+    p {
+      color: #666;
+      font-size: 0.9rem;
+      margin: 0.5rem 0;
+    }
+  
+    .base-price {
+      color: #007bff;
+      font-weight: 600;
+      margin-top: 0.5rem;
+    }
+  }
+  
+  // Services Customization
+  .services {
+    .service-item {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: #f8f9fa;
+      border-radius: 8px;
+  
+      label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+      }
+  
+      .service-input {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+  
+        select {
+          padding: 0.5rem;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 1rem;
+        }
+  
+        .service-cost {
+          color: #28a745;
+          font-weight: 600;
+        }
+      }
+  
+      &.slider-input {
+        .slider-input {
+          width: 100%;
+  
+          input[type="range"] {
+            width: 100%;
+            margin: 1rem 0;
+          }
+  
+          .slider-value {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+        }
+      }
+    }
+  }
+  
+  // Extra Services
+  .extra-services {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+  }
+  
+  .extra-service-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  
+    &:hover {
+      border-color: #007bff;
+    }
+  
+    &.selected {
+      border-color: #007bff;
+      background-color: #f0f8ff;
+    }
+  
+    .extra-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+  
+      .extra-info {
+        flex: 1;
+  
+        h4 {
+          margin: 0 0 0.5rem 0;
+          color: #333;
+        }
+  
+        p {
+          color: #666;
+          font-size: 0.9rem;
+          margin: 0 0 0.5rem 0;
+        }
+  
+        .extra-price {
+          color: #007bff;
+          font-weight: 600;
+        }
+      }
+  
+      .checkbox {
+        input[type="checkbox"] {
+          width: 20px;
+          height: 20px;
+          cursor: pointer;
+        }
+      }
+    }
+  
+    .extra-controls {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e0e0e0;
+  
+      .quantity-control,
+      .hours-control {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+  
+        label {
+          font-weight: 600;
+          color: #666;
+        }
+  
+        button {
+          width: 30px;
+          height: 30px;
+          border: 1px solid #ddd;
+          background: white;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+  
+          &:hover:not(:disabled) {
+            background-color: #007bff;
+            color: white;
+          }
+  
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+        }
+  
+        span {
+          min-width: 40px;
+          text-align: center;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+  
+  // Date & Time Selection
+  .date-time-selection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  // Frequency Options
+  .frequency-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  
+  .frequency-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  
+    &:hover {
+      border-color: #007bff;
+    }
+  
+    &.selected {
+      border-color: #007bff;
+      background-color: #f0f8ff;
+    }
+  
+    h4 {
+      margin: 0 0 0.5rem 0;
+      color: #333;
+    }
+  
+    p {
+      color: #666;
+      font-size: 0.9rem;
+      margin: 0.5rem 0;
+    }
+  
+    .discount {
+      background-color: #28a745;
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      display: inline-block;
+    }
+  }
+  
+  // Discounts Section
+  .discounts {
+    .first-time-discount {
+      margin-bottom: 1rem;
+  
+      .discount-card {
+        background-color: #fff3cd;
+        border: 1px solid #ffeeba;
+        border-radius: 8px;
+        padding: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+  
+        h4 {
+          margin: 0;
+          color: #856404;
+        }
+  
+        p {
+          margin: 0.25rem 0 0 0;
+          color: #856404;
+          font-size: 0.9rem;
+        }
+  
+        .apply-btn {
+          background-color: #ffc107;
+          color: #212529;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: 600;
+  
+          &:hover {
+            background-color: #e0a800;
+          }
+        }
+      }
+    }
+  
+    .promo-code {
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+      }
+  
+      .promo-input {
+        display: flex;
+        gap: 1rem;
+  
+        input {
+          flex: 1;
+          padding: 0.5rem;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+        }
+  
+        button {
+          background-color: #007bff;
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+  
+          &:hover {
+            background-color: #0056b3;
+          }
+        }
+      }
+    }
+  }
+  
+  // Tips Section
+  .tips-section {
+    p {
+      color: #666;
+      margin-bottom: 1rem;
+    }
+  
+    .tip-options {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+  
+      button {
+        padding: 0.75rem 1.5rem;
+        border: 2px solid #e0e0e0;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+  
+        &:hover {
+          border-color: #007bff;
+        }
+  
+        &.selected {
+          border-color: #007bff;
+          background-color: #007bff;
+          color: white;
+        }
+      }
+  
+      .custom-tip {
+        input {
+          width: 120px;
+          padding: 0.75rem;
+          border: 2px solid #e0e0e0;
+          border-radius: 8px;
+        }
+      }
+    }
+  }
+  
+  // Form Elements
+  .form-group {
+    margin-bottom: 1rem;
+  
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+  
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+  
+      &:focus {
+        outline: none;
+        border-color: #007bff;
+      }
+    }
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  
+    .full-width {
+      grid-column: 1 / -1;
+    }
+  }
+  
+  // Address Options
+  .address-options {
+    margin-bottom: 1rem;
+  
+    label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      cursor: pointer;
+    }
+  
+    select {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+    }
+  }
+  
+  // Book Now Button
+  .book-now-section {
+    text-align: center;
+    margin-top: 2rem;
+  
+    .book-now-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 1rem 3rem;
+      font-size: 1.25rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+  
+      &:hover:not(:disabled) {
+        background-color: #218838;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+      }
+  
+      &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+    }
+  }
+  
+  // Booking Summary (Right Side)
+  .booking-summary {
+    position: sticky;
+    top: 100px;
+  
+    @media (max-width: 1200px) {
+      position: static;
+      order: -1;
+      margin-bottom: 2rem;
+    }
+  }
+  
+  .summary-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+  
+    h3 {
+      margin: 0 0 1.5rem 0;
+      color: #333;
+      text-align: center;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid #f0f0f0;
+    }
+  
+    .summary-details {
+      margin-bottom: 1.5rem;
+  
+      .summary-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        color: #666;
+  
+        span:last-child {
+          font-weight: 600;
+          color: #333;
+        }
+      }
+    }
+  
+    .price-breakdown {
+      border-top: 2px solid #f0f0f0;
+      padding-top: 1rem;
+  
+      .price-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        color: #666;
+  
+        span:last-child {
+          font-weight: 600;
+          color: #333;
+        }
+  
+        .discount {
+          color: #28a745;
+        }
+      }
+  
+      .total {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 2px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #333;
+      }
+    }
+  }
