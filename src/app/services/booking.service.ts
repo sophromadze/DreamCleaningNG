@@ -10,6 +10,7 @@ export interface ServiceType {
   description?: string;
   services: Service[];
   extraServices: ExtraService[];
+  isActive: boolean;
 }
 
 export interface Service {
@@ -25,6 +26,7 @@ export interface Service {
   stepValue?: number;
   isRangeInput: boolean;
   unit?: string;
+  isActive: boolean;
 }
 
 export interface ExtraService {
@@ -41,6 +43,7 @@ export interface ExtraService {
   isSameDayService: boolean;
   priceMultiplier: number;
   isAvailableForAll: boolean;
+  isActive: boolean;
 }
 
 export interface Frequency {

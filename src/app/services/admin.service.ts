@@ -152,6 +152,16 @@ export interface UpdateFrequency {
   displayOrder: number;
 }
 
+export interface CopyService {
+  sourceServiceId: number;
+  targetServiceTypeId: number;
+}
+
+export interface CopyExtraService {
+  sourceExtraServiceId: number;
+  targetServiceTypeId: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -173,6 +183,14 @@ export class AdminService {
     return this.http.put<ServiceType>(`${this.apiUrl}/service-types/${id}`, serviceType);
   }
 
+  deactivateServiceType(id: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/service-types/${id}/deactivate`, {});
+  }
+
+  activateServiceType(id: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/service-types/${id}/activate`, {});
+  }
+
   deleteServiceType(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/service-types/${id}`);
   }
@@ -186,8 +204,20 @@ export class AdminService {
     return this.http.post<Service>(`${this.apiUrl}/services`, service);
   }
 
+  copyService(copyData: CopyService): Observable<Service> {
+    return this.http.post<Service>(`${this.apiUrl}/services/copy`, copyData);
+  }
+
   updateService(id: number, service: UpdateService): Observable<Service> {
     return this.http.put<Service>(`${this.apiUrl}/services/${id}`, service);
+  }
+
+  deactivateService(id: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/services/${id}/deactivate`, {});
+  }
+
+  activateService(id: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/services/${id}/activate`, {});
   }
 
   deleteService(id: number): Observable<any> {
@@ -203,8 +233,20 @@ export class AdminService {
     return this.http.post<ExtraService>(`${this.apiUrl}/extra-services`, extraService);
   }
 
+  copyExtraService(copyData: CopyExtraService): Observable<ExtraService> {
+    return this.http.post<ExtraService>(`${this.apiUrl}/extra-services/copy`, copyData);
+  }
+
   updateExtraService(id: number, extraService: UpdateExtraService): Observable<ExtraService> {
     return this.http.put<ExtraService>(`${this.apiUrl}/extra-services/${id}`, extraService);
+  }
+
+  deactivateExtraService(id: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/extra-services/${id}/deactivate`, {});
+  }
+
+  activateExtraService(id: number): Observable<any> {
+    return this.http.put(`${this.apiUrl}/extra-services/${id}/activate`, {});
   }
 
   deleteExtraService(id: number): Observable<any> {

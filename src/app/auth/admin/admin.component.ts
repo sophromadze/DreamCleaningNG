@@ -16,6 +16,8 @@ export class AdminComponent implements OnInit {
   
   // Service Types
   serviceTypes: ServiceType[] = [];
+  allServices: Service[] = [];
+  allExtraServices: ExtraService[] = [];
   selectedServiceType: ServiceType | null = null;
   isEditingServiceType = false;
   isAddingServiceType = false;
@@ -43,6 +45,8 @@ export class AdminComponent implements OnInit {
     unit: '',
     displayOrder: 1
   };
+  selectedExistingServiceId: number | null = null;
+  showExistingServices = false;
   
   // Extra Services  
   isAddingExtraService = false;
@@ -63,6 +67,8 @@ export class AdminComponent implements OnInit {
     isAvailableForAll: true,
     displayOrder: 1
   };
+  selectedExistingExtraServiceId: number | null = null;
+  showExistingExtraServices = false;
   
   // Frequencies
   frequencies: Frequency[] = [];
@@ -105,6 +111,8 @@ export class AdminComponent implements OnInit {
 
   ngOnInit() {
     this.loadServiceTypes();
+    this.loadAllServices();
+    this.loadAllExtraServices();
     this.loadFrequencies();
     this.loadPromoCodes();
     this.loadUsers();
@@ -126,6 +134,33 @@ export class AdminComponent implements OnInit {
         this.errorMessage = 'Failed to load service types';
       }
     });
+  }
+
+  loadAllServices() {
+    this.adminService.getServices().subscribe({
+      next: (services) => {
+        this.allServices = services;
+      },
+      error: (error) => {
+        console.error('Failed to load all services', error);
+      }
+    });
+  }
+
+  loadAllExtraServices() {
+    this.adminService.getExtraServices().subscribe({
+      next: (extraServices) => {
+        this.allExtraServices = extraServices;
+      },
+      error: (error) => {
+        console.error('Failed to load all extra services', error);
+      }
+    });
+  }
+
+  getServiceTypeNameById(serviceTypeId: number): string {
+    const serviceType = this.serviceTypes.find(st => st.id === serviceTypeId);
+    return serviceType ? `${serviceType.name} (#${serviceType.id})` : `Unknown (#${serviceTypeId})`;
   }
 
   selectServiceType(type: ServiceType) {
@@ -192,7 +227,7 @@ export class AdminComponent implements OnInit {
   }
 
   deleteServiceType(type: ServiceType) {
-    if (confirm(`Are you sure you want to delete "${type.name}"?`)) {
+    if (confirm(`Are you sure you want to permanently delete "${type.name}"? This cannot be undone.`)) {
       this.adminService.deleteServiceType(type.id).subscribe({
         next: () => {
           this.successMessage = 'Service type deleted successfully';
@@ -201,11 +236,39 @@ export class AdminComponent implements OnInit {
           }
           this.loadServiceTypes();
         },
-        error: () => {
-          this.errorMessage = 'Failed to delete service type';
+        error: (error) => {
+          if (error.error?.message) {
+            this.errorMessage = error.error.message;
+          } else {
+            this.errorMessage = 'Failed to delete service type';
+          }
         }
       });
     }
+  }
+
+  deactivateServiceType(type: ServiceType) {
+    this.adminService.deactivateServiceType(type.id).subscribe({
+      next: () => {
+        this.successMessage = 'Service type deactivated successfully';
+        this.loadServiceTypes();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to deactivate service type';
+      }
+    });
+  }
+
+  activateServiceType(type: ServiceType) {
+    this.adminService.activateServiceType(type.id).subscribe({
+      next: () => {
+        this.successMessage = 'Service type activated successfully';
+        this.loadServiceTypes();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to activate service type';
+      }
+    });
   }
 
   // Services Methods
@@ -213,6 +276,8 @@ export class AdminComponent implements OnInit {
     if (!this.selectedServiceType) return;
     
     this.isAddingService = true;
+    this.showExistingServices = false;
+    this.selectedExistingServiceId = null;
     this.newService = {
       name: '',
       serviceKey: '',
@@ -229,8 +294,33 @@ export class AdminComponent implements OnInit {
     };
   }
 
+  toggleExistingServices() {
+    this.showExistingServices = !this.showExistingServices;
+  }
+
+  copyExistingService() {
+    if (!this.selectedExistingServiceId || !this.selectedServiceType) return;
+    
+    this.adminService.copyService({
+      sourceServiceId: this.selectedExistingServiceId,
+      targetServiceTypeId: this.selectedServiceType.id
+    }).subscribe({
+      next: () => {
+        this.successMessage = 'Service copied successfully';
+        this.isAddingService = false;
+        this.loadServiceTypes();
+        this.loadAllServices();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to copy service';
+      }
+    });
+  }
+
   cancelAddService() {
     this.isAddingService = false;
+    this.showExistingServices = false;
+    this.selectedExistingServiceId = null;
   }
 
   addService() {
@@ -239,6 +329,7 @@ export class AdminComponent implements OnInit {
         this.successMessage = 'Service created successfully';
         this.isAddingService = false;
         this.loadServiceTypes();
+        this.loadAllServices();
       },
       error: () => {
         this.errorMessage = 'Failed to create service';
@@ -274,6 +365,7 @@ export class AdminComponent implements OnInit {
         this.successMessage = 'Service updated successfully';
         this.editingServiceId = null;
         this.loadServiceTypes();
+        this.loadAllServices();
       },
       error: () => {
         this.errorMessage = 'Failed to update service';
@@ -282,17 +374,48 @@ export class AdminComponent implements OnInit {
   }
 
   deleteService(service: Service) {
-    if (confirm(`Are you sure you want to delete "${service.name}"?`)) {
+    if (confirm(`Are you sure you want to permanently delete "${service.name}"? This cannot be undone.`)) {
       this.adminService.deleteService(service.id).subscribe({
         next: () => {
           this.successMessage = 'Service deleted successfully';
           this.loadServiceTypes();
+          this.loadAllServices();
         },
-        error: () => {
-          this.errorMessage = 'Failed to delete service';
+        error: (error) => {
+          if (error.error?.message) {
+            this.errorMessage = error.error.message;
+          } else {
+            this.errorMessage = 'Failed to delete service';
+          }
         }
       });
     }
+  }
+
+  deactivateService(service: Service) {
+    this.adminService.deactivateService(service.id).subscribe({
+      next: () => {
+        this.successMessage = 'Service deactivated successfully';
+        this.loadServiceTypes();
+        this.loadAllServices();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to deactivate service';
+      }
+    });
+  }
+
+  activateService(service: Service) {
+    this.adminService.activateService(service.id).subscribe({
+      next: () => {
+        this.successMessage = 'Service activated successfully';
+        this.loadServiceTypes();
+        this.loadAllServices();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to activate service';
+      }
+    });
   }
 
   // Extra Services Methods
@@ -300,6 +423,8 @@ export class AdminComponent implements OnInit {
     if (!this.selectedServiceType) return;
     
     this.isAddingExtraService = true;
+    this.showExistingExtraServices = false;
+    this.selectedExistingExtraServiceId = null;
     this.newExtraService = {
       name: '',
       description: '',
@@ -318,16 +443,47 @@ export class AdminComponent implements OnInit {
     };
   }
 
+  toggleExistingExtraServices() {
+    this.showExistingExtraServices = !this.showExistingExtraServices;
+  }
+
+  copyExistingExtraService() {
+    if (!this.selectedExistingExtraServiceId || !this.selectedServiceType) return;
+    
+    this.adminService.copyExtraService({
+      sourceExtraServiceId: this.selectedExistingExtraServiceId,
+      targetServiceTypeId: this.selectedServiceType.id
+    }).subscribe({
+      next: () => {
+        this.successMessage = 'Extra service copied successfully';
+        this.isAddingExtraService = false;
+        this.loadServiceTypes();
+        this.loadAllExtraServices();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to copy extra service';
+      }
+    });
+  }
+
   cancelAddExtraService() {
     this.isAddingExtraService = false;
+    this.showExistingExtraServices = false;
+    this.selectedExistingExtraServiceId = null;
   }
 
   addExtraService() {
+    // If IsAvailableForAll is true, set serviceTypeId to null
+    if (this.newExtraService.isAvailableForAll) {
+      this.newExtraService.serviceTypeId = undefined;
+    }
+    
     this.adminService.createExtraService(this.newExtraService).subscribe({
       next: () => {
         this.successMessage = 'Extra service created successfully';
         this.isAddingExtraService = false;
         this.loadServiceTypes();
+        this.loadAllExtraServices();
       },
       error: () => {
         this.errorMessage = 'Failed to create extra service';
@@ -357,7 +513,7 @@ export class AdminComponent implements OnInit {
       isSuperDeepCleaning: extraService.isSuperDeepCleaning,
       isSameDayService: extraService.isSameDayService,
       priceMultiplier: extraService.priceMultiplier,
-      serviceTypeId: undefined, // This should be set based on your logic
+      serviceTypeId: extraService.isAvailableForAll ? undefined : this.selectedServiceType?.id,
       isAvailableForAll: extraService.isAvailableForAll,
       displayOrder: 1
     }).subscribe({
@@ -365,6 +521,7 @@ export class AdminComponent implements OnInit {
         this.successMessage = 'Extra service updated successfully';
         this.editingExtraServiceId = null;
         this.loadServiceTypes();
+        this.loadAllExtraServices();
       },
       error: () => {
         this.errorMessage = 'Failed to update extra service';
@@ -373,17 +530,48 @@ export class AdminComponent implements OnInit {
   }
 
   deleteExtraService(extraService: ExtraService) {
-    if (confirm(`Are you sure you want to delete "${extraService.name}"?`)) {
+    if (confirm(`Are you sure you want to permanently delete "${extraService.name}"? This cannot be undone.`)) {
       this.adminService.deleteExtraService(extraService.id).subscribe({
         next: () => {
           this.successMessage = 'Extra service deleted successfully';
           this.loadServiceTypes();
+          this.loadAllExtraServices();
         },
-        error: () => {
-          this.errorMessage = 'Failed to delete extra service';
+        error: (error) => {
+          if (error.error?.message) {
+            this.errorMessage = error.error.message;
+          } else {
+            this.errorMessage = 'Failed to delete extra service';
+          }
         }
       });
     }
+  }
+
+  deactivateExtraService(extraService: ExtraService) {
+    this.adminService.deactivateExtraService(extraService.id).subscribe({
+      next: () => {
+        this.successMessage = 'Extra service deactivated successfully';
+        this.loadServiceTypes();
+        this.loadAllExtraServices();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to deactivate extra service';
+      }
+    });
+  }
+
+  activateExtraService(extraService: ExtraService) {
+    this.adminService.activateExtraService(extraService.id).subscribe({
+      next: () => {
+        this.successMessage = 'Extra service activated successfully';
+        this.loadServiceTypes();
+        this.loadAllExtraServices();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to activate extra service';
+      }
+    });
   }
 
   // Frequencies Methods
