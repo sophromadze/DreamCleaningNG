@@ -120,6 +120,10 @@ export class BookingComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Set minimum date to today
+    this.minDate = new Date();
+    this.minDate.setHours(0, 0, 0, 0);
+    
     this.loadInitialData();
     this.setupFormListeners();
   }
@@ -345,7 +349,12 @@ export class BookingComponent implements OnInit {
   private updateDateRestrictions() {
     if (this.isSameDaySelected) {
       const today = new Date();
-      const formattedDate = today.toISOString().split('T')[0];
+      // Format date properly for HTML date input (YYYY-MM-DD)
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      
       this.serviceDate.setValue(formattedDate);
       this.serviceDate.disable();
     } else {
@@ -495,6 +504,38 @@ export class BookingComponent implements OnInit {
     }
 
     this.isLoading = true;
+    
+    // Get form values, including disabled fields
+    const formValue = this.bookingForm.getRawValue();
+    
+    // Check if serviceDate exists
+    if (!formValue.serviceDate) {
+      this.errorMessage = 'Please select a service date';
+      this.isLoading = false;
+      return;
+    }
+    
+    // Parse the date string and create a proper Date object
+    let serviceDate: Date;
+    
+    if (typeof formValue.serviceDate === 'string') {
+      const dateParts = formValue.serviceDate.split('-');
+      if (dateParts.length === 3) {
+        const [year, month, day] = dateParts.map(Number);
+        serviceDate = new Date(year, month - 1, day); // month is 0-indexed in JS Date
+      } else {
+        this.errorMessage = 'Invalid date format';
+        this.isLoading = false;
+        return;
+      }
+    } else if (formValue.serviceDate instanceof Date) {
+      serviceDate = formValue.serviceDate;
+    } else {
+      this.errorMessage = 'Invalid date format';
+      this.isLoading = false;
+      return;
+    }
+    
     const bookingData = {
       serviceTypeId: this.selectedServiceType.id,
       services: this.selectedServices.map(s => ({
@@ -507,10 +548,24 @@ export class BookingComponent implements OnInit {
         hours: s.hours
       })),
       frequencyId: this.selectedFrequency.id,
-      ...this.bookingForm.value,
-      entryMethod: this.entryMethod.value === 'Other' 
-        ? this.customEntryMethod.value 
-        : this.entryMethod.value
+      serviceDate: serviceDate,
+      serviceTime: formValue.serviceTime,
+      entryMethod: formValue.entryMethod === 'Other' 
+        ? formValue.customEntryMethod 
+        : formValue.entryMethod,
+      specialInstructions: formValue.specialInstructions,
+      contactFirstName: formValue.contactFirstName,
+      contactLastName: formValue.contactLastName,
+      contactEmail: formValue.contactEmail,
+      contactPhone: formValue.contactPhone,
+      serviceAddress: formValue.serviceAddress,
+      aptSuite: formValue.aptSuite,
+      city: formValue.city,
+      state: formValue.state,
+      zipCode: formValue.zipCode,
+      apartmentId: formValue.selectedApartmentId,
+      promoCode: formValue.promoCode,
+      tips: formValue.tips
     };
 
     this.bookingService.createBooking(bookingData).subscribe({
@@ -552,6 +607,14 @@ export class BookingComponent implements OnInit {
     }
     
     return options;
+  }
+
+  getMinDateString(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   // Form control getters for type safety

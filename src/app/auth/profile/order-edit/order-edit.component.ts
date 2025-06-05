@@ -170,7 +170,7 @@ export class OrderEditComponent implements OnInit {
 
   initializeServices() {
     if (!this.serviceType || !this.order) return;
-
+  
     // Initialize selected services with quantities from the order
     this.selectedServices = [];
     
@@ -184,39 +184,31 @@ export class OrderEditComponent implements OnInit {
         });
       }
     });
-    
-    // Then, add any services that weren't in the order with default values
-    this.serviceType.services.forEach(service => {
-      if (!this.selectedServices.find(s => s.service.id === service.id)) {
-        this.selectedServices.push({
-          service: service,
-          quantity: service.minValue || 0
-        });
-      }
-    });
-
-    // Initialize selected extra services
-    this.selectedExtraServices = [];
-    this.order.extraServices.forEach(orderExtraService => {
-      const extraService = this.serviceType!.extraServices.find(es => es.id === orderExtraService.extraServiceId);
-      if (extraService) {
-        this.selectedExtraServices.push({
-          extraService: extraService,
-          quantity: orderExtraService.quantity,
-          hours: orderExtraService.hours
-        });
-      }
-    });
   }
 
   updateServiceQuantity(service: Service, quantity: number) {
     const selectedService = this.selectedServices.find(s => s.service.id === service.id);
     if (selectedService) {
+      // Store the old quantity temporarily
+      const oldQuantity = selectedService.quantity;
       selectedService.quantity = quantity;
+      
+      // Calculate the new total
+      this.calculateAdditionalAmount();
+      
+      // If the new total would be less than the original, revert the change
+      if (this.additionalAmount < 0) {
+        selectedService.quantity = oldQuantity;
+        this.calculateAdditionalAmount();
+        this.errorMessage = 'Cannot reduce the order total below the original amount';
+        setTimeout(() => {
+          this.errorMessage = '';
+        }, 3000);
+      }
     } else {
       this.selectedServices.push({ service, quantity });
+      this.calculateAdditionalAmount();
     }
-    this.calculateAdditionalAmount();
   }
 
   toggleExtraService(extraService: ExtraService) {
@@ -267,20 +259,42 @@ export class OrderEditComponent implements OnInit {
 
   getServiceQuantity(service: Service): number {
     const selected = this.selectedServices.find(s => s.service.id === service.id);
-    return selected ? selected.quantity : (service.minValue || 0);
+    const quantity = selected ? selected.quantity : (service.minValue || 0);
+    return quantity;
   }
 
   calculateAdditionalAmount() {
     if (!this.order) return;
-
+  
+    // Make sure we have some services selected
+    if (!this.selectedServices || this.selectedServices.length === 0) {
+      console.warn('No services selected for calculation');
+      return;
+    }
+  
     const updateData = this.prepareUpdateData();
     
+    // Validate the update data before sending
+    if (!updateData.services || updateData.services.length === 0) {
+      console.error('No services in update data');
+      return;
+    }
+        
     this.orderService.calculateAdditionalAmount(this.order.id, updateData).subscribe({
       next: (response) => {
         this.additionalAmount = response.additionalAmount;
+        
+        // If the additional amount is negative, it means the total would be less than the original
+        if (this.additionalAmount < 0) {
+          this.errorMessage = 'Cannot reduce the order total below the original amount';
+          setTimeout(() => {
+            this.errorMessage = '';
+          }, 3000);
+        }
       },
       error: (error) => {
         console.error('Failed to calculate additional amount', error);
+        this.additionalAmount = 0;
       }
     });
   }
@@ -288,30 +302,35 @@ export class OrderEditComponent implements OnInit {
   prepareUpdateData(): UpdateOrder {
     const formValue = this.orderForm.value;
     
+    // Filter out services with 0 quantity for office cleaning hours
+    const services = this.selectedServices
+      .filter(s => !(s.service.serviceKey === 'hours' && s.quantity === 0))
+      .map(s => ({
+        serviceId: s.service.id,
+        quantity: s.quantity
+      }));
+    
     return {
       serviceDate: new Date(formValue.serviceDate),
       serviceTime: formValue.serviceTime,
       entryMethod: formValue.entryMethod === 'Other' ? formValue.customEntryMethod : formValue.entryMethod,
-      specialInstructions: formValue.specialInstructions,
+      specialInstructions: formValue.specialInstructions || '',
       contactFirstName: formValue.contactFirstName,
       contactLastName: formValue.contactLastName,
       contactEmail: formValue.contactEmail,
       contactPhone: formValue.contactPhone,
       serviceAddress: formValue.serviceAddress,
-      aptSuite: formValue.aptSuite,
+      aptSuite: formValue.aptSuite || '',
       city: formValue.city,
       state: formValue.state,
       zipCode: formValue.zipCode,
-      services: this.selectedServices.map(s => ({
-        serviceId: s.service.id,
-        quantity: s.quantity
-      })),
+      services: services,
       extraServices: this.selectedExtraServices.map(s => ({
         extraServiceId: s.extraService.id,
         quantity: s.quantity,
         hours: s.hours
       })),
-      tips: formValue.tips
+      tips: formValue.tips || 0
     };
   }
 
@@ -392,5 +411,9 @@ export class OrderEditComponent implements OnInit {
 
   get minDate(): string {
     return new Date().toISOString().split('T')[0];
+  }
+
+  getSelectedService(service: Service): SelectedService {
+    return this.selectedServices.find(s => s.service.id === service.id) || { service: service, quantity: service.minValue || 0 };
   }
 }
