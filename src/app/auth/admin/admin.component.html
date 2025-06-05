@@ -67,6 +67,7 @@
                 <p>${{ type.basePrice }}</p>
               </div>
               <div class="item-actions">
+                <button class="action-btn edit" (click)="editServiceType(); $event.stopPropagation()">Edit</button>
                 <button class="action-btn activate" *ngIf="!type.isActive" (click)="activateServiceType(type); $event.stopPropagation()">Activate</button>
                 <button class="action-btn deactivate" *ngIf="type.isActive" (click)="deactivateServiceType(type); $event.stopPropagation()">Deactivate</button>
                 <button class="action-btn delete" (click)="deleteServiceType(type); $event.stopPropagation()">Delete</button>
@@ -115,7 +116,6 @@
               <label>Description:</label>
               <span>{{ selectedServiceType.description || 'No description' }}</span>
             </div>
-            <button class="edit-btn" (click)="editServiceType()">Edit</button>
           </div>
   
           <!-- Services List -->
