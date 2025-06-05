@@ -344,7 +344,9 @@ export class BookingComponent implements OnInit {
 
   private updateDateRestrictions() {
     if (this.isSameDaySelected) {
-      this.serviceDate.setValue(new Date().toISOString().split('T')[0]);
+      const today = new Date();
+      const formattedDate = today.toISOString().split('T')[0];
+      this.serviceDate.setValue(formattedDate);
       this.serviceDate.disable();
     } else {
       this.serviceDate.enable();

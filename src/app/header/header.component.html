@@ -22,6 +22,7 @@
                   {{ currentUser.firstName }} {{ currentUser.lastName }}
                 </div>
                 <a routerLink="/profile">Profile</a>
+                <a routerLink="/profile/orders">My Orders</a>
                 <a routerLink="/change-password">Change Password</a>
                 <a routerLink="/admin" *ngIf="currentUser.role === 'Admin'">Admin Panel</a>
                 <a (click)="logout()">Logout</a>

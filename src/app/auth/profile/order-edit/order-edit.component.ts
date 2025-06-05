@@ -171,14 +171,26 @@ export class OrderEditComponent implements OnInit {
   initializeServices() {
     if (!this.serviceType || !this.order) return;
 
-    // Initialize selected services
+    // Initialize selected services with quantities from the order
     this.selectedServices = [];
+    
+    // First, add all services from the order
     this.order.services.forEach(orderService => {
       const service = this.serviceType!.services.find(s => s.id === orderService.serviceId);
       if (service) {
         this.selectedServices.push({
           service: service,
           quantity: orderService.quantity
+        });
+      }
+    });
+    
+    // Then, add any services that weren't in the order with default values
+    this.serviceType.services.forEach(service => {
+      if (!this.selectedServices.find(s => s.service.id === service.id)) {
+        this.selectedServices.push({
+          service: service,
+          quantity: service.minValue || 0
         });
       }
     });

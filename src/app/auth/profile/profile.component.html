@@ -14,7 +14,10 @@
       <div class="section">
         <div class="section-header">
           <h2>Personal Information</h2>
-          <button *ngIf="!isEditingProfile" class="edit-btn" (click)="startEditProfile()">Edit</button>
+          <div class="header-actions">
+            <a routerLink="/change-password" class="change-password-btn">Change Password</a>
+            <button *ngIf="!isEditingProfile" class="edit-btn" (click)="startEditProfile()">Edit</button>
+          </div>
         </div>
   
         <div *ngIf="!isEditingProfile" class="info-display">
@@ -64,6 +67,33 @@
           <div class="form-actions">
             <button class="save-btn" (click)="saveProfile()">Save</button>
             <button class="cancel-btn" (click)="cancelEditProfile()">Cancel</button>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Recent Orders Section -->
+      <div class="section">
+        <div class="section-header">
+          <h2>Recent Orders</h2>
+        </div>
+  
+        <div class="recent-orders">
+          <div *ngIf="recentOrders && recentOrders.length > 0">
+            <div *ngFor="let order of recentOrders" class="order-item">
+              <div class="order-info">
+                <span class="service-type">{{ order.serviceTypeName }}</span>
+                <span class="order-date">{{ formatDate(order.serviceDate) }}</span>
+                <span class="order-amount">${{ order.total }}</span>
+                <span class="order-status" [ngClass]="order.status.toLowerCase()">{{ order.status }}</span>
+              </div>
+              <button class="view-details-btn" (click)="viewOrderDetails(order.id)">View Details</button>
+            </div>
+          </div>
+          <div *ngIf="!recentOrders || recentOrders.length === 0" class="no-orders">
+            <p>No recent orders found.</p>
+          </div>
+          <div class="view-all-orders">
+            <button class="view-all-btn" routerLink="/profile/orders">View All Orders</button>
           </div>
         </div>
       </div>
@@ -195,12 +225,6 @@
             <p>You haven't added any apartments yet.</p>
           </div>
         </div>
-      </div>
-  
-      <!-- Navigation Links -->
-      <div class="section navigation-links">
-        <a routerLink="/change-password" class="nav-link">Change Password</a>
-        <a routerLink="/booking" class="nav-link">Book a Cleaning</a>
       </div>
     </div>
   </div>

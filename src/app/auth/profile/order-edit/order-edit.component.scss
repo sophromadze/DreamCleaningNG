@@ -251,11 +251,24 @@
     padding: 1rem;
     margin: 2rem 0;
   
+    &.warning {
+      background: #f8d7da;
+      border-color: #f5c6cb;
+      
+      .info-message {
+        color: #721c24;
+      }
+      
+      p {
+        color: #721c24;
+      }
+    }
+
     .info-message {
       margin: 0 0 0.5rem 0;
       color: #856404;
     }
-  
+
     p {
       margin: 0;
       color: #856404;

@@ -5,6 +5,8 @@ import { RouterModule } from '@angular/router';
 import { ProfileService, Profile, Apartment, CreateApartment } from '../../services/profile.service';
 import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
+import { OrderService, OrderList } from '../../services/order.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-profile',
@@ -21,6 +23,7 @@ export class ProfileComponent implements OnInit {
   editingApartmentId: number | null = null;
   errorMessage = '';
   successMessage = '';
+  recentOrders: OrderList[] = [];
 
   // Profile edit form
   editProfileForm = {
@@ -51,12 +54,15 @@ export class ProfileComponent implements OnInit {
   constructor(
     private profileService: ProfileService,
     private authService: AuthService,
-    private locationService: LocationService
+    private locationService: LocationService,
+    private orderService: OrderService,
+    private router: Router
   ) {}
 
   ngOnInit() {
     this.loadProfile();
     this.loadLocationData();
+    this.loadRecentOrders();
   }
 
   loadLocationData() {
@@ -223,5 +229,24 @@ export class ProfileComponent implements OnInit {
 
   logout() {
     this.authService.logout();
+  }
+
+  loadRecentOrders() {
+    this.orderService.getUserOrders().subscribe({
+      next: (orders: OrderList[]) => {
+        this.recentOrders = orders.slice(0, 3);
+      },
+      error: (error: Error) => {
+        console.error('Error loading recent orders:', error);
+      }
+    });
+  }
+
+  viewOrderDetails(orderId: number) {
+    this.router.navigate(['/order', orderId]);
+  }
+
+  formatDate(date: any): string {
+    return new Date(date).toLocaleDateString();
   }
 }
