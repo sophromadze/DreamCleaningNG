@@ -23,13 +23,13 @@
           <div class="service-item" *ngFor="let service of serviceType.services">
             <label>{{ service.name }}</label>
             <div class="service-input">
-              <select [value]="getServiceQuantity(service)" 
-                      (change)="updateServiceQuantity(service, +$event.target.value)">
-                <option *ngFor="let option of getServiceOptions(service)" [value]="option">
-                  <ng-container *ngIf="service.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
-                  <ng-container *ngIf="!(service.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
-                </option>
-              </select>
+                <select [value]="getServiceQuantity(service)" 
+                (change)="updateServiceQuantity(service, +$any($event.target).value)">
+          <option *ngFor="let option of getServiceOptions(service)" [value]="option">
+            <ng-container *ngIf="service?.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
+            <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
+          </option>
+        </select>
               <span class="service-cost">+${{ service.cost * getServiceQuantity(service) }}</span>
             </div>
           </div>
@@ -76,29 +76,29 @@
       </div>
   
       <!-- Date & Time -->
-      <div class="section">
-        <h2>Date & Time</h2>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Service Date *</label>
-            <input type="date" formControlName="serviceDate" [min]="new Date().toISOString().split('T')[0]">
-          </div>
-          <div class="form-group">
-            <label>Service Time *</label>
-            <select formControlName="serviceTime">
-              <option value="08:00">8:00 AM</option>
-              <option value="09:00">9:00 AM</option>
-              <option value="10:00">10:00 AM</option>
-              <option value="11:00">11:00 AM</option>
-              <option value="12:00">12:00 PM</option>
-              <option value="13:00">1:00 PM</option>
-              <option value="14:00">2:00 PM</option>
-              <option value="15:00">3:00 PM</option>
-              <option value="16:00">4:00 PM</option>
-            </select>
-          </div>
-        </div>
+<div class="section">
+    <h2>Date & Time</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Service Date *</label>
+        <input type="date" formControlName="serviceDate" [min]="minDate">
       </div>
+      <div class="form-group">
+        <label>Service Time *</label>
+        <select formControlName="serviceTime">
+          <option value="08:00">8:00 AM</option>
+          <option value="09:00">9:00 AM</option>
+          <option value="10:00">10:00 AM</option>
+          <option value="11:00">11:00 AM</option>
+          <option value="12:00">12:00 PM</option>
+          <option value="13:00">1:00 PM</option>
+          <option value="14:00">2:00 PM</option>
+          <option value="15:00">3:00 PM</option>
+          <option value="16:00">4:00 PM</option>
+        </select>
+      </div>
+    </div>
+  </div>
   
       <!-- Entry Method -->
       <div class="section">
@@ -168,18 +168,18 @@
           </div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label>State *</label>
-            <select formControlName="state" (change)="onStateChange($event.target.value)">
-              <option value="">Select state</option>
-              <option *ngFor="let state of states" [value]="state">{{ state }}</option>
-            </select>
+            <div class="form-group">
+              <label>State *</label>
+              <select formControlName="state" (change)="onStateChange($any($event.target).value)">
+                <option value="">Select state</option>
+                <option *ngFor="let state of states" [value]="state">{{ state }}</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Zip Code *</label>
+              <input type="text" formControlName="zipCode" placeholder="12345">
+            </div>
           </div>
-          <div class="form-group">
-            <label>Zip Code *</label>
-            <input type="text" formControlName="zipCode" placeholder="12345">
-          </div>
-        </div>
       </div>
   
       <!-- Tips -->

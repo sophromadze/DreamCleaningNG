@@ -377,4 +377,8 @@ export class OrderEditComponent implements OnInit {
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   }
+
+  get minDate(): string {
+    return new Date().toISOString().split('T')[0];
+  }
 }

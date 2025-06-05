@@ -44,5 +44,30 @@ export const routes: Routes = [
     path: 'admin',
     canActivate: [adminGuard],
     loadComponent: () => import('./auth/admin/admin.component').then(m => m.AdminComponent)
-  }
+  },
+  {
+    path: 'profile',
+    canActivate: [authGuard],
+    loadComponent: () => import('./auth/profile/profile.component').then(m => m.ProfileComponent)
+  },
+  {
+    path: 'profile/orders',
+    canActivate: [authGuard],
+    loadComponent: () => import('./auth/profile/order-history/order-history.component').then(m => m.OrderHistoryComponent)
+  },
+  {
+    path: 'order/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./auth/profile/order-details/order-details.component').then(m => m.OrderDetailsComponent)
+  },
+  {
+    path: 'order/:id/edit',
+    canActivate: [authGuard],
+    loadComponent: () => import('./auth/profile/order-edit/order-edit.component').then(m => m.OrderEditComponent)
+  },
+  {
+    path: 'booking-confirmation/:orderId',
+    canActivate: [authGuard],
+    loadComponent: () => import('./booking/booking-confirmation/booking-confirmation.component').then(m => m.BookingConfirmationComponent)
+  },
 ];
