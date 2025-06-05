@@ -269,6 +269,14 @@ export class BookingComponent implements OnInit {
         this.updateDateRestrictions();
       }
     } else {
+      // If selecting a cleaning type, remove other cleaning types
+      if (extraService.isDeepCleaning || extraService.isSuperDeepCleaning) {
+        // Remove any existing deep cleaning or super deep cleaning
+        this.selectedExtraServices = this.selectedExtraServices.filter(
+          s => !s.extraService.isDeepCleaning && !s.extraService.isSuperDeepCleaning
+        );
+      }
+      
       // Add new selection
       this.selectedExtraServices.push({
         extraService: extraService,

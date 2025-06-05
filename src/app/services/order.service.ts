@@ -56,6 +56,7 @@ export interface OrderService {
   quantity: number;
   cost: number;
   duration: number;
+  priceMultiplier?: number;
 }
 
 export interface OrderExtraService {

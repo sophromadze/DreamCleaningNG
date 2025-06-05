@@ -225,28 +225,47 @@
         
         <div class="calculator-content">
           <div class="price-row">
-            <span>Original Total:</span>
-            <span class="amount">${{ (order?.total || 0).toFixed(2) }}</span>
+            <span>Subtotal:</span>
+            <span class="amount">${{ (newSubTotal + originalDiscountAmount).toFixed(2) }}</span>
           </div>
           
-          <div class="price-row" *ngIf="additionalAmount !== 0">
-            <span>Additional Amount:</span>
-            <span class="amount" [class.positive]="additionalAmount > 0" [class.negative]="additionalAmount < 0">
-              {{ additionalAmount > 0 ? '+' : '' }}${{ additionalAmount.toFixed(2) }}
-            </span>
+          <div class="price-row" *ngIf="originalDiscountAmount > 0">
+            <span>Discount:</span>
+            <span class="amount discount">-${{ originalDiscountAmount.toFixed(2) }}</span>
+          </div>
+          
+          <div class="price-row">
+            <span>Tax (8.8%):</span>
+            <span class="amount">${{ newTax.toFixed(2) }}</span>
+          </div>
+          
+          <div class="price-row" *ngIf="tips.value > 0">
+            <span>Tips:</span>
+            <span class="amount">${{ tips.value.toFixed(2) }}</span>
           </div>
           
           <div class="price-row total">
             <span>New Total:</span>
-            <span class="amount">${{ ((order?.total || 0) + additionalAmount).toFixed(2) }}</span>
+            <span class="amount">${{ newTotal.toFixed(2) }}</span>
+          </div>
+          
+          <div class="price-row" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+            <span>Original Total:</span>
+            <span class="amount">${{ originalTotal.toFixed(2) }}</span>
+          </div>
+          
+          <div class="price-row" *ngIf="additionalAmount !== 0" style="font-weight: bold;">
+            <span>{{ additionalAmount > 0 ? 'Additional Payment:' : 'Reduction:' }}</span>
+            <span class="amount" [class.positive]="additionalAmount > 0" [class.negative]="additionalAmount < 0">
+              {{ additionalAmount > 0 ? '+' : '' }}${{ (additionalAmount > 0 ? additionalAmount : -additionalAmount).toFixed(2) }}
+            </span>
           </div>
 
           <div class="price-note" *ngIf="additionalAmount < 0">
-            <p>⚠️ You cannot reduce the order total below the original amount.</p>
+            <p>⚠️ Refunds are not available for order reductions. The new total cannot be less than the original amount paid.</p>
           </div>
         </div>
       </div>
-    </div>
   
     <!-- Payment Modal -->
     <div class="modal-backdrop" *ngIf="showPaymentModal" (click)="closePaymentModal()">

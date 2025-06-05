@@ -611,3 +611,43 @@
     color: #ff0000;
     font-weight: 600;
   }
+
+  .cleaning-type-red {
+    color: #ff0000;
+    font-weight: 600;
+  }
+
+  .cleaning-type-display {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    strong {
+      color: #333;
+    }
+    
+    .cleaning-type-badge {
+      padding: 0.25rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      
+      &.regular {
+        background: #e7f3ff;
+        color: #007bff;
+      }
+      
+      &.deep {
+        background: #fff3cd;
+        color: #856404;
+      }
+      
+      &.super-deep {
+        background: #f8d7da;
+        color: #721c24;
+      }
+    }
+  }

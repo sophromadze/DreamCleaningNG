@@ -54,8 +54,17 @@ export class OrderEditComponent implements OnInit {
     'Other'
   ];
   
-  // Original total for comparison
+  // Original values for comparison
   originalTotal = 0;
+  originalDiscountAmount = 0;
+  
+  // Calculated values
+  newSubTotal = 0;
+  newTotal = 0;
+  newTax = 0;
+  
+  // Constants
+  salesTaxRate = 0.088; // 8.8%
 
   constructor(
     private fb: FormBuilder,
@@ -88,6 +97,11 @@ export class OrderEditComponent implements OnInit {
     const orderId = this.route.snapshot.params['id'];
     this.loadLocationData();
     this.loadOrder(orderId);
+    
+    // Listen to tips changes
+    this.orderForm.get('tips')?.valueChanges.subscribe(() => {
+      this.calculateNewTotal();
+    });
   }
 
   loadLocationData() {
@@ -117,6 +131,7 @@ export class OrderEditComponent implements OnInit {
       next: (order) => {
         this.order = order;
         this.originalTotal = order.total;
+        this.originalDiscountAmount = order.discountAmount;
         this.populateForm(order);
         this.loadServiceType(order.serviceTypeId);
       },
@@ -158,6 +173,9 @@ export class OrderEditComponent implements OnInit {
         this.serviceType = serviceTypes.find(st => st.id === serviceTypeId) || null;
         if (this.serviceType && this.order) {
           this.initializeServices();
+          this.initializeExtraServices();
+          // Calculate initial total
+          this.calculateNewTotal();
         }
         this.isLoading = false;
       },
@@ -174,7 +192,7 @@ export class OrderEditComponent implements OnInit {
     // Initialize selected services with quantities from the order
     this.selectedServices = [];
     
-    // First, add all services from the order
+    // Add all services from the order
     this.order.services.forEach(orderService => {
       const service = this.serviceType!.services.find(s => s.id === orderService.serviceId);
       if (service) {
@@ -186,29 +204,32 @@ export class OrderEditComponent implements OnInit {
     });
   }
 
+  initializeExtraServices() {
+    if (!this.serviceType || !this.order) return;
+    
+    // Initialize selected extra services from the order
+    this.selectedExtraServices = [];
+    
+    this.order.extraServices.forEach(orderExtraService => {
+      const extraService = this.serviceType!.extraServices.find(es => es.id === orderExtraService.extraServiceId);
+      if (extraService) {
+        this.selectedExtraServices.push({
+          extraService: extraService,
+          quantity: orderExtraService.quantity,
+          hours: orderExtraService.hours
+        });
+      }
+    });
+  }
+
   updateServiceQuantity(service: Service, quantity: number) {
     const selectedService = this.selectedServices.find(s => s.service.id === service.id);
     if (selectedService) {
-      // Store the old quantity temporarily
-      const oldQuantity = selectedService.quantity;
       selectedService.quantity = quantity;
-      
-      // Calculate the new total
-      this.calculateAdditionalAmount();
-      
-      // If the new total would be less than the original, revert the change
-      if (this.additionalAmount < 0) {
-        selectedService.quantity = oldQuantity;
-        this.calculateAdditionalAmount();
-        this.errorMessage = 'Cannot reduce the order total below the original amount';
-        setTimeout(() => {
-          this.errorMessage = '';
-        }, 3000);
-      }
     } else {
       this.selectedServices.push({ service, quantity });
-      this.calculateAdditionalAmount();
     }
+    this.calculateNewTotal();
   }
 
   toggleExtraService(extraService: ExtraService) {
@@ -217,6 +238,14 @@ export class OrderEditComponent implements OnInit {
     if (index > -1) {
       this.selectedExtraServices.splice(index, 1);
     } else {
+      // If selecting a cleaning type, remove other cleaning types
+      if (extraService.isDeepCleaning || extraService.isSuperDeepCleaning) {
+        // Remove any existing deep cleaning or super deep cleaning
+        this.selectedExtraServices = this.selectedExtraServices.filter(
+          s => !s.extraService.isDeepCleaning && !s.extraService.isSuperDeepCleaning
+        );
+      }
+      
       this.selectedExtraServices.push({
         extraService: extraService,
         quantity: 1,
@@ -224,14 +253,14 @@ export class OrderEditComponent implements OnInit {
       });
     }
     
-    this.calculateAdditionalAmount();
+    this.calculateNewTotal();
   }
 
   updateExtraServiceQuantity(extraService: ExtraService, quantity: number) {
     const selected = this.selectedExtraServices.find(s => s.extraService.id === extraService.id);
     if (selected && quantity >= 1) {
       selected.quantity = quantity;
-      this.calculateAdditionalAmount();
+      this.calculateNewTotal();
     }
   }
 
@@ -239,7 +268,7 @@ export class OrderEditComponent implements OnInit {
     const selected = this.selectedExtraServices.find(s => s.extraService.id === extraService.id);
     if (selected && hours >= 0.5) {
       selected.hours = hours;
-      this.calculateAdditionalAmount();
+      this.calculateNewTotal();
     }
   }
 
@@ -259,44 +288,92 @@ export class OrderEditComponent implements OnInit {
 
   getServiceQuantity(service: Service): number {
     const selected = this.selectedServices.find(s => s.service.id === service.id);
-    const quantity = selected ? selected.quantity : (service.minValue || 0);
-    return quantity;
+    return selected ? selected.quantity : (service.minValue || 0);
   }
 
-  calculateAdditionalAmount() {
-    if (!this.order) return;
-  
-    // Make sure we have some services selected
-    if (!this.selectedServices || this.selectedServices.length === 0) {
-      console.warn('No services selected for calculation');
-      return;
+  calculateNewTotal() {
+    let subTotal = 0;
+    let totalDuration = 0;
+
+    // Calculate base price
+    if (this.serviceType) {
+      subTotal += this.serviceType.basePrice;
     }
-  
-    const updateData = this.prepareUpdateData();
+
+    // Check for deep cleaning multipliers
+    let priceMultiplier = 1;
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
     
-    // Validate the update data before sending
-    if (!updateData.services || updateData.services.length === 0) {
-      console.error('No services in update data');
-      return;
+    if (superDeepCleaning) {
+      priceMultiplier = superDeepCleaning.extraService.priceMultiplier;
+    } else if (deepCleaning) {
+      priceMultiplier = deepCleaning.extraService.priceMultiplier;
     }
-        
-    this.orderService.calculateAdditionalAmount(this.order.id, updateData).subscribe({
-      next: (response) => {
-        this.additionalAmount = response.additionalAmount;
-        
-        // If the additional amount is negative, it means the total would be less than the original
-        if (this.additionalAmount < 0) {
-          this.errorMessage = 'Cannot reduce the order total below the original amount';
-          setTimeout(() => {
-            this.errorMessage = '';
-          }, 3000);
+
+    // Calculate service costs
+    this.selectedServices.forEach(selected => {
+      // Special handling for office cleaning - cost is per cleaner per hour
+      if (selected.service.serviceKey === 'cleaners' && this.serviceType?.name === 'Office Cleaning') {
+        // Find the hours service
+        const hoursService = this.selectedServices.find(s => s.service.serviceKey === 'hours');
+        if (hoursService) {
+          const hours = hoursService.quantity;
+          const cleaners = selected.quantity;
+          const costPerCleanerPerHour = selected.service.cost * priceMultiplier;
+          const cost = costPerCleanerPerHour * cleaners * hours;
+          subTotal += cost;
+          totalDuration += hours * 60; // Convert hours to minutes
         }
-      },
-      error: (error) => {
-        console.error('Failed to calculate additional amount', error);
-        this.additionalAmount = 0;
+      } else if (selected.service.serviceKey === 'bedrooms' && selected.quantity === 0) {
+        // Studio apartment - flat rate of $20
+        const cost = 20 * priceMultiplier;
+        subTotal += cost;
+        totalDuration += 20; // 20 minutes for studio
+      } else if (selected.service.serviceKey !== 'hours') {
+        // Regular service calculation (not hours)
+        const cost = selected.service.cost * selected.quantity * priceMultiplier;
+        subTotal += cost;
+        totalDuration += selected.service.timeDuration * selected.quantity;
       }
     });
+
+    // Calculate extra service costs (excluding deep cleaning multipliers)
+    this.selectedExtraServices.forEach(selected => {
+      if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
+        if (selected.extraService.hasHours) {
+          subTotal += selected.extraService.price * selected.hours;
+          totalDuration += selected.extraService.duration * selected.hours;
+        } else if (selected.extraService.hasQuantity) {
+          subTotal += selected.extraService.price * selected.quantity;
+          totalDuration += selected.extraService.duration * selected.quantity;
+        } else {
+          subTotal += selected.extraService.price;
+          totalDuration += selected.extraService.duration;
+        }
+      }
+    });
+
+    // Apply original discount amount (not percentage, to keep the same discount)
+    const discountedSubTotal = subTotal - this.originalDiscountAmount;
+
+    // Make sure we don't go negative
+    if (discountedSubTotal < 0) {
+      this.newSubTotal = 0;
+      this.newTax = 0;
+    } else {
+      this.newSubTotal = discountedSubTotal;
+      this.newTax = discountedSubTotal * this.salesTaxRate;
+    }
+
+    // Get tips
+    const tips = this.orderForm.get('tips')?.value || 0;
+
+    // Calculate new total
+    this.newTotal = this.newSubTotal + this.newTax + tips;
+
+    // Calculate the additional amount needed
+    this.additionalAmount = this.newTotal - this.originalTotal;
   }
 
   prepareUpdateData(): UpdateOrder {
@@ -340,17 +417,12 @@ export class OrderEditComponent implements OnInit {
       return;
     }
 
-    // Calculate final additional amount
-    this.calculateAdditionalAmount();
-    
     // Check if additional payment is needed
-    setTimeout(() => {
-      if (this.additionalAmount > 0) {
-        this.showPaymentModal = true;
-      } else {
-        this.saveOrder();
-      }
-    }, 500);
+    if (this.additionalAmount > 0) {
+      this.showPaymentModal = true;
+    } else {
+      this.saveOrder();
+    }
   }
 
   saveOrder() {
@@ -413,7 +485,7 @@ export class OrderEditComponent implements OnInit {
     return new Date().toISOString().split('T')[0];
   }
 
-  getSelectedService(service: Service): SelectedService {
-    return this.selectedServices.find(s => s.service.id === service.id) || { service: service, quantity: service.minValue || 0 };
+  get tips() {
+    return this.orderForm.get('tips')!;
   }
 }
