@@ -1,0 +1,51 @@
+<div class="order-history-container">
+    <div class="section-header">
+      <h2>Order History</h2>
+      <a routerLink="/booking" class="new-order-btn">Book New Service</a>
+    </div>
+  
+    <div *ngIf="isLoading" class="loading">Loading orders...</div>
+    
+    <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+  
+    <div *ngIf="!isLoading && orders.length === 0" class="no-orders">
+      <p>You haven't placed any orders yet.</p>
+      <a routerLink="/booking" class="book-now-btn">Book Your First Service</a>
+    </div>
+  
+    <div class="orders-list" *ngIf="!isLoading && orders.length > 0">
+      <div class="order-card" *ngFor="let order of orders">
+        <div class="order-header">
+          <div class="order-info">
+            <h3>{{ order.serviceTypeName }}</h3>
+            <p class="order-date">Ordered on {{ formatDate(order.orderDate) }}</p>
+          </div>
+          <div class="order-status">
+            <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+              {{ order.status }}
+            </span>
+          </div>
+        </div>
+        
+        <div class="order-details">
+          <div class="detail-row">
+            <span class="label">Service Date:</span>
+            <span class="value">{{ formatDate(order.serviceDate) }} at {{ formatTime(order.serviceTime) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Address:</span>
+            <span class="value">{{ order.serviceAddress }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Total:</span>
+            <span class="value price">${{ order.total.toFixed(2) }}</span>
+          </div>
+        </div>
+  
+        <div class="order-actions">
+          <a [routerLink]="['/order', order.id]" class="view-btn">View Details</a>
+          <a [routerLink]="['/order', order.id, 'edit']" class="edit-btn" *ngIf="order.status === 'Active'">Edit Order</a>
+        </div>
+      </div>
+    </div>
+  </div>

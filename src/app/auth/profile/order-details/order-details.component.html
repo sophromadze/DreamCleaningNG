@@ -1,0 +1,157 @@
+<div class="order-details-container">
+    <div class="page-header">
+      <a routerLink="/profile/orders" class="back-link">← Back to Orders</a>
+      <h1>Order Details</h1>
+    </div>
+  
+    <div *ngIf="isLoading" class="loading">Loading order details...</div>
+    
+    <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+  
+    <div *ngIf="!isLoading && order" class="order-content">
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <div class="summary-header">
+          <h2>{{ order.serviceTypeName }}</h2>
+          <span class="status-badge" [ngClass]="getStatusClass(order.status)">
+            {{ order.status }}
+          </span>
+        </div>
+        
+        <div class="summary-info">
+          <div class="info-row">
+            <span class="label">Order ID:</span>
+            <span class="value">#{{ order.id }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Order Date:</span>
+            <span class="value">{{ formatDate(order.orderDate) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Service Date:</span>
+            <span class="value">{{ formatDate(order.serviceDate) }} at {{ formatTime(order.serviceTime) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Duration:</span>
+            <span class="value">{{ formatDuration(order.totalDuration) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="label">Frequency:</span>
+            <span class="value">{{ order.frequencyName }}</span>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Service Details -->
+      <div class="section">
+        <h3>Services</h3>
+        <div class="services-list">
+          <div class="service-item" *ngFor="let service of order.services">
+            <span class="service-name">{{ service.serviceName }}</span>
+            <span class="service-quantity">Qty: {{ service.quantity }}</span>
+            <span class="service-cost">${{ service.cost.toFixed(2) }}</span>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Extra Services -->
+      <div class="section" *ngIf="order.extraServices.length > 0">
+        <h3>Extra Services</h3>
+        <div class="extra-services-list">
+          <div class="extra-service-item" *ngFor="let extra of order.extraServices">
+            <span class="service-name">{{ extra.extraServiceName }}</span>
+            <span class="service-quantity">
+              <ng-container *ngIf="extra.quantity > 0">Qty: {{ extra.quantity }}</ng-container>
+              <ng-container *ngIf="extra.hours > 0">Hours: {{ extra.hours }}</ng-container>
+            </span>
+            <span class="service-cost">${{ extra.cost.toFixed(2) }}</span>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Contact Information -->
+      <div class="section">
+        <h3>Contact Information</h3>
+        <div class="contact-info">
+          <p><strong>Name:</strong> {{ order.contactFirstName }} {{ order.contactLastName }}</p>
+          <p><strong>Email:</strong> {{ order.contactEmail }}</p>
+          <p><strong>Phone:</strong> {{ order.contactPhone }}</p>
+        </div>
+      </div>
+  
+      <!-- Service Address -->
+      <div class="section">
+        <h3>Service Address</h3>
+        <div class="address-info">
+          <p>{{ order.serviceAddress }}<span *ngIf="order.aptSuite">, {{ order.aptSuite }}</span></p>
+          <p>{{ order.city }}, {{ order.state }} {{ order.zipCode }}</p>
+        </div>
+      </div>
+  
+      <!-- Special Instructions -->
+      <div class="section" *ngIf="order.specialInstructions">
+        <h3>Special Instructions</h3>
+        <div class="special-instructions">
+          <p>{{ order.specialInstructions }}</p>
+        </div>
+      </div>
+  
+      <!-- Price Breakdown -->
+      <div class="section">
+        <h3>Price Breakdown</h3>
+        <div class="price-breakdown">
+          <div class="price-row">
+            <span>Subtotal:</span>
+            <span>${{ order.subTotal.toFixed(2) }}</span>
+          </div>
+          <div class="price-row" *ngIf="order.discountAmount > 0">
+            <span>Discount:</span>
+            <span class="discount">-${{ order.discountAmount.toFixed(2) }}</span>
+          </div>
+          <div class="price-row">
+            <span>Tax (8.8%):</span>
+            <span>${{ order.tax.toFixed(2) }}</span>
+          </div>
+          <div class="price-row" *ngIf="order.tips > 0">
+            <span>Tips:</span>
+            <span>${{ order.tips.toFixed(2) }}</span>
+          </div>
+          <div class="price-row total">
+            <span>Total:</span>
+            <span>${{ order.total.toFixed(2) }}</span>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Action Buttons -->
+      <div class="action-buttons">
+        <a [routerLink]="['/order', order.id, 'edit']" class="edit-btn" *ngIf="canEditOrder()">
+          Edit Order
+        </a>
+        <button class="cancel-btn" (click)="openCancelModal()" *ngIf="canCancelOrder()">
+          Cancel Order
+        </button>
+      </div>
+    </div>
+  
+    <!-- Cancel Modal -->
+    <div class="modal-backdrop" *ngIf="showCancelModal" (click)="closeCancelModal()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h2>Cancel Order</h2>
+        <p>Are you sure you want to cancel this order?</p>
+        <p class="refund-notice">Your payment will be refunded within 7 working days.</p>
+        
+        <div class="form-group">
+          <label>Reason for cancellation:</label>
+          <textarea [(ngModel)]="cancelReason" rows="3" placeholder="Please provide a reason..."></textarea>
+        </div>
+        
+        <div class="modal-actions">
+          <button class="confirm-btn" (click)="confirmCancelOrder()" [disabled]="!cancelReason.trim()">
+            Confirm Cancellation
+          </button>
+          <button class="close-btn" (click)="closeCancelModal()">Keep Order</button>
+        </div>
+      </div>
+    </div>
+  </div>
