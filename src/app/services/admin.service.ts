@@ -276,11 +276,32 @@ export class AdminService {
   }
 
   createPromoCode(promoCode: CreatePromoCode): Observable<PromoCode> {
-    return this.http.post<PromoCode>(`${this.apiUrl}/promo-codes`, promoCode);
+    // Ensure proper data types
+    const payload = {
+      ...promoCode,
+      isPercentage: Boolean(promoCode.isPercentage),
+      discountValue: Number(promoCode.discountValue),
+      maxUsageCount: promoCode.maxUsageCount ? Number(promoCode.maxUsageCount) : null,
+      maxUsagePerUser: promoCode.maxUsagePerUser ? Number(promoCode.maxUsagePerUser) : null,
+      minimumOrderAmount: promoCode.minimumOrderAmount ? Number(promoCode.minimumOrderAmount) : null
+    };
+    
+    return this.http.post<PromoCode>(`${this.apiUrl}/promo-codes`, payload);
   }
 
   updatePromoCode(id: number, promoCode: UpdatePromoCode): Observable<PromoCode> {
-    return this.http.put<PromoCode>(`${this.apiUrl}/promo-codes/${id}`, promoCode);
+    // Ensure proper data types
+    const payload = {
+      ...promoCode,
+      isPercentage: Boolean(promoCode.isPercentage),
+      discountValue: Number(promoCode.discountValue),
+      maxUsageCount: promoCode.maxUsageCount ? Number(promoCode.maxUsageCount) : null,
+      maxUsagePerUser: promoCode.maxUsagePerUser ? Number(promoCode.maxUsagePerUser) : null,
+      minimumOrderAmount: promoCode.minimumOrderAmount ? Number(promoCode.minimumOrderAmount) : null,
+      isActive: Boolean(promoCode.isActive)
+    };
+    
+    return this.http.put<PromoCode>(`${this.apiUrl}/promo-codes/${id}`, payload);
   }
 
   deletePromoCode(id: number): Observable<any> {

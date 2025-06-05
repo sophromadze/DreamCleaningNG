@@ -673,7 +673,7 @@ export class AdminComponent implements OnInit {
     this.newPromoCode = {
       code: '',
       description: '',
-      isPercentage: true,
+      isPercentage: true, // Ensure it's a boolean
       discountValue: 0,
       maxUsageCount: undefined,
       maxUsagePerUser: undefined,
@@ -688,20 +688,76 @@ export class AdminComponent implements OnInit {
   }
 
   addPromoCode() {
-    this.adminService.createPromoCode(this.newPromoCode).subscribe({
+    // Validate before sending
+    if (!this.newPromoCode.code || this.newPromoCode.discountValue <= 0) {
+      this.errorMessage = 'Please fill in all required fields';
+      return;
+    }
+  
+    // Clean up the data before sending
+    const promoCodeData: CreatePromoCode = {
+      code: this.newPromoCode.code.trim(),
+      description: this.newPromoCode.description?.trim() || undefined,
+      isPercentage: Boolean(this.newPromoCode.isPercentage), // Convert to boolean
+      discountValue: Number(this.newPromoCode.discountValue),
+      maxUsageCount: this.newPromoCode.maxUsageCount ? Number(this.newPromoCode.maxUsageCount) : undefined,
+      maxUsagePerUser: this.newPromoCode.maxUsagePerUser ? Number(this.newPromoCode.maxUsagePerUser) : undefined,
+      validFrom: this.newPromoCode.validFrom || undefined,
+      validTo: this.newPromoCode.validTo || undefined,
+      minimumOrderAmount: this.newPromoCode.minimumOrderAmount ? Number(this.newPromoCode.minimumOrderAmount) : undefined
+    };
+  
+    // Additional client-side validation
+    if (promoCodeData.isPercentage && promoCodeData.discountValue > 100) {
+      this.errorMessage = 'Percentage discount cannot be greater than 100%';
+      return;
+    }
+  
+    if (promoCodeData.validFrom && promoCodeData.validTo && new Date(promoCodeData.validFrom) > new Date(promoCodeData.validTo)) {
+      this.errorMessage = 'Valid From date must be before Valid To date';
+      return;
+    }
+  
+    console.log('Sending promo code data:', promoCodeData); // Debug log
+  
+    this.adminService.createPromoCode(promoCodeData).subscribe({
       next: () => {
         this.successMessage = 'Promo code created successfully';
         this.isAddingPromoCode = false;
         this.loadPromoCodes();
       },
-      error: () => {
-        this.errorMessage = 'Failed to create promo code';
+      error: (error) => {
+        console.error('Failed to create promo code:', error);
+        if (error.error?.errors) {
+          // Handle validation errors from backend
+          const errorMessages = Object.values(error.error.errors).flat().join(', ');
+          this.errorMessage = errorMessages;
+        } else {
+          this.errorMessage = error.error?.message || 'Failed to create promo code';
+        }
       }
     });
   }
 
   editPromoCode(promoCode: PromoCode) {
     this.editingPromoCodeId = promoCode.id;
+    // Format dates for HTML date input if they exist
+    if (promoCode.validFrom) {
+      promoCode.validFrom = this.formatDateForInput(promoCode.validFrom);
+    }
+    if (promoCode.validTo) {
+      promoCode.validTo = this.formatDateForInput(promoCode.validTo);
+    }
+  }
+
+  // Add this helper method
+  private formatDateForInput(date: any): any {
+    if (!date) return null;
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   cancelEditPromoCode() {
@@ -710,26 +766,53 @@ export class AdminComponent implements OnInit {
   }
 
   savePromoCode(promoCode: PromoCode) {
+    // Validate before sending
+    if (promoCode.discountValue <= 0) {
+      this.errorMessage = 'Discount value must be greater than 0';
+      return;
+    }
+  
+    // Clean up the data and ensure proper types
     const updateData: UpdatePromoCode = {
-      description: promoCode.description,
-      isPercentage: promoCode.isPercentage,
-      discountValue: promoCode.discountValue,
-      maxUsageCount: promoCode.maxUsageCount,
-      maxUsagePerUser: promoCode.maxUsagePerUser,
-      validFrom: promoCode.validFrom,
-      validTo: promoCode.validTo,
-      minimumOrderAmount: promoCode.minimumOrderAmount,
-      isActive: promoCode.isActive
+      description: promoCode.description?.trim() || undefined,
+      isPercentage: Boolean(promoCode.isPercentage), // Ensure boolean
+      discountValue: Number(promoCode.discountValue),
+      maxUsageCount: promoCode.maxUsageCount ? Number(promoCode.maxUsageCount) : undefined,
+      maxUsagePerUser: promoCode.maxUsagePerUser ? Number(promoCode.maxUsagePerUser) : undefined,
+      validFrom: promoCode.validFrom || undefined,
+      validTo: promoCode.validTo || undefined,
+      minimumOrderAmount: promoCode.minimumOrderAmount ? Number(promoCode.minimumOrderAmount) : undefined,
+      isActive: Boolean(promoCode.isActive) // Ensure boolean
     };
-
+  
+    // Additional client-side validation
+    if (updateData.isPercentage && updateData.discountValue > 100) {
+      this.errorMessage = 'Percentage discount cannot be greater than 100%';
+      return;
+    }
+  
+    if (updateData.validFrom && updateData.validTo && new Date(updateData.validFrom) > new Date(updateData.validTo)) {
+      this.errorMessage = 'Valid From date must be before Valid To date';
+      return;
+    }
+  
+    console.log('Updating promo code:', updateData); // Debug log
+  
     this.adminService.updatePromoCode(promoCode.id, updateData).subscribe({
       next: () => {
         this.successMessage = 'Promo code updated successfully';
         this.editingPromoCodeId = null;
         this.loadPromoCodes();
       },
-      error: () => {
-        this.errorMessage = 'Failed to update promo code';
+      error: (error) => {
+        console.error('Failed to update promo code:', error);
+        if (error.error?.errors) {
+          // Handle validation errors from backend
+          const errorMessages = Object.values(error.error.errors).flat().join(', ');
+          this.errorMessage = errorMessages;
+        } else {
+          this.errorMessage = error.error?.message || 'Failed to update promo code';
+        }
       }
     });
   }
