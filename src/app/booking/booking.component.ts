@@ -505,7 +505,7 @@ export class BookingComponent implements OnInit {
   }
 
    // Get cleaning type text
-   getCleaningTypeText(): string {
+  getCleaningTypeText(): string {
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
     
@@ -533,29 +533,34 @@ export class BookingComponent implements OnInit {
   // Get cleaner cost display
   getCleanerCostDisplay(cleanerCount: number): string {
     const pricePerHour = this.getCleanerPricePerHour();
-    const hoursService = this.selectedServices.find(s => s.service.serviceKey === 'hours');
+    const hoursService = this.selectedServices.find(s => s.service.serviceRelationType === 'hours');
     const hours = hoursService ? hoursService.quantity : 0;
     
     if (hours === 0) {
-      return `${cleanerCount} cleaner${cleanerCount > 1 ? 's' : ''} × $${pricePerHour}/hour`;
+      return `${cleanerCount} cleaner${cleanerCount > 1 ? 's' : ''} × ${pricePerHour}/hour`;
     } else {
       const totalCost = cleanerCount * hours * pricePerHour;
-      return `${cleanerCount} × ${hours}h × $${pricePerHour} = $${totalCost}`;
+      return `${cleanerCount} × ${hours}h × ${pricePerHour} = ${totalCost}`;
     }
   }
 
   // Get hours cost display
   getHoursCostDisplay(hours: number): string {
     const pricePerHour = this.getCleanerPricePerHour();
-    const cleanersService = this.selectedServices.find(s => s.service.serviceKey === 'cleaners');
+    const cleanersService = this.selectedServices.find(s => s.service.serviceRelationType === 'cleaner');
     const cleaners = cleanersService ? cleanersService.quantity : 0;
     
     if (cleaners === 0) {
       return `${hours} hour${hours > 1 ? 's' : ''}`;
     } else {
       const totalCost = cleaners * hours * pricePerHour;
-      return `${cleaners} cleaner${cleaners > 1 ? 's' : ''} × ${hours}h = $${totalCost}`;
+      return `${cleaners} cleaner${cleaners > 1 ? 's' : ''} × ${hours}h = ${totalCost}`;
     }
+  }
+
+  // Check if we have cleaner services
+  hasCleanerServices(): boolean {
+    return this.selectedServices.some(s => s.service.serviceRelationType === 'cleaner');
   }
 
   // Get cleaner price per hour based on cleaning type

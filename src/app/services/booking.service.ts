@@ -26,6 +26,7 @@ export interface Service {
   stepValue?: number;
   isRangeInput: boolean;
   unit?: string;
+  serviceRelationType?: string;
   isActive: boolean;
 }
 

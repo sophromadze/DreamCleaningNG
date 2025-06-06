@@ -43,6 +43,7 @@ export class AdminComponent implements OnInit {
     stepValue: 1,
     isRangeInput: false,
     unit: '',
+    serviceRelationType: '',
     displayOrder: 1
   };
   selectedExistingServiceId: number | null = null;

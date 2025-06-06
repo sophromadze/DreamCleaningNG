@@ -30,7 +30,7 @@
           <h2>2. Customize Your Service</h2>
           
           <!-- Office Cleaning Pricing Text -->
-          <div class="service-pricing-info" *ngIf="selectedServiceType.name === 'Office Cleaning'">
+          <div class="service-pricing-info" *ngIf="hasCleanerServices()">
             <p class="pricing-text" [innerHTML]="getCleanerPricingText()"></p>
           </div>
           
@@ -62,13 +62,13 @@
                     +${{ selected.service.cost * selected.quantity }}
                   </ng-container>
                   
-                  <!-- Cleaners (Office Cleaning) -->
-                  <ng-container *ngIf="selected.service.serviceKey === 'cleaners'">
+                  <!-- Cleaners (with serviceRelationType) -->
+                  <ng-container *ngIf="selected.service.serviceRelationType === 'cleaner'">
                     {{ getCleanerCostDisplay(selected.quantity) }}
                   </ng-container>
                   
-                  <!-- Hours (Office Cleaning) -->
-                  <ng-container *ngIf="selected.service.serviceKey === 'hours'">
+                  <!-- Hours (with serviceRelationType) -->
+                  <ng-container *ngIf="selected.service.serviceRelationType === 'hours'">
                     {{ getHoursCostDisplay(selected.quantity) }}
                   </ng-container>
                 </span>

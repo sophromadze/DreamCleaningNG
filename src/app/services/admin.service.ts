@@ -84,6 +84,7 @@ export interface CreateService {
   stepValue?: number;
   isRangeInput: boolean;
   unit?: string;
+  serviceRelationType?: string;
   displayOrder: number;
 }
 
@@ -99,6 +100,7 @@ export interface UpdateService {
   stepValue?: number;
   isRangeInput: boolean;
   unit?: string;
+  serviceRelationType?: string;
   displayOrder: number;
 }
 
