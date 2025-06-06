@@ -1,3 +1,4 @@
+// src/app/auth/profile/order-edit/order-edit.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
@@ -204,8 +205,23 @@ export class OrderEditComponent implements OnInit {
     // First, add all services from the service type with their original quantities
     this.serviceType.services.forEach(service => {
       const orderService = this.order!.services.find(s => s.serviceId === service.id);
-      const quantity = orderService ? orderService.quantity : 0;
-      const hours = orderService && service.serviceKey === 'cleaners' ? orderService.duration / 60 : undefined;
+      let quantity = orderService ? orderService.quantity : 0;
+      let hours: number | undefined = undefined;
+      
+      // Special handling for cleaner services
+      if (service.serviceRelationType === 'cleaner') {
+        // Find the hours service in the order
+        const hoursService = this.serviceType!.services.find(s => s.serviceRelationType === 'hours' && s.serviceTypeId === service.serviceTypeId);
+        if (hoursService) {
+          const orderHoursService = this.order!.services.find(s => s.serviceId === hoursService.id);
+          hours = orderHoursService ? orderHoursService.quantity : (orderService ? orderService.duration / 60 : 2);
+        }
+      }
+      
+      // For hours service, use 0 as default if not found
+      if (service.serviceRelationType === 'hours') {
+        quantity = quantity || 2; // Default to 2 hours if not found
+      }
       
       this.selectedServices.push({
         service: service,
@@ -321,7 +337,19 @@ export class OrderEditComponent implements OnInit {
   }
 
   getOriginalServiceHours(service: Service): number {
-    if (!this.order || service.serviceKey !== 'cleaners') return 0;
+    if (!this.order || service.serviceRelationType !== 'cleaner') return 0;
+    
+    // Find the hours service for this service type
+    const hoursService = this.serviceType?.services.find(s => 
+      s.serviceRelationType === 'hours' && s.serviceTypeId === service.serviceTypeId
+    );
+    
+    if (hoursService) {
+      const orderHoursService = this.order.services.find(s => s.serviceId === hoursService.id);
+      return orderHoursService ? orderHoursService.quantity : 0;
+    }
+    
+    // Fallback: check if duration is stored with cleaner service
     const orderService = this.order.services.find(s => s.serviceId === service.id);
     return orderService ? orderService.duration / 60 : 0;
   }
@@ -330,6 +358,16 @@ export class OrderEditComponent implements OnInit {
     const index = this.selectedServices.findIndex(s => s.service.id === service.id);
     if (index !== -1) {
       this.selectedServices[index].hours = hours;
+      
+      // Also update the hours service quantity
+      const hoursService = this.selectedServices.find(s => 
+        s.service.serviceRelationType === 'hours' && 
+        s.service.serviceTypeId === service.serviceTypeId
+      );
+      
+      if (hoursService) {
+        hoursService.quantity = hours;
+      }
     }
     this.calculateNewTotal();
   }
@@ -363,9 +401,9 @@ export class OrderEditComponent implements OnInit {
       if (service.serviceKey === 'bedrooms' && quantity === 0) {
         // Studio apartment - flat rate of $20
         subtotal += 20 * priceMultiplier;
-      } else if (service.serviceKey === 'cleaners' && hours) {
+      } else if (service.serviceRelationType === 'cleaner' && hours) {
         subtotal += service.cost * quantity * hours * priceMultiplier;
-      } else if (service.serviceKey !== 'hours') {
+      } else if (service.serviceRelationType !== 'hours') {
         // Regular service calculation (not hours in a cleaner-hours relationship)
         subtotal += service.cost * quantity * priceMultiplier;
       }
@@ -415,13 +453,40 @@ export class OrderEditComponent implements OnInit {
   prepareUpdateData(): UpdateOrder {
     const formValue = this.orderForm.value;
     
-    // Filter out services with 0 quantity for office cleaning hours
-    const services = this.selectedServices
-      .filter(s => !(s.service.serviceKey === 'hours' && s.quantity === 0))
-      .map(s => ({
-        serviceId: s.service.id,
-        quantity: s.quantity
-      }));
+    // Prepare services with special handling for cleaner/hours relationship
+    const services: { serviceId: number; quantity: number }[] = [];
+    
+    this.selectedServices.forEach(selectedService => {
+      const { service, quantity, hours } = selectedService;
+      
+      if (service.serviceRelationType === 'cleaner' && hours !== undefined) {
+        // Add the cleaner service
+        services.push({
+          serviceId: service.id,
+          quantity: quantity
+        });
+        
+        // Find and add the hours service for this service type
+        const hoursService = this.selectedServices.find(s => 
+          s.service.serviceRelationType === 'hours' && 
+          s.service.serviceTypeId === service.serviceTypeId
+        );
+        
+        if (hoursService) {
+          services.push({
+            serviceId: hoursService.service.id,
+            quantity: hours // Use the hours value as quantity for hours service
+          });
+        }
+      } else if (service.serviceRelationType !== 'hours') {
+        // Add non-hours services normally
+        services.push({
+          serviceId: service.id,
+          quantity: quantity
+        });
+      }
+      // Skip hours services as they're handled with cleaners
+    });
     
     return {
       serviceDate: new Date(formValue.serviceDate),
