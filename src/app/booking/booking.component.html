@@ -29,17 +29,6 @@
           <section class="booking-section" *ngIf="selectedServiceType">
             <h2>2. Customize Your Service</h2>
             
-            <!-- Cleaning Type Display -->
-            <div class="cleaning-type-display">
-              <strong>Cleaning Type Selected:</strong> 
-              <span class="cleaning-type-badge" 
-                    [class.regular]="getCleaningTypeText() === 'Regular Cleaning'"
-                    [class.deep]="getCleaningTypeText() === 'Deep Cleaning'"
-                    [class.super-deep]="getCleaningTypeText() === 'Super Deep Cleaning'">
-                {{ getCleaningTypeText() }}
-              </span>
-            </div>
-            
             <!-- Office Cleaning Pricing Text -->
             <div class="cleaner-pricing-info" *ngIf="selectedServiceType.name === 'Office Cleaning'" [innerHTML]="getCleanerPricingText()"></div>
             
@@ -87,6 +76,18 @@
           <!-- Step 3: Extra Services -->
           <section class="booking-section" *ngIf="selectedServiceType">
             <h2>3. Add Extra Services</h2>
+            
+            <!-- Cleaning Type Display -->
+            <div class="cleaning-type-display">
+              <strong>Cleaning Type Selected:</strong> 
+              <span class="cleaning-type-badge" 
+                    [class.regular]="getCleaningTypeText() === 'Regular Cleaning'"
+                    [class.deep]="getCleaningTypeText() === 'Deep Cleaning'"
+                    [class.super-deep]="getCleaningTypeText() === 'Super Deep Cleaning'">
+                {{ getCleaningTypeText() }}
+              </span>
+            </div>
+
             <div class="extra-services">
               <div class="extra-service-card" 
                    *ngFor="let extra of selectedServiceType.extraServices"

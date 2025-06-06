@@ -430,21 +430,26 @@ export class BookingComponent implements OnInit {
       }
     });
 
-    // Calculate extra service costs (excluding deep cleaning multipliers)
-    this.selectedExtraServices.forEach(selected => {
-      if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
-        if (selected.extraService.hasHours) {
-          subTotal += selected.extraService.price * selected.hours;
-          totalDuration += selected.extraService.duration * selected.hours;
-        } else if (selected.extraService.hasQuantity) {
-          subTotal += selected.extraService.price * selected.quantity;
-          totalDuration += selected.extraService.duration * selected.quantity;
-        } else {
-          subTotal += selected.extraService.price;
-          totalDuration += selected.extraService.duration;
-        }
-      }
-    });
+    // Calculate extra service costs
+this.selectedExtraServices.forEach(selected => {
+  if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
+    // Regular extra services
+    if (selected.extraService.hasHours) {
+      subTotal += selected.extraService.price * selected.hours;
+      totalDuration += selected.extraService.duration * selected.hours;
+    } else if (selected.extraService.hasQuantity) {
+      subTotal += selected.extraService.price * selected.quantity;
+      totalDuration += selected.extraService.duration * selected.quantity;
+    } else {
+      subTotal += selected.extraService.price;
+      totalDuration += selected.extraService.duration;
+    }
+  } else {
+    // Deep cleaning services - add their base price as a fee
+    subTotal += selected.extraService.price;
+    totalDuration += selected.extraService.duration;
+  }
+});
 
     // Apply frequency discount
     let discountAmount = 0;
@@ -486,6 +491,19 @@ export class BookingComponent implements OnInit {
     };
   }
 
+  // Get cleaning type text
+  getCleaningTypeText(): string {
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+    
+    if (superDeepCleaning) {
+      return 'Super Deep Cleaning';
+    } else if (deepCleaning) {
+      return 'Deep Cleaning';
+    }
+    return 'Regular Cleaning';
+  }
+
   // Get cleaner pricing text
   getCleanerPricingText(): string {
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
@@ -497,6 +515,22 @@ export class BookingComponent implements OnInit {
       return 'Hourly Service: $60 per hour/per cleaner <span class="cleaning-type-red">(Deep Cleaning)</span>';
     }
     return 'Hourly Service: $40 per hour/per cleaner';
+  }
+
+  formatDuration(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  }
+
+  getServiceTypeIcon(serviceType: ServiceType): string {
+    // Map service types to icons
+    const iconMap: { [key: string]: string } = {
+      'Residential Cleaning': '🏠',
+      'Office Cleaning': '🏢',
+      'Commercial Cleaning': '🏪'
+    };
+    return iconMap[serviceType.name] || '🧹';
   }
 
   isFormValid(): boolean {
@@ -586,22 +620,6 @@ export class BookingComponent implements OnInit {
         this.isLoading = false;
       }
     });
-  }
-
-  getServiceTypeIcon(serviceType: ServiceType): string {
-    // Map service types to icons
-    const iconMap: { [key: string]: string } = {
-      'Residential Cleaning': '🏠',
-      'Office Cleaning': '🏢',
-      'Commercial Cleaning': '🏪'
-    };
-    return iconMap[serviceType.name] || '🧹';
-  }
-
-  formatDuration(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   }
 
   getServiceOptions(service: Service): number[] {
