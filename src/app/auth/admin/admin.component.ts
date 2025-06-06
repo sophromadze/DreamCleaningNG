@@ -318,6 +318,7 @@ export class AdminComponent implements OnInit {
     });
   }
 
+
   cancelAddService() {
     this.isAddingService = false;
     this.showExistingServices = false;
@@ -360,6 +361,7 @@ export class AdminComponent implements OnInit {
       stepValue: service.stepValue,
       isRangeInput: service.isRangeInput,
       unit: service.unit,
+      serviceRelationType: service.serviceRelationType, // ADD THIS LINE
       displayOrder: 1
     }).subscribe({
       next: () => {

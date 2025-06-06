@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { OrderService, Order } from '../../../services/order.service';
+import { BookingService, Service, ExtraService } from '../../../services/booking.service';
 
 @Component({
   selector: 'app-order-details',
@@ -21,15 +22,14 @@ export class OrderDetailsComponent implements OnInit {
 
   constructor(
     private orderService: OrderService,
+    private bookingService: BookingService,
     private route: ActivatedRoute,
     private router: Router
   ) {}
 
   ngOnInit() {
-    this.route.params.subscribe(params => {
-      const orderId = params['id'];
-      this.loadOrder(orderId);
-    });
+    const orderId = this.route.snapshot.params['id'];
+    this.loadOrder(orderId);
     // Update current time every minute
     setInterval(() => {
       this.now = new Date();
@@ -126,5 +126,30 @@ export class OrderDetailsComponent implements OnInit {
     const serviceDate = new Date(this.order.serviceDate);
     const diffMs = serviceDate.getTime() - this.now.getTime();
     return Math.floor(diffMs / (1000 * 60 * 60));
+  }
+
+  getServiceQuantity(service: Service): number {
+    const orderService = this.order?.services.find(s => s.serviceId === service.id);
+    return orderService ? orderService.quantity : 0;
+  }
+
+  getCleaningTypeText(): string {
+    if (!this.order) return 'Normal Cleaning';
+    
+    const deepCleaning = this.order.extraServices.find(s => 
+      s.extraServiceName.toLowerCase().includes('deep cleaning') && 
+      !s.extraServiceName.toLowerCase().includes('super')
+    );
+    
+    const superDeepCleaning = this.order.extraServices.find(s => 
+      s.extraServiceName.toLowerCase().includes('super deep cleaning')
+    );
+    
+    if (superDeepCleaning) {
+      return 'Super Deep Cleaning';
+    } else if (deepCleaning) {
+      return 'Deep Cleaning';
+    }
+    return 'Normal Cleaning';
   }
 }

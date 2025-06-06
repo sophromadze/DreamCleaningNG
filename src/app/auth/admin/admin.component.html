@@ -229,60 +229,68 @@
                 </div>
   
                 <!-- Edit Service Form -->
-                <div class="service-form inline-edit" *ngIf="editingServiceId === service.id">
-                  <div class="form-grid">
-                    <div class="form-group">
-                      <label>Name</label>
-                      <input type="text" [(ngModel)]="service.name">
-                    </div>
-                    <div class="form-group">
-                      <label>Service Key</label>
-                      <input type="text" [(ngModel)]="service.serviceKey">
-                    </div>
-                    <div class="form-group">
-                      <label>Cost</label>
-                      <input type="number" [(ngModel)]="service.cost" step="0.01">
-                    </div>
-                    <div class="form-group">
-                      <label>Duration</label>
-                      <input type="number" [(ngModel)]="service.timeDuration">
-                    </div>
-                    <div class="form-group">
-                      <label>Input Type</label>
-                      <select [(ngModel)]="service.inputType">
-                        <option value="dropdown">Dropdown</option>
-                        <option value="slider">Slider</option>
-                        <option value="number">Number</option>
-                      </select>
-                    </div>
-                    <div class="form-group">
-                      <label>Min Value</label>
-                      <input type="number" [(ngModel)]="service.minValue">
-                    </div>
-                    <div class="form-group">
-                      <label>Max Value</label>
-                      <input type="number" [(ngModel)]="service.maxValue">
-                    </div>
-                    <div class="form-group">
-                      <label>Step Value</label>
-                      <input type="number" [(ngModel)]="service.stepValue">
-                    </div>
-                    <div class="form-group">
-                      <label>Unit</label>
-                      <input type="text" [(ngModel)]="service.unit">
-                    </div>
-                    <div class="form-group">
-                      <label>
-                        <input type="checkbox" [(ngModel)]="service.isRangeInput">
-                        Is Range Input
-                      </label>
-                    </div>
-                  </div>
-                  <div class="form-actions">
-                    <button class="save-btn" (click)="saveService(service)">Save</button>
-                    <button class="cancel-btn" (click)="cancelEditService()">Cancel</button>
-                  </div>
-                </div>
+<div class="service-form inline-edit" *ngIf="editingServiceId === service.id">
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Name</label>
+      <input type="text" [(ngModel)]="service.name">
+    </div>
+    <div class="form-group">
+      <label>Service Key</label>
+      <input type="text" [(ngModel)]="service.serviceKey">
+    </div>
+    <div class="form-group">
+      <label>Cost</label>
+      <input type="number" [(ngModel)]="service.cost" step="0.01">
+    </div>
+    <div class="form-group">
+      <label>Duration</label>
+      <input type="number" [(ngModel)]="service.timeDuration">
+    </div>
+    <div class="form-group">
+      <label>Input Type</label>
+      <select [(ngModel)]="service.inputType">
+        <option value="dropdown">Dropdown</option>
+        <option value="slider">Slider</option>
+        <option value="number">Number</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Min Value</label>
+      <input type="number" [(ngModel)]="service.minValue">
+    </div>
+    <div class="form-group">
+      <label>Max Value</label>
+      <input type="number" [(ngModel)]="service.maxValue">
+    </div>
+    <div class="form-group">
+      <label>Step Value</label>
+      <input type="number" [(ngModel)]="service.stepValue">
+    </div>
+    <div class="form-group">
+      <label>Unit</label>
+      <input type="text" [(ngModel)]="service.unit">
+    </div>
+    <div class="form-group">
+      <label>Service Type</label>
+      <select [(ngModel)]="service.serviceRelationType">
+        <option value="">Regular Service</option>
+        <option value="cleaner">Cleaner Service</option>
+        <option value="hours">Hours for Cleaners</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>
+        <input type="checkbox" [(ngModel)]="service.isRangeInput">
+        Is Range Input
+      </label>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="save-btn" (click)="saveService(service)">Save</button>
+    <button class="cancel-btn" (click)="cancelEditService()">Cancel</button>
+  </div>
+</div>
               </div>
             </div>
           </div>

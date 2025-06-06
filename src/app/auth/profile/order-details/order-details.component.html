@@ -50,7 +50,14 @@
             <span class="service-name">{{ service.serviceName }}</span>
             <span class="service-quantity">
               <ng-container *ngIf="service.serviceName.toLowerCase().includes('bedroom') && service.quantity === 0">Studio</ng-container>
-              <ng-container *ngIf="!(service.serviceName.toLowerCase().includes('bedroom') && service.quantity === 0)">Qty: {{ service.quantity }}</ng-container>
+              <ng-container *ngIf="!(service.serviceName.toLowerCase().includes('bedroom') && service.quantity === 0)">
+                <ng-container *ngIf="service.serviceName.toLowerCase().includes('cleaner')">
+                  Qty: {{ service.quantity }} | Hours: {{ service.duration / 60 }}
+                </ng-container>
+                <ng-container *ngIf="!service.serviceName.toLowerCase().includes('cleaner')">
+                  Qty: {{ service.quantity }}
+                </ng-container>
+              </ng-container>
             </span>
             <span class="service-cost">${{ service.cost.toFixed(2) }}</span>
           </div>
@@ -60,6 +67,15 @@
       <!-- Extra Services -->
       <div class="section" *ngIf="order.extraServices.length > 0">
         <h3>Extra Services</h3>
+        <div class="cleaning-type-display">
+          <strong>Cleaning Type:</strong>
+          <span [class]="getCleaningTypeText().toLowerCase().replace(' ', '-')"
+                [class.regular]="getCleaningTypeText() === 'Normal Cleaning'"
+                [class.deep]="getCleaningTypeText() === 'Deep Cleaning'"
+                [class.super-deep]="getCleaningTypeText() === 'Super Deep Cleaning'">
+            {{ getCleaningTypeText() }}
+          </span>
+        </div>
         <div class="extra-services-list">
           <div class="extra-service-item" *ngFor="let extra of order.extraServices">
             <span class="service-name">{{ extra.extraServiceName }}</span>

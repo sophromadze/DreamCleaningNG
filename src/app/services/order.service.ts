@@ -54,6 +54,7 @@ export interface OrderService {
   serviceId: number;
   serviceName: string;
   quantity: number;
+  hours?: number;
   cost: number;
   duration: number;
   priceMultiplier?: number;

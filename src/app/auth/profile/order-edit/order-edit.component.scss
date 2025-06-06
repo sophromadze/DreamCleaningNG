@@ -623,3 +623,68 @@
       }
     }
   }
+
+  .hours-input {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    label {
+      font-weight: 500;
+      color: #333;
+    }
+
+    select {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      background-color: white;
+      font-size: 14px;
+      min-width: 100px;
+
+      &:focus {
+        outline: none;
+        border-color: #4a90e2;
+      }
+    }
+  }
+
+  .hidden {
+    display: none !important;
+  }
+
+  .cleaning-type-display {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    strong {
+      color: #333;
+    }
+    
+    .cleaning-type-badge {
+      padding: 0.25rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+      
+      &.regular {
+        background: #e7f3ff;
+        color: #007bff;
+      }
+      
+      &.deep {
+        background: #fff3cd;
+        color: #856404;
+      }
+      
+      &.super-deep {
+        background: #f8d7da;
+        color: #721c24;
+      }
+    }
+  }

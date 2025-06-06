@@ -389,3 +389,39 @@
       }
     }
   }
+
+.cleaning-type-display {
+  background-color: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  strong {
+    color: #495057;
+  }
+
+  span {
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 500;
+
+    &.regular {
+      background-color: #cff4fc;
+      color: #055160;
+    }
+
+    &.deep {
+      background-color: #fff3cd;
+      color: #664d03;
+    }
+
+    &.super-deep {
+      background-color: #f8d7da;
+      color: #842029;
+    }
+  }
+}

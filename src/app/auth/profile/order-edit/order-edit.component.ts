@@ -9,6 +9,7 @@ import { LocationService } from '../../../services/location.service';
 interface SelectedService {
   service: Service;
   quantity: number;
+  hours?: number;  // Add hours field for cleaner services
 }
 
 interface SelectedExtraService {
@@ -204,10 +205,12 @@ export class OrderEditComponent implements OnInit {
     this.serviceType.services.forEach(service => {
       const orderService = this.order!.services.find(s => s.serviceId === service.id);
       const quantity = orderService ? orderService.quantity : 0;
+      const hours = orderService && service.serviceKey === 'cleaners' ? orderService.duration / 60 : undefined;
       
       this.selectedServices.push({
         service: service,
-        quantity: quantity
+        quantity: quantity,
+        hours: hours
       });
       
       // Store original quantity
@@ -308,87 +311,87 @@ export class OrderEditComponent implements OnInit {
     return selected ? selected.quantity : (service.minValue || 0);
   }
 
+  getServiceHours(service: Service): number {
+    const selected = this.selectedServices.find(s => s.service.id === service.id);
+    return selected?.hours || 0;
+  }
+
   getOriginalServiceQuantity(service: Service): number {
     return this.originalServiceQuantities.get(service.id) ?? 0;
   }
 
+  getOriginalServiceHours(service: Service): number {
+    if (!this.order || service.serviceKey !== 'cleaners') return 0;
+    const orderService = this.order.services.find(s => s.serviceId === service.id);
+    return orderService ? orderService.duration / 60 : 0;
+  }
+
+  updateServiceHours(service: Service, hours: number): void {
+    const index = this.selectedServices.findIndex(s => s.service.id === service.id);
+    if (index !== -1) {
+      this.selectedServices[index].hours = hours;
+    }
+    this.calculateNewTotal();
+  }
+
   calculateNewTotal() {
-    let subTotal = 0;
-    let totalDuration = 0;
-    let deepCleaningFee = 0; // Add this to track DC/SDC fees separately
-  
-    // Check for deep cleaning multipliers
+    if (!this.serviceType) return;
+
+    let subtotal = 0;
     let priceMultiplier = 1;
+    let deepCleaningFee = 0;
+
+    // Check for deep cleaning multipliers FIRST
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
     
     if (superDeepCleaning) {
       priceMultiplier = superDeepCleaning.extraService.priceMultiplier;
-      deepCleaningFee = superDeepCleaning.extraService.price; // Track fee separately
+      deepCleaningFee = superDeepCleaning.extraService.price;
     } else if (deepCleaning) {
       priceMultiplier = deepCleaning.extraService.priceMultiplier;
-      deepCleaningFee = deepCleaning.extraService.price; // Track fee separately
+      deepCleaningFee = deepCleaning.extraService.price;
     }
-  
-    // Calculate base price with multiplier
-    if (this.serviceType) {
-      subTotal += this.serviceType.basePrice * priceMultiplier;
-    }
-  
-    // Calculate service costs
-    this.selectedServices.forEach(selected => {
-      // Special handling for office cleaning - cost is per cleaner per hour
-      if (selected.service.serviceKey === 'cleaners' && this.serviceType?.name === 'Office Cleaning') {
-        // Find the hours service
-        const hoursService = this.selectedServices.find(s => s.service.serviceKey === 'hours');
-        if (hoursService) {
-          const hours = hoursService.quantity;
-          const cleaners = selected.quantity;
-          const costPerCleanerPerHour = selected.service.cost * priceMultiplier;
-          const cost = costPerCleanerPerHour * cleaners * hours;
-          subTotal += cost;
-          totalDuration += hours * 60; // Convert hours to minutes
-        }
-      } else if (selected.service.serviceKey === 'bedrooms' && selected.quantity === 0) {
+
+    // Add base price with multiplier
+    subtotal += this.serviceType.basePrice * priceMultiplier;
+
+    // Calculate services cost
+    this.selectedServices.forEach(selectedService => {
+      const { service, quantity, hours } = selectedService;
+      
+      if (service.serviceKey === 'bedrooms' && quantity === 0) {
         // Studio apartment - flat rate of $20
-        const cost = 20 * priceMultiplier;
-        subTotal += cost;
-        totalDuration += 20; // 20 minutes for studio
-      } else if (selected.service.serviceKey !== 'hours') {
-        // Regular service calculation (not hours)
-        const cost = selected.service.cost * selected.quantity * priceMultiplier;
-        subTotal += cost;
-        totalDuration += selected.service.timeDuration * selected.quantity;
+        subtotal += 20 * priceMultiplier;
+      } else if (service.serviceKey === 'cleaners' && hours) {
+        subtotal += service.cost * quantity * hours * priceMultiplier;
+      } else if (service.serviceKey !== 'hours') {
+        // Regular service calculation (not hours in a cleaner-hours relationship)
+        subtotal += service.cost * quantity * priceMultiplier;
       }
     });
-  
-    // Calculate extra service costs with multiplier (excluding deep cleaning multipliers)
+
+    // Calculate extra service costs
     this.selectedExtraServices.forEach(selected => {
       if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
-        // Apply multiplier EXCEPT for Same Day Service
+        // Regular extra services - apply multiplier EXCEPT for Same Day Service
         const currentMultiplier = selected.extraService.isSameDayService ? 1 : priceMultiplier;
         
         if (selected.extraService.hasHours) {
-          subTotal += selected.extraService.price * selected.hours * currentMultiplier;
-          totalDuration += selected.extraService.duration * selected.hours;
+          subtotal += selected.extraService.price * selected.hours * currentMultiplier;
         } else if (selected.extraService.hasQuantity) {
-          subTotal += selected.extraService.price * selected.quantity * currentMultiplier;
-          totalDuration += selected.extraService.duration * selected.quantity;
+          subtotal += selected.extraService.price * selected.quantity * currentMultiplier;
         } else {
-          subTotal += selected.extraService.price * currentMultiplier;
-          totalDuration += selected.extraService.duration;
+          subtotal += selected.extraService.price * currentMultiplier;
         }
-      } else {
-        // Deep cleaning services - duration only (fee tracked separately)
-        totalDuration += selected.extraService.duration;
       }
     });
-  
-    // Add deep cleaning fee AFTER all calculations
-    subTotal += deepCleaningFee;
+
+    // Add deep cleaning fee AFTER all other calculations
+    subtotal += deepCleaningFee;
   
     // Apply original discount amount (not percentage, to keep the same discount)
-    const discountedSubTotal = subTotal - this.originalDiscountAmount;
+    const discountedSubTotal = subtotal - this.originalDiscountAmount;
   
     // Make sure we don't go negative
     if (discountedSubTotal < 0) {
@@ -525,5 +528,17 @@ export class OrderEditComponent implements OnInit {
   getSelectedServiceQuantity(service: Service): number {
     const selected = this.selectedServices.find(s => s.service.id === service.id);
     return selected ? selected.quantity : 0;
+  }
+
+  getCleaningTypeText(): string {
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+    
+    if (superDeepCleaning) {
+      return 'Super Deep Cleaning';
+    } else if (deepCleaning) {
+      return 'Deep Cleaning';
+    }
+    return 'Normal Cleaning';
   }
 }

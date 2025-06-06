@@ -21,7 +21,7 @@
         <div class="section" *ngIf="serviceType">
           <h2>Services</h2>
           <div class="services">
-            <div class="service-item" *ngFor="let service of serviceType.services; let i = index">
+            <div class="service-item" *ngFor="let service of serviceType.services; let i = index" [class.hidden]="service.serviceKey === 'hours'">
               <label>{{ service.name }}</label>
               <div class="service-input">
                 <div class="quantity-display">
@@ -30,11 +30,27 @@
                     <div class="quantity-box original">
                       <span class="value">
                         <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0">Studio</ng-container>
-                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0)">{{ getOriginalServiceQuantity(service) }}</ng-container>
+                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0)">
+                          <ng-container *ngIf="service?.serviceKey === 'cleaners'">
+                            Cleaners: {{ getOriginalServiceQuantity(service) }}
+                            <br>
+                            Hours: {{ getOriginalServiceHours(service) }}
+                          </ng-container>
+                          <ng-container *ngIf="service?.serviceKey !== 'cleaners'">
+                            {{ getOriginalServiceQuantity(service) }}
+                          </ng-container>
+                        </ng-container>
                       </span>
                       <span class="price">
                         <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0">+$20</ng-container>
-                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0)">+${{ service.cost * getOriginalServiceQuantity(service) }}</ng-container>
+                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0)">
+                          <ng-container *ngIf="service?.serviceKey === 'cleaners'">
+                            +${{ service.cost * getOriginalServiceQuantity(service) * getOriginalServiceHours(service) }}
+                          </ng-container>
+                          <ng-container *ngIf="service?.serviceKey !== 'cleaners'">
+                            +${{ service.cost * getOriginalServiceQuantity(service) }}
+                          </ng-container>
+                        </ng-container>
                       </span>
                     </div>
                   </div>
@@ -45,15 +61,38 @@
                               (change)="updateServiceQuantity(service, +$any($event.target).value)">
                         <option *ngFor="let option of getServiceOptions(service)" [value]="option">
                           <ng-container *ngIf="service?.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
-                          <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
+                          <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && option === 0)">
+                            <ng-container *ngIf="service?.serviceKey === 'cleaners'">
+                              Cleaners: {{ option }}
+                            </ng-container>
+                            <ng-container *ngIf="service?.serviceKey !== 'cleaners'">
+                              {{ option }}
+                            </ng-container>
+                          </ng-container>
                         </option>
                       </select>
                       <span class="price">
                         <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0">+$20</ng-container>
-                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0)">+${{ service.cost * getServiceQuantity(service) }}</ng-container>
+                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0)">
+                          <ng-container *ngIf="service?.serviceKey === 'cleaners'">
+                            +${{ service.cost * getServiceQuantity(service) * getServiceHours(service) }}
+                          </ng-container>
+                          <ng-container *ngIf="service?.serviceKey !== 'cleaners'">
+                            +${{ service.cost * getServiceQuantity(service) }}
+                          </ng-container>
+                        </ng-container>
                       </span>
                     </div>
                   </div>
+                </div>
+                <!-- Hours input for cleaner services -->
+                <div class="hours-input" *ngIf="service?.serviceKey === 'cleaners'">
+                  <label>Hours:</label>
+                  <select (change)="updateServiceHours(service, +$any($event.target).value)">
+                    <option *ngFor="let hour of [1,2,3,4,5,6,7,8,9]" [value]="hour" [selected]="hour === getServiceHours(service)">
+                      {{ hour }} hour{{ hour > 1 ? 's' : '' }}
+                    </option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -63,6 +102,18 @@
         <!-- Extra Services -->
         <div class="section" *ngIf="serviceType && serviceType.extraServices.length > 0">
           <h2>Extra Services</h2>
+          
+          <!-- Cleaning Type Display -->
+          <div class="cleaning-type-display">
+            <strong>Cleaning Type:</strong> 
+            <span class="cleaning-type-badge" 
+                  [class.regular]="getCleaningTypeText() === 'Normal Cleaning'"
+                  [class.deep]="getCleaningTypeText() === 'Deep Cleaning'"
+                  [class.super-deep]="getCleaningTypeText() === 'Super Deep Cleaning'">
+              {{ getCleaningTypeText() }}
+            </span>
+          </div>
+
           <div class="extra-services">
             <div class="extra-service-card" 
                  *ngFor="let extra of serviceType.extraServices"

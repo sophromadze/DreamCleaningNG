@@ -392,7 +392,7 @@ export class BookingComponent implements OnInit {
   private calculateTotal() {
     let subTotal = 0;
     let totalDuration = 0;
-    let deepCleaningFee = 0; // Add this to track DC/SDC fees separately
+    let deepCleaningFee = 0;
   
     // Check for deep cleaning multipliers FIRST
     let priceMultiplier = 1;
@@ -401,10 +401,10 @@ export class BookingComponent implements OnInit {
     
     if (superDeepCleaning) {
       priceMultiplier = superDeepCleaning.extraService.priceMultiplier;
-      deepCleaningFee = superDeepCleaning.extraService.price; // Track fee separately
+      deepCleaningFee = superDeepCleaning.extraService.price;
     } else if (deepCleaning) {
       priceMultiplier = deepCleaning.extraService.priceMultiplier;
-      deepCleaningFee = deepCleaning.extraService.price; // Track fee separately
+      deepCleaningFee = deepCleaning.extraService.price;
     }
   
     // Calculate base price with multiplier
@@ -414,10 +414,10 @@ export class BookingComponent implements OnInit {
   
     // Calculate service costs
     this.selectedServices.forEach(selected => {
-      // Special handling for office cleaning - cost is per cleaner per hour
-      if (selected.service.serviceKey === 'cleaners' && this.selectedServiceType?.name === 'Office Cleaning') {
+      // Special handling for cleaner-hours relationship - works for ANY service type
+      if (selected.service.serviceRelationType === 'cleaner') {
         // Find the hours service
-        const hoursService = this.selectedServices.find(s => s.service.serviceKey === 'hours');
+        const hoursService = this.selectedServices.find(s => s.service.serviceRelationType === 'hours');
         if (hoursService) {
           const hours = hoursService.quantity;
           const cleaners = selected.quantity;
@@ -431,12 +431,13 @@ export class BookingComponent implements OnInit {
         const cost = 20 * priceMultiplier;
         subTotal += cost;
         totalDuration += 20; // 20 minutes for studio
-      } else if (selected.service.serviceKey !== 'hours') {
-        // Regular service calculation (not hours)
+      } else if (selected.service.serviceRelationType !== 'hours') {
+        // Regular service calculation (not hours in a cleaner-hours relationship)
         const cost = selected.service.cost * selected.quantity * priceMultiplier;
         subTotal += cost;
         totalDuration += selected.service.timeDuration * selected.quantity;
       }
+      // Note: 'hours' services are not calculated separately when serviceRelationType is 'hours'
     });
   
     // Calculate extra service costs
