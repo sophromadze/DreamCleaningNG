@@ -452,7 +452,14 @@ export class OrderEditComponent implements OnInit {
       this.errorMessage = 'Please fill in all required fields';
       return;
     }
-
+  
+    // Check if the total is being reduced
+    if (this.additionalAmount < 0) {
+      this.errorMessage = `Cannot reduce order total. The new total would be $${Math.abs(this.additionalAmount).toFixed(2)} less than the original amount paid.`;
+      window.scrollTo(0, 0);
+      return;
+    }
+  
     // Check if additional payment is needed
     if (this.additionalAmount > 0) {
       this.showPaymentModal = true;
@@ -463,10 +470,11 @@ export class OrderEditComponent implements OnInit {
 
   saveOrder() {
     if (!this.order) return;
-
+  
     this.isSaving = true;
+    this.errorMessage = ''; // Clear previous errors
     const updateData = this.prepareUpdateData();
-
+  
     this.orderService.updateOrder(this.order.id, updateData).subscribe({
       next: (updatedOrder) => {
         this.successMessage = 'Order updated successfully';
@@ -475,8 +483,12 @@ export class OrderEditComponent implements OnInit {
         }, 1500);
       },
       error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to update order';
+        console.error('Update error:', error);
+        this.errorMessage = error.error?.message || error.error || 'Failed to update order';
         this.isSaving = false;
+        
+        // Scroll to top to show error message
+        window.scrollTo(0, 0);
       }
     });
   }
