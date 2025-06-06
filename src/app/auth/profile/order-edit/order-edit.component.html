@@ -267,20 +267,20 @@
         </div>
   
          <!-- Additional Amount Info -->
-<div class="additional-amount-info" *ngIf="additionalAmount > 0">
-  <p class="info-message">
-    <strong>Additional Payment Required:</strong> ${{ additionalAmount.toFixed(2) }}
-  </p>
-  <p>This additional amount will need to be paid to confirm your changes.</p>
-</div>
+          <div class="additional-amount-info" *ngIf="additionalAmount > 0">
+            <p class="info-message">
+              <strong>Additional Payment Required:</strong> ${{ additionalAmount.toFixed(2) }}
+            </p>
+            <p>This additional amount will need to be paid to confirm your changes.</p>
+          </div>
 
-<div class="additional-amount-info warning" *ngIf="additionalAmount < 0">
-  <p class="info-message">
-    <strong>⚠️ Cannot Save Changes</strong>
-  </p>
-  <p>Your changes would reduce the order total by ${{ (-additionalAmount).toFixed(2) }}.</p>
-  <p>Orders cannot be reduced after payment. Please add more services or keep the current selection.</p>
-</div>
+          <div class="additional-amount-info warning" *ngIf="additionalAmount < 0">
+            <p class="info-message">
+              <strong>⚠️ Cannot Save Changes</strong>
+            </p>
+            <p>Your changes would reduce the order total by ${{ (-additionalAmount).toFixed(2) }}.</p>
+            <p>Orders cannot be reduced after payment. Please add more services or keep the current selection.</p>
+          </div>
 
         <!-- Action Buttons -->
         <div class="form-actions">
@@ -299,6 +299,12 @@
         </div>
         
         <div class="calculator-content">
+          <!-- Add this after the header -->
+          <div class="maids-count-display">
+            <strong>Number of Maids:</strong>
+            <span class="maids-badge">{{ calculatedMaidsCount }} {{ calculatedMaidsCount > 1 ? 'Maids' : 'Maid' }}</span>
+          </div>
+          
           <div class="price-row">
             <span>Subtotal:</span>
             <span class="amount">${{ (newSubTotal + originalDiscountAmount).toFixed(2) }}</span>

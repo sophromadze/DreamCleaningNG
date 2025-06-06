@@ -43,6 +43,7 @@ export interface Order {
   state: string;
   zipCode: string;
   totalDuration: number;
+  maidsCount: number;
   isPaid: boolean;
   paidAt?: Date;
   services: OrderService[];

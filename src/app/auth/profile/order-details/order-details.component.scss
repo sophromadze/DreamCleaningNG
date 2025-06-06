@@ -365,6 +365,28 @@
       }
     }
   }
+
+  .maids-count-display {
+    background: #e7f3ff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    
+    strong {
+      color: #333;
+    }
+    
+    .maids-badge {
+      background: #007bff;
+      color: white;
+      padding: 0.25rem 1rem;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+  }
   
   @media (max-width: 768px) {
     .order-details-container {

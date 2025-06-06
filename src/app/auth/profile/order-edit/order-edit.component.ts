@@ -68,6 +68,9 @@ export class OrderEditComponent implements OnInit {
   // Constants
   salesTaxRate = 0.088; // 8.8%
 
+  calculatedMaidsCount = 1;
+  originalMaidsCount = 1;
+
   originalServiceQuantities: Map<number, number> = new Map();
   serviceControls: FormArray;
 
@@ -139,6 +142,7 @@ export class OrderEditComponent implements OnInit {
         this.order = order;
         this.originalTotal = order.total;
         this.originalDiscountAmount = order.discountAmount;
+        this.originalMaidsCount = order.maidsCount; // Add this
         this.populateForm(order);
         this.loadServiceType(order.serviceTypeId);
       },
@@ -376,6 +380,7 @@ export class OrderEditComponent implements OnInit {
     if (!this.serviceType) return;
 
     let subtotal = 0;
+    let totalDuration = 0; // Track duration separately
     let priceMultiplier = 1;
     let deepCleaningFee = 0;
 
@@ -394,59 +399,73 @@ export class OrderEditComponent implements OnInit {
     // Add base price with multiplier
     subtotal += this.serviceType.basePrice * priceMultiplier;
 
-    // Calculate services cost
+    // Calculate services cost and duration
     this.selectedServices.forEach(selectedService => {
       const { service, quantity, hours } = selectedService;
       
       if (service.serviceKey === 'bedrooms' && quantity === 0) {
-        // Studio apartment - flat rate of $20
         subtotal += 20 * priceMultiplier;
+        totalDuration += 20; // 20 minutes for studio
       } else if (service.serviceRelationType === 'cleaner' && hours) {
         subtotal += service.cost * quantity * hours * priceMultiplier;
+        totalDuration += hours * 60; // Convert hours to minutes
       } else if (service.serviceRelationType !== 'hours') {
-        // Regular service calculation (not hours in a cleaner-hours relationship)
         subtotal += service.cost * quantity * priceMultiplier;
+        totalDuration += service.timeDuration * quantity;
       }
     });
 
-    // Calculate extra service costs
+    // Calculate extra service costs and duration
     this.selectedExtraServices.forEach(selected => {
       if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
-        // Regular extra services - apply multiplier EXCEPT for Same Day Service
         const currentMultiplier = selected.extraService.isSameDayService ? 1 : priceMultiplier;
         
         if (selected.extraService.hasHours) {
           subtotal += selected.extraService.price * selected.hours * currentMultiplier;
+          totalDuration += selected.extraService.duration * selected.hours;
         } else if (selected.extraService.hasQuantity) {
           subtotal += selected.extraService.price * selected.quantity * currentMultiplier;
+          totalDuration += selected.extraService.duration * selected.quantity;
         } else {
           subtotal += selected.extraService.price * currentMultiplier;
+          totalDuration += selected.extraService.duration;
         }
+      } else {
+        totalDuration += selected.extraService.duration;
       }
     });
 
+    // Calculate maids count
+    this.calculatedMaidsCount = 1;
+    
+    const hasCleanerService = this.selectedServices.some(s => 
+      s.service.serviceRelationType === 'cleaner'
+    );
+    
+    if (hasCleanerService) {
+      const cleanerService = this.selectedServices.find(s => 
+        s.service.serviceRelationType === 'cleaner'
+      );
+      if (cleanerService) {
+        this.calculatedMaidsCount = cleanerService.quantity;
+      }
+    } else {
+      // Calculate based on duration (every 6 hours = 1 maid)
+      const totalHours = totalDuration / 60;
+      this.calculatedMaidsCount = Math.max(1, Math.ceil(totalHours / 6));
+    }
+
     // Add deep cleaning fee AFTER all other calculations
     subtotal += deepCleaningFee;
-  
-    // Apply original discount amount (not percentage, to keep the same discount)
-    const discountedSubTotal = subtotal - this.originalDiscountAmount;
-  
-    // Make sure we don't go negative
-    if (discountedSubTotal < 0) {
-      this.newSubTotal = 0;
-      this.newTax = 0;
-    } else {
-      this.newSubTotal = discountedSubTotal;
-      this.newTax = discountedSubTotal * this.salesTaxRate;
-    }
-  
-    // Get tips
-    const tips = this.orderForm.get('tips')?.value || 0;
-  
+
+    // Calculate tax
+    this.newTax = subtotal * this.salesTaxRate;
+
     // Calculate new total
-    this.newTotal = this.newSubTotal + this.newTax + tips;
-  
-    // Calculate the additional amount needed
+    this.newSubTotal = subtotal;
+    this.newTotal = subtotal + this.newTax + (this.tips.value || 0);
+
+    // Calculate additional amount needed
     this.additionalAmount = this.newTotal - this.originalTotal;
   }
 

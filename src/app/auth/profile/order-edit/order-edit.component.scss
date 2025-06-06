@@ -650,6 +650,12 @@
     }
   }
 
+  .original-value {
+    color: #6c757d;
+    text-decoration: line-through;
+    margin-right: 0.5rem;
+  }
+
   .hidden {
     display: none !important;
   }

@@ -62,6 +62,7 @@ export class BookingComponent implements OnInit {
   promoCodeApplied = false;
   promoDiscount = 0;
   promoIsPercentage = true;
+  calculatedMaidsCount = 1;
   
   // Constants
   salesTaxRate = 0.088; // 8.8%
@@ -462,6 +463,33 @@ export class BookingComponent implements OnInit {
       }
     });
   
+    // Calculate maids count
+    this.calculatedMaidsCount = 1;
+    
+    // Check if cleaners are explicitly selected
+    const hasCleanerService = this.selectedServices.some(s => 
+      s.service.serviceRelationType === 'cleaner'
+    );
+    
+    if (hasCleanerService) {
+      // Use the selected cleaner count
+      const cleanerService = this.selectedServices.find(s => 
+        s.service.serviceRelationType === 'cleaner'
+      );
+      if (cleanerService) {
+        this.calculatedMaidsCount = cleanerService.quantity;
+      }
+    } else {
+      // Calculate based on duration (every 6 hours = 1 maid)
+      const totalHours = totalDuration / 60;
+      this.calculatedMaidsCount = Math.max(1, Math.ceil(totalHours / 6));
+      
+      // Adjust duration based on maids count
+      if (this.calculatedMaidsCount > 1) {
+        totalDuration = Math.floor(totalDuration / this.calculatedMaidsCount);
+      }
+    }
+  
     // Apply frequency discount to the subtotal (before adding deep cleaning fee)
     let discountAmount = 0;
     if (this.selectedFrequency && this.selectedFrequency.discountPercentage > 0) {
@@ -580,7 +608,12 @@ export class BookingComponent implements OnInit {
   formatDuration(minutes: number): string {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    const baseFormat = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    
+    if (this.calculatedMaidsCount > 1) {
+      return `${baseFormat} per maid`;
+    }
+    return baseFormat;
   }
 
   getServiceTypeIcon(serviceType: ServiceType): string {
