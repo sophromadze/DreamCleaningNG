@@ -249,10 +249,16 @@ export class BookingComponent implements OnInit {
     this.calculateTotal();
   }
 
+
   updateServiceQuantity(service: Service, quantity: number) {
     const selectedService = this.selectedServices.find(s => s.service.id === service.id);
     if (selectedService) {
       selectedService.quantity = quantity;
+      // When cleaners or hours change, update the display for both
+      if (service.serviceKey === 'cleaners' || service.serviceKey === 'hours') {
+        // Force Angular to detect changes
+        this.selectedServices = [...this.selectedServices];
+      }
       this.calculateTotal();
     }
   }
@@ -498,8 +504,8 @@ export class BookingComponent implements OnInit {
     };
   }
 
-  // Get cleaning type text
-  getCleaningTypeText(): string {
+   // Get cleaning type text
+   getCleaningTypeText(): string {
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
     
@@ -522,6 +528,47 @@ export class BookingComponent implements OnInit {
       return 'Hourly Service: $60 per hour/per cleaner <span class="cleaning-type-red">(Deep Cleaning)</span>';
     }
     return 'Hourly Service: $40 per hour/per cleaner';
+  }
+
+  // Get cleaner cost display
+  getCleanerCostDisplay(cleanerCount: number): string {
+    const pricePerHour = this.getCleanerPricePerHour();
+    const hoursService = this.selectedServices.find(s => s.service.serviceKey === 'hours');
+    const hours = hoursService ? hoursService.quantity : 0;
+    
+    if (hours === 0) {
+      return `${cleanerCount} cleaner${cleanerCount > 1 ? 's' : ''} × $${pricePerHour}/hour`;
+    } else {
+      const totalCost = cleanerCount * hours * pricePerHour;
+      return `${cleanerCount} × ${hours}h × $${pricePerHour} = $${totalCost}`;
+    }
+  }
+
+  // Get hours cost display
+  getHoursCostDisplay(hours: number): string {
+    const pricePerHour = this.getCleanerPricePerHour();
+    const cleanersService = this.selectedServices.find(s => s.service.serviceKey === 'cleaners');
+    const cleaners = cleanersService ? cleanersService.quantity : 0;
+    
+    if (cleaners === 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''}`;
+    } else {
+      const totalCost = cleaners * hours * pricePerHour;
+      return `${cleaners} cleaner${cleaners > 1 ? 's' : ''} × ${hours}h = $${totalCost}`;
+    }
+  }
+
+  // Get cleaner price per hour based on cleaning type
+  private getCleanerPricePerHour(): number {
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+    
+    if (superDeepCleaning) {
+      return 80;
+    } else if (deepCleaning) {
+      return 60;
+    }
+    return 40;
   }
 
   formatDuration(minutes: number): string {
