@@ -294,12 +294,8 @@ export class OrderEditComponent implements OnInit {
   calculateNewTotal() {
     let subTotal = 0;
     let totalDuration = 0;
-
-    // Calculate base price
-    if (this.serviceType) {
-      subTotal += this.serviceType.basePrice;
-    }
-
+    let deepCleaningFee = 0; // Add this to track DC/SDC fees separately
+  
     // Check for deep cleaning multipliers
     let priceMultiplier = 1;
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
@@ -307,10 +303,17 @@ export class OrderEditComponent implements OnInit {
     
     if (superDeepCleaning) {
       priceMultiplier = superDeepCleaning.extraService.priceMultiplier;
+      deepCleaningFee = superDeepCleaning.extraService.price; // Track fee separately
     } else if (deepCleaning) {
       priceMultiplier = deepCleaning.extraService.priceMultiplier;
+      deepCleaningFee = deepCleaning.extraService.price; // Track fee separately
     }
-
+  
+    // Calculate base price with multiplier
+    if (this.serviceType) {
+      subTotal += this.serviceType.basePrice * priceMultiplier;
+    }
+  
     // Calculate service costs
     this.selectedServices.forEach(selected => {
       // Special handling for office cleaning - cost is per cleaner per hour
@@ -337,26 +340,35 @@ export class OrderEditComponent implements OnInit {
         totalDuration += selected.service.timeDuration * selected.quantity;
       }
     });
-
-    // Calculate extra service costs (excluding deep cleaning multipliers)
+  
+    // Calculate extra service costs with multiplier (excluding deep cleaning multipliers)
     this.selectedExtraServices.forEach(selected => {
       if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
+        // Apply multiplier EXCEPT for Same Day Service
+        const currentMultiplier = selected.extraService.isSameDayService ? 1 : priceMultiplier;
+        
         if (selected.extraService.hasHours) {
-          subTotal += selected.extraService.price * selected.hours;
+          subTotal += selected.extraService.price * selected.hours * currentMultiplier;
           totalDuration += selected.extraService.duration * selected.hours;
         } else if (selected.extraService.hasQuantity) {
-          subTotal += selected.extraService.price * selected.quantity;
+          subTotal += selected.extraService.price * selected.quantity * currentMultiplier;
           totalDuration += selected.extraService.duration * selected.quantity;
         } else {
-          subTotal += selected.extraService.price;
+          subTotal += selected.extraService.price * currentMultiplier;
           totalDuration += selected.extraService.duration;
         }
+      } else {
+        // Deep cleaning services - duration only (fee tracked separately)
+        totalDuration += selected.extraService.duration;
       }
     });
-
+  
+    // Add deep cleaning fee AFTER all calculations
+    subTotal += deepCleaningFee;
+  
     // Apply original discount amount (not percentage, to keep the same discount)
     const discountedSubTotal = subTotal - this.originalDiscountAmount;
-
+  
     // Make sure we don't go negative
     if (discountedSubTotal < 0) {
       this.newSubTotal = 0;
@@ -365,13 +377,13 @@ export class OrderEditComponent implements OnInit {
       this.newSubTotal = discountedSubTotal;
       this.newTax = discountedSubTotal * this.salesTaxRate;
     }
-
+  
     // Get tips
     const tips = this.orderForm.get('tips')?.value || 0;
-
+  
     // Calculate new total
     this.newTotal = this.newSubTotal + this.newTax + tips;
-
+  
     // Calculate the additional amount needed
     this.additionalAmount = this.newTotal - this.originalTotal;
   }

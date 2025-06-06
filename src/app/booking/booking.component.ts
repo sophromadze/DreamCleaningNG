@@ -386,12 +386,13 @@ export class BookingComponent implements OnInit {
   private calculateTotal() {
     let subTotal = 0;
     let totalDuration = 0;
-
+    let deepCleaningFee = 0; // Add this to track DC/SDC fees separately
+  
     // Calculate base price
     if (this.selectedServiceType) {
       subTotal += this.selectedServiceType.basePrice;
     }
-
+  
     // Check for deep cleaning multipliers
     let priceMultiplier = 1;
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
@@ -399,10 +400,12 @@ export class BookingComponent implements OnInit {
     
     if (superDeepCleaning) {
       priceMultiplier = superDeepCleaning.extraService.priceMultiplier;
+      deepCleaningFee = superDeepCleaning.extraService.price; // Track fee separately
     } else if (deepCleaning) {
       priceMultiplier = deepCleaning.extraService.priceMultiplier;
+      deepCleaningFee = deepCleaning.extraService.price; // Track fee separately
     }
-
+  
     // Calculate service costs
     this.selectedServices.forEach(selected => {
       // Special handling for office cleaning - cost is per cleaner per hour
@@ -429,39 +432,40 @@ export class BookingComponent implements OnInit {
         totalDuration += selected.service.timeDuration * selected.quantity;
       }
     });
-
+  
     // Calculate extra service costs
-this.selectedExtraServices.forEach(selected => {
-  if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
-    // Regular extra services
-    if (selected.extraService.hasHours) {
-      subTotal += selected.extraService.price * selected.hours;
-      totalDuration += selected.extraService.duration * selected.hours;
-    } else if (selected.extraService.hasQuantity) {
-      subTotal += selected.extraService.price * selected.quantity;
-      totalDuration += selected.extraService.duration * selected.quantity;
-    } else {
-      subTotal += selected.extraService.price;
-      totalDuration += selected.extraService.duration;
-    }
-  } else {
-    // Deep cleaning services - add their base price as a fee
-    subTotal += selected.extraService.price;
-    totalDuration += selected.extraService.duration;
-  }
-});
-
-    // Apply frequency discount
+    this.selectedExtraServices.forEach(selected => {
+      if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
+        // Regular extra services - apply multiplier EXCEPT for Same Day Service
+        const currentMultiplier = selected.extraService.isSameDayService ? 1 : priceMultiplier;
+        
+        if (selected.extraService.hasHours) {
+          subTotal += selected.extraService.price * selected.hours * currentMultiplier;
+          totalDuration += selected.extraService.duration * selected.hours;
+        } else if (selected.extraService.hasQuantity) {
+          subTotal += selected.extraService.price * selected.quantity * currentMultiplier;
+          totalDuration += selected.extraService.duration * selected.quantity;
+        } else {
+          subTotal += selected.extraService.price * currentMultiplier;
+          totalDuration += selected.extraService.duration;
+        }
+      } else {
+        // Deep cleaning services - duration only (fee tracked separately)
+        totalDuration += selected.extraService.duration;
+      }
+    });
+  
+    // Apply frequency discount to the subtotal (before adding deep cleaning fee)
     let discountAmount = 0;
     if (this.selectedFrequency && this.selectedFrequency.discountPercentage > 0) {
       discountAmount = subTotal * (this.selectedFrequency.discountPercentage / 100);
     }
-
+  
     // Apply first time discount (20%) only if explicitly applied
     if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
       discountAmount += subTotal * 0.20;
     }
-
+  
     // Apply promo code discount
     if (this.promoCodeApplied) {
       if (this.promoIsPercentage) {
@@ -470,17 +474,20 @@ this.selectedExtraServices.forEach(selected => {
         discountAmount += this.promoDiscount;
       }
     }
-
+  
+    // Now add the deep cleaning fee AFTER discounts are calculated
+    subTotal += deepCleaningFee;
+  
     // Calculate tax on discounted subtotal
     const discountedSubTotal = subTotal - discountAmount;
     const tax = discountedSubTotal * this.salesTaxRate;
-
+  
     // Get tips
     const tips = this.tips.value || 0;
-
+  
     // Calculate total
     const total = discountedSubTotal + tax + tips;
-
+  
     this.calculation = {
       subTotal,
       tax,
