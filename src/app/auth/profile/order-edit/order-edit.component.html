@@ -21,19 +21,41 @@
         <div class="section" *ngIf="serviceType">
           <h2>Services</h2>
           <div class="services">
-            <div class="service-item" *ngFor="let service of serviceType.services">
+            <div class="service-item" *ngFor="let service of serviceType.services; let i = index">
               <label>{{ service.name }}</label>
               <div class="service-input">
-                  <select [value]="getServiceQuantity(service)" 
-                          (change)="updateServiceQuantity(service, +$any($event.target).value)">
-                    <option *ngFor="let option of getServiceOptions(service)" [value]="option">
-                      <ng-container *ngIf="service?.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
-                      <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
-                    </option>
-                  </select>
-                  <span class="current-quantity">Current: {{ getServiceQuantity(service) }}</span>
-                  <span class="service-cost">+${{ service.cost * getServiceQuantity(service) }}</span>
+                <div class="quantity-display">
+                  <div class="quantity-section">
+                    <h4>Original</h4>
+                    <div class="quantity-box original">
+                      <span class="value">
+                        <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0">Studio</ng-container>
+                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0)">{{ getOriginalServiceQuantity(service) }}</ng-container>
+                      </span>
+                      <span class="price">
+                        <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0">+$20</ng-container>
+                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0)">+${{ service.cost * getOriginalServiceQuantity(service) }}</ng-container>
+                      </span>
+                    </div>
+                  </div>
+                  <div class="quantity-section">
+                    <h4>New</h4>
+                    <div class="quantity-box new">
+                      <select [formControl]="getServiceControl(i)"
+                              (change)="updateServiceQuantity(service, +$any($event.target).value)">
+                        <option *ngFor="let option of getServiceOptions(service)" [value]="option">
+                          <ng-container *ngIf="service?.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
+                          <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
+                        </option>
+                      </select>
+                      <span class="price">
+                        <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0">+$20</ng-container>
+                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0)">+${{ service.cost * getServiceQuantity(service) }}</ng-container>
+                      </span>
+                    </div>
+                  </div>
                 </div>
+              </div>
             </div>
           </div>
         </div>

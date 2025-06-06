@@ -60,4 +60,12 @@ export class OrderHistoryComponent implements OnInit {
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
   }
+
+  canEditOrder(order: OrderList): boolean {
+    if (order.status !== 'Active') return false;
+    const serviceDate = new Date(order.serviceDate);
+    const now = new Date();
+    const hoursUntilService = (serviceDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return hoursUntilService > 12;
+  }
 }

@@ -48,7 +48,10 @@
         <div class="services-list">
           <div class="service-item" *ngFor="let service of order.services">
             <span class="service-name">{{ service.serviceName }}</span>
-            <span class="service-quantity">Qty: {{ service.quantity }}</span>
+            <span class="service-quantity">
+              <ng-container *ngIf="service.serviceName.toLowerCase().includes('bedroom') && service.quantity === 0">Studio</ng-container>
+              <ng-container *ngIf="!(service.serviceName.toLowerCase().includes('bedroom') && service.quantity === 0)">Qty: {{ service.quantity }}</ng-container>
+            </span>
             <span class="service-cost">${{ service.cost.toFixed(2) }}</span>
           </div>
         </div>
@@ -125,10 +128,16 @@
   
       <!-- Action Buttons -->
       <div class="action-buttons">
-        <a [routerLink]="['/order', order.id, 'edit']" class="edit-btn" *ngIf="canEditOrder()">
+        <a [routerLink]="canEditOrder() ? ['/order', order.id, 'edit'] : null" 
+           class="edit-btn" 
+           [class.disabled]="!canEditOrder()"
+           [attr.data-tooltip]="!canEditOrder() ? (order.status === 'Done' ? 'Order is completed' : order.status === 'Cancelled' ? 'Order is cancelled' : 'Service date has passed') : null">
           Edit Order
         </a>
-        <button class="cancel-btn" (click)="openCancelModal()" *ngIf="canCancelOrder()">
+        <button class="cancel-btn" 
+                (click)="canCancelOrder() ? openCancelModal() : null"
+                [class.disabled]="!canCancelOrder()"
+                [attr.data-tooltip]="!canCancelOrder() ? (order.status === 'Done' ? 'Order is completed' : order.status === 'Cancelled' ? 'Order is cancelled' : 'Service date has passed') : null">
           Cancel Order
         </button>
       </div>

@@ -79,9 +79,9 @@
             
             <!-- Cleaning Type Display -->
             <div class="cleaning-type-display">
-              <strong>Cleaning Type Selected:</strong> 
+              <strong>Cleaning Type:</strong> 
               <span class="cleaning-type-badge" 
-                    [class.regular]="getCleaningTypeText() === 'Regular Cleaning'"
+                    [class.regular]="getCleaningTypeText() === 'Normal Cleaning'"
                     [class.deep]="getCleaningTypeText() === 'Deep Cleaning'"
                     [class.super-deep]="getCleaningTypeText() === 'Super Deep Cleaning'">
                 {{ getCleaningTypeText() }}

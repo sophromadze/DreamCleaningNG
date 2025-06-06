@@ -44,7 +44,7 @@
   
         <div class="order-actions">
           <a [routerLink]="['/order', order.id]" class="view-btn">View Details</a>
-          <a [routerLink]="['/order', order.id, 'edit']" class="edit-btn" *ngIf="order.status === 'Active'">Edit Order</a>
+          <a [routerLink]="['/order', order.id, 'edit']" class="edit-btn" *ngIf="canEditOrder(order)">Edit Order</a>
         </div>
       </div>
     </div>

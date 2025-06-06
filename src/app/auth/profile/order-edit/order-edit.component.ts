@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { OrderService, Order, UpdateOrder } from '../../../services/order.service';
 import { BookingService, ServiceType, Service, ExtraService, Frequency } from '../../../services/booking.service';
@@ -66,6 +66,9 @@ export class OrderEditComponent implements OnInit {
   // Constants
   salesTaxRate = 0.088; // 8.8%
 
+  originalServiceQuantities: Map<number, number> = new Map();
+  serviceControls: FormArray;
+
   constructor(
     private fb: FormBuilder,
     private orderService: OrderService,
@@ -89,8 +92,10 @@ export class OrderEditComponent implements OnInit {
       city: ['', Validators.required],
       state: ['', Validators.required],
       zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
-      tips: [0, Validators.min(0)]
+      tips: [0, Validators.min(0)],
+      services: this.fb.array([])
     });
+    this.serviceControls = this.orderForm.get('services') as FormArray;
   }
 
   ngOnInit() {
@@ -189,18 +194,27 @@ export class OrderEditComponent implements OnInit {
   initializeServices() {
     if (!this.serviceType || !this.order) return;
   
+    // Clear existing controls
+    this.serviceControls.clear();
+    
     // Initialize selected services with quantities from the order
     this.selectedServices = [];
     
-    // Add all services from the order
-    this.order.services.forEach(orderService => {
-      const service = this.serviceType!.services.find(s => s.id === orderService.serviceId);
-      if (service) {
-        this.selectedServices.push({
-          service: service,
-          quantity: orderService.quantity
-        });
-      }
+    // First, add all services from the service type with their original quantities
+    this.serviceType.services.forEach(service => {
+      const orderService = this.order!.services.find(s => s.serviceId === service.id);
+      const quantity = orderService ? orderService.quantity : 0;
+      
+      this.selectedServices.push({
+        service: service,
+        quantity: quantity
+      });
+      
+      // Store original quantity
+      this.originalServiceQuantities.set(service.id, quantity);
+
+      // Add form control for this service
+      this.serviceControls.push(this.fb.control(quantity));
     });
   }
 
@@ -222,12 +236,15 @@ export class OrderEditComponent implements OnInit {
     });
   }
 
+  getServiceControl(index: number): FormControl {
+    return this.serviceControls.at(index) as FormControl;
+  }
+
   updateServiceQuantity(service: Service, quantity: number) {
-    const selectedService = this.selectedServices.find(s => s.service.id === service.id);
-    if (selectedService) {
-      selectedService.quantity = quantity;
-    } else {
-      this.selectedServices.push({ service, quantity });
+    const index = this.selectedServices.findIndex(s => s.service.id === service.id);
+    if (index !== -1) {
+      this.selectedServices[index].quantity = quantity;
+      this.serviceControls.at(index).setValue(quantity);
     }
     this.calculateNewTotal();
   }
@@ -289,6 +306,10 @@ export class OrderEditComponent implements OnInit {
   getServiceQuantity(service: Service): number {
     const selected = this.selectedServices.find(s => s.service.id === service.id);
     return selected ? selected.quantity : (service.minValue || 0);
+  }
+
+  getOriginalServiceQuantity(service: Service): number {
+    return this.originalServiceQuantities.get(service.id) ?? 0;
   }
 
   calculateNewTotal() {
@@ -499,5 +520,10 @@ export class OrderEditComponent implements OnInit {
 
   get tips() {
     return this.orderForm.get('tips')!;
+  }
+
+  getSelectedServiceQuantity(service: Service): number {
+    const selected = this.selectedServices.find(s => s.service.id === service.id);
+    return selected ? selected.quantity : 0;
   }
 }

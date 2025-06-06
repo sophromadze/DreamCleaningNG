@@ -17,6 +17,7 @@ export class OrderDetailsComponent implements OnInit {
   errorMessage = '';
   showCancelModal = false;
   cancelReason = '';
+  now = new Date();
 
   constructor(
     private orderService: OrderService,
@@ -25,8 +26,14 @@ export class OrderDetailsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    const orderId = this.route.snapshot.params['id'];
-    this.loadOrder(orderId);
+    this.route.params.subscribe(params => {
+      const orderId = params['id'];
+      this.loadOrder(orderId);
+    });
+    // Update current time every minute
+    setInterval(() => {
+      this.now = new Date();
+    }, 60000);
   }
 
   loadOrder(orderId: number) {
@@ -68,7 +75,11 @@ export class OrderDetailsComponent implements OnInit {
   }
 
   canEditOrder(): boolean {
-    return this.order?.status === 'Active' && new Date(this.order.serviceDate) > new Date();
+    if (!this.order) return false;
+    const serviceDate = new Date(this.order.serviceDate);
+    const now = new Date();
+    const hoursUntilService = (serviceDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    return this.order.status === 'Active' && hoursUntilService > 12;
   }
 
   canCancelOrder(): boolean {
@@ -108,5 +119,12 @@ export class OrderDetailsComponent implements OnInit {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  }
+
+  getHoursUntilService(): number {
+    if (!this.order?.serviceDate) return 0;
+    const serviceDate = new Date(this.order.serviceDate);
+    const diffMs = serviceDate.getTime() - this.now.getTime();
+    return Math.floor(diffMs / (1000 * 60 * 60));
   }
 }

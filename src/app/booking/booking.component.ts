@@ -388,12 +388,7 @@ export class BookingComponent implements OnInit {
     let totalDuration = 0;
     let deepCleaningFee = 0; // Add this to track DC/SDC fees separately
   
-    // Calculate base price
-    if (this.selectedServiceType) {
-      subTotal += this.selectedServiceType.basePrice;
-    }
-  
-    // Check for deep cleaning multipliers
+    // Check for deep cleaning multipliers FIRST
     let priceMultiplier = 1;
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
@@ -404,6 +399,11 @@ export class BookingComponent implements OnInit {
     } else if (deepCleaning) {
       priceMultiplier = deepCleaning.extraService.priceMultiplier;
       deepCleaningFee = deepCleaning.extraService.price; // Track fee separately
+    }
+  
+    // Calculate base price with multiplier
+    if (this.selectedServiceType) {
+      subTotal += this.selectedServiceType.basePrice * priceMultiplier;
     }
   
     // Calculate service costs
@@ -508,7 +508,7 @@ export class BookingComponent implements OnInit {
     } else if (deepCleaning) {
       return 'Deep Cleaning';
     }
-    return 'Regular Cleaning';
+    return 'Normal Cleaning';
   }
 
   // Get cleaner pricing text
