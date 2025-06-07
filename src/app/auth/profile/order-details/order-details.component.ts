@@ -28,88 +28,12 @@ export class OrderDetailsComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    const orderId = this.route.snapshot.paramMap.get('id');
-    if (orderId) {
-      this.loadOrderDetails(+orderId);
-    }
-  }
-
-  loadOrderDetails(orderId: number) {
-    this.isLoading = true;
-    this.orderService.getOrderById(orderId).subscribe({
-      next: (order) => {
-        this.order = order;
-        
-        // Calculate maid count if it's missing or 0
-        if (!order.maidsCount || order.maidsCount === 0) {
-          this.order.maidsCount = this.calculateMaidCount(order);
-        }
-        
-        // Calculate display duration
-        if (order.totalDuration) {
-          this.order.totalDuration = this.calculateDisplayDuration(order);
-        }
-        
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.errorMessage = 'Failed to load order details';
-        this.isLoading = false;
-      }
-    });
-  }
-
-  calculateMaidCount(order: Order): number {
-    // Check if cleaners are explicitly selected
-    const cleanerService = order.services.find(s => 
-      s.serviceName.toLowerCase().includes('cleaner')
-    );
-    
-    if (cleanerService) {
-      return cleanerService.quantity;
-    }
-    
-    // Calculate based on duration (every 6 hours = 1 maid)
-    const totalHours = order.totalDuration / 60;
-    return Math.max(1, Math.ceil(totalHours / 6));
-  }
-
-  private calculateDisplayDuration(order: Order): number {
-    // Check if hours service exists
-    const hoursService = order.services.find(s => 
-      s.serviceName.toLowerCase().includes('hour')
-    );
-    
-    // If both cleaner and hours services exist, use hours service
-    const cleanerService = order.services.find(s => 
-      s.serviceName.toLowerCase().includes('cleaner')
-    );
-    
-    if (cleanerService && hoursService) {
-      // Duration is based on hours service only
-      return hoursService.quantity * 60;
-    }
-    
-    // If maid count > 1 and no explicit cleaner service, divide duration
-    const maidCount = order.maidsCount || this.calculateMaidCount(order);
-    if (maidCount > 1 && !cleanerService) {
-      return Math.ceil(order.totalDuration / maidCount);
-    }
-    
-    return order.totalDuration;
-  }
-
-  formatDuration(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    
-    if (hours === 0) {
-      return `${mins} minute${mins !== 1 ? 's' : ''}`;
-    } else if (mins === 0) {
-      return `${hours} hour${hours !== 1 ? 's' : ''}`;
-    } else {
-      return `${hours} hour${hours !== 1 ? 's' : ''} ${mins} minute${mins !== 1 ? 's' : ''}`;
-    }
+    const orderId = this.route.snapshot.params['id'];
+    this.loadOrder(orderId);
+    // Update current time every minute
+    setInterval(() => {
+      this.now = new Date();
+    }, 60000);
   }
 
   loadOrder(orderId: number) {
@@ -191,7 +115,11 @@ export class OrderDetailsComponent implements OnInit {
     return `${displayHour}:${minutes} ${ampm}`;
   }
 
-  
+  formatDuration(minutes: number): string {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  }
 
   getHoursUntilService(): number {
     if (!this.order?.serviceDate) return 0;
