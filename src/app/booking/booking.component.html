@@ -48,6 +48,10 @@
                     <ng-container *ngIf="!(selected.service.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
                   </option>
                 </select>
+                <span class="service-duration" *ngIf="selected.service.timeDuration">
+                  <span class="duration-icon">⏱️</span>
+                  {{ formatDuration(selected.service.timeDuration * selected.quantity) }}
+                </span>
                 <span class="service-cost">
                   <!-- Bedrooms -->
                   <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity === 0">
@@ -115,7 +119,13 @@
                 <div class="extra-info">
                   <h4>{{ extra.name }}</h4>
                   <p>{{ extra.description }}</p>
-                  <div class="extra-price">${{ extra.price }}</div>
+                  <div class="extra-details">
+                    <div class="extra-price">${{ extra.price }}</div>
+                    <div class="extra-duration" *ngIf="extra.duration">
+                      <span class="duration-icon">⏱️</span>
+                      {{ formatDuration(extra.duration) }}
+                    </div>
+                  </div>
                 </div>
                 <div class="checkbox">
                   <input type="checkbox" [checked]="isExtraServiceSelected(extra)" (click)="$event.stopPropagation()">

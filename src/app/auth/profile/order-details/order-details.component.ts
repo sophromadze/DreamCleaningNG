@@ -50,6 +50,25 @@ export class OrderDetailsComponent implements OnInit {
     });
   }
 
+  getServiceDuration(): number {
+    if (!this.order) return 0;
+    
+    // Use ! to tell TypeScript that order is not null
+    const hasCleanerWithHours = this.order!.services.some(s => 
+      s.serviceName.toLowerCase().includes('cleaner') && 
+      this.order!.services.some(h => h.serviceName.toLowerCase().includes('hour'))
+    );
+    
+    if (hasCleanerWithHours) {
+      const hoursService = this.order!.services.find(s => 
+        s.serviceName.toLowerCase().includes('hour')
+      );
+      return hoursService ? hoursService.quantity * 60 : this.order!.totalDuration;
+    }
+    
+    return Math.ceil(this.order!.totalDuration / (this.order!.maidsCount || 1));
+  }
+
   openCancelModal() {
     this.showCancelModal = true;
   }
