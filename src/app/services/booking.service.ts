@@ -13,6 +13,14 @@ export interface ServiceType {
   isActive: boolean;
 }
 
+export interface BookingResponse {
+  orderId: number;
+  status: string;
+  total: number;
+  paymentIntentId: string;
+}
+
+
 export interface Service {
   id: number;
   name: string;
@@ -80,9 +88,10 @@ export interface BookingData {
   city: string;
   state: string;
   zipCode: string;
-  apartmentId?: number;
-  promoCode?: string;
   tips: number;
+  promoCode?: string;
+  maidsCount?: number;
+  totalDuration?: number;
 }
 
 export interface BookingCalculation {
@@ -118,8 +127,8 @@ export class BookingService {
     return this.http.post<BookingCalculation>(`${this.apiUrl}/booking/calculate`, bookingData);
   }
 
-  createBooking(bookingData: BookingData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/booking/create`, bookingData);
+  createBooking(bookingData: BookingData): Observable<BookingResponse> {
+    return this.http.post<BookingResponse>(`${this.apiUrl}/booking/create`, bookingData);
   }
 
   getAvailableTimeSlots(date: Date, serviceTypeId: number): Observable<string[]> {

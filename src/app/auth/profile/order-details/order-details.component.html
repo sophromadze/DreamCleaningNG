@@ -47,10 +47,13 @@
         <h3>Services</h3>
 
          <!-- Add Maids Count Display -->
-          <div class="maids-count-display">
-            <strong>Number of Maids:</strong>
-            <span class="maids-badge">{{ order.maidsCount }} {{ order.maidsCount > 1 ? 'Maids' : 'Maid' }}</span>
-          </div>
+<div class="maids-count-display">
+  <strong>Number of Maids:</strong>
+  <span class="maids-badge">
+    {{ (order.maidsCount || calculateMaidCount(order)) }} 
+    {{ (order.maidsCount || calculateMaidCount(order)) > 1 ? 'Maids' : 'Maid' }}
+  </span>
+</div>
           
         <div class="services-list">
           <div class="service-item" *ngFor="let service of order.services">
