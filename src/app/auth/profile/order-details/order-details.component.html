@@ -39,6 +39,10 @@
             <span class="label">Frequency:</span>
             <span class="value">{{ order.frequencyName }}</span>
           </div>
+          <div class="info-row">
+            <span class="label">Maids:</span>
+            <span class="value">{{ order.maidsCount }} {{ order.maidsCount > 1 ? 'Maids' : 'Maid' }}</span>
+          </div>
         </div>
       </div>
   
@@ -46,12 +50,6 @@
       <div class="section">
         <h3>Services</h3>
 
-         <!-- Add Maids Count Display -->
-          <div class="maids-count-display">
-            <strong>Number of Maids:</strong>
-            <span class="maids-badge">{{ order.maidsCount }} {{ order.maidsCount > 1 ? 'Maids' : 'Maid' }}</span>
-          </div>
-          
         <div class="services-list">
           <div class="service-item" *ngFor="let service of order.services">
             <span class="service-name">{{ service.serviceName }}</span>
