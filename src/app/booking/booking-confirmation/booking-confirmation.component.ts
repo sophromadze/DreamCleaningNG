@@ -40,7 +40,9 @@ export class BookingConfirmationComponent implements OnInit {
         
         // Redirect to order details after 3 seconds
         setTimeout(() => {
-          this.router.navigate(['/order', this.orderId]);
+          this.router.navigate(['/order', this.orderId], {
+            state: { bookingCompleted: true }
+          });
         }, 3000);
       },
       error: (error) => {

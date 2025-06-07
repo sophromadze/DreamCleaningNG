@@ -85,6 +85,8 @@ export interface BookingData {
   tips: number;
   maidsCount: number;
   totalDuration: number;
+  discountAmount: number;
+  subTotal: number;
 }
 
 export interface BookingCalculation {

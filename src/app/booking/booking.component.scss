@@ -420,6 +420,50 @@
         }
       }
     }
+  
+    .discount-card {
+      &.applied {
+        border-color: #28a745;
+        background-color: #f0f8f0;
+      }
+    }
+  
+    .remove-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      margin-left: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+  
+      &:hover {
+        background-color: #c82333;
+      }
+    }
+  
+    .discount-error {
+      margin-bottom: 1rem;
+    }
+  
+    .discount-note {
+      margin-top: 0.5rem;
+      color: #6c757d;
+      font-style: italic;
+    }
+  
+    .promo-input {
+      input[disabled] {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+      }
+  
+      button[disabled] {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
   }
   
   // Tips Section

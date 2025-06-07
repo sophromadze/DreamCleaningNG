@@ -1,12 +1,12 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { map, tap, catchError } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../environments/environment';
 
-interface User {
+export interface UserDto {
   id: number;
   firstName: string;
   lastName: string;
@@ -19,7 +19,7 @@ interface User {
 }
 
 interface AuthResponse {
-  user: User;
+  user: UserDto;
   token: string;
   refreshToken: string;
 }
@@ -43,8 +43,8 @@ interface RegisterData {
 })
 export class AuthService {
   private apiUrl = environment.apiUrl;
-  private currentUserSubject: BehaviorSubject<User | null>;
-  public currentUser: Observable<User | null>;
+  private currentUserSubject: BehaviorSubject<UserDto | null>;
+  public currentUser: Observable<UserDto | null>;
   private isBrowser: boolean;
   private isInitializedSubject = new BehaviorSubject<boolean>(false);
   public isInitialized$ = this.isInitializedSubject.asObservable();
@@ -62,14 +62,14 @@ export class AuthService {
       storedUser = userStr ? JSON.parse(userStr) : null;
     }
     
-    this.currentUserSubject = new BehaviorSubject<User | null>(storedUser);
+    this.currentUserSubject = new BehaviorSubject<UserDto | null>(storedUser);
     this.currentUser = this.currentUserSubject.asObservable();
     
     // Mark as initialized after loading from storage
     setTimeout(() => this.isInitializedSubject.next(true), 0);
   }
 
-  public get currentUserValue(): User | null {
+  public get currentUserValue(): UserDto | null {
     return this.currentUserSubject.value;
   }
 
@@ -162,5 +162,37 @@ export class AuthService {
       currentPassword,
       newPassword
     });
+  }
+
+  // Update the current user in memory and localStorage
+  updateCurrentUser(user: UserDto): void {
+    if (this.isBrowser) {
+      localStorage.setItem('currentUser', JSON.stringify(user));
+    }
+    this.currentUserSubject.next(user);
+  }
+
+  // Refresh user data from the profile endpoint
+  refreshUserProfile(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/profile`).pipe(
+      tap(profile => {
+        if (profile && this.currentUserValue) {
+          // Update the current user with the profile data
+          const updatedUser: UserDto = {
+            ...this.currentUserValue,
+            firstName: profile.firstName,
+            lastName: profile.lastName,
+            email: profile.email,
+            phone: profile.phone,
+            firstTimeOrder: profile.firstTimeOrder
+          };
+          this.updateCurrentUser(updatedUser);
+        }
+      }),
+      catchError(error => {
+        console.error('Failed to refresh user profile:', error);
+        return of(null);
+      })
+    );
   }
 }

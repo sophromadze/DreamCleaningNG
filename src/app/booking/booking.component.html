@@ -203,22 +203,53 @@
         <!-- Step 6: Discounts -->
         <section class="booking-section" *ngIf="selectedServiceType">
           <h2>6. Apply Discounts</h2>
+
+          <!-- Show error message if there is one -->
+          <div class="discount-error" *ngIf="errorMessage">
+            <p class="error-message">{{ errorMessage }}</p>
+          </div>
+
           <div class="discounts">
             <div class="first-time-discount" *ngIf="hasFirstTimeDiscount">
-              <div class="discount-card">
+              <div class="discount-card" [class.applied]="firstTimeDiscountApplied">
                 <h4>First Time Customer Discount</h4>
                 <p>Get 20% off your first order!</p>
-                <button class="apply-btn" (click)="applyFirstTimeDiscount()" [disabled]="firstTimeDiscountApplied">
+                <button 
+                  class="apply-btn" 
+                  (click)="applyFirstTimeDiscount()" 
+                  [disabled]="firstTimeDiscountApplied || promoCodeApplied">
                   {{ firstTimeDiscountApplied ? 'Applied' : 'Apply' }}
+                </button>
+                <button 
+                  class="remove-btn" 
+                  (click)="removeFirstTimeDiscount()" 
+                  *ngIf="firstTimeDiscountApplied">
+                  Remove
                 </button>
               </div>
             </div>
+
             <div class="promo-code">
               <label>Promo Code</label>
               <div class="promo-input">
-                <input type="text" [formControl]="promoCode" placeholder="Enter promo code">
-                <button (click)="applyPromoCode()">Apply</button>
+                <input 
+                  type="text" 
+                  [formControl]="promoCode" 
+                  placeholder="Enter promo code">
+                <button 
+                  (click)="applyPromoCode()">
+                  Apply
+                </button>
+                <button 
+                  class="remove-btn" 
+                  (click)="removePromoCode()" 
+                  *ngIf="promoCodeApplied">
+                  Remove
+                </button>
               </div>
+              <p class="discount-note" *ngIf="firstTimeDiscountApplied || promoCodeApplied">
+                <small>Note: Only one discount can be applied per order</small>
+              </p>
             </div>
           </div>
         </section>

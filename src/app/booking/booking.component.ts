@@ -126,8 +126,18 @@ export class BookingComponent implements OnInit {
     this.minDate = new Date();
     this.minDate.setHours(0, 0, 0, 0);
     
-    this.loadInitialData();
-    this.setupFormListeners();
+    // Refresh user data to ensure we have the latest firstTimeOrder status
+    this.authService.refreshUserProfile().subscribe({
+      next: () => {
+        this.loadInitialData();
+        this.setupFormListeners();
+      },
+      error: () => {
+        // Even if refresh fails, continue with cached data
+        this.loadInitialData();
+        this.setupFormListeners();
+      }
+    });
   }
 
   private loadInitialData() {
@@ -337,9 +347,20 @@ export class BookingComponent implements OnInit {
   }
 
   applyPromoCode() {
+    // Check if the control is disabled
+    if (this.promoCode.disabled) {
+      return;
+    }
+  
     const code = this.promoCode.value;
     if (!code) return;
-
+  
+    // If first-time discount is already applied, show error
+    if (this.firstTimeDiscountApplied) {
+      this.errorMessage = 'Cannot apply promo code when first-time discount is already applied. Please remove the first-time discount first.';
+      return;
+    }
+  
     this.bookingService.validatePromoCode(code).subscribe({
       next: (validation) => {
         if (validation.isValid) {
@@ -358,7 +379,15 @@ export class BookingComponent implements OnInit {
   }
 
   applyFirstTimeDiscount() {
+    // If promo code is already applied, show error
+    if (this.promoCodeApplied) {
+      this.errorMessage = 'Cannot apply first-time discount when a promo code is already applied. Please remove the promo code first.';
+      return;
+    }
+    
     this.firstTimeDiscountApplied = true;
+    // Disable the promo code input
+    this.promoCode.disable();
     this.calculateTotal();
   }
 
@@ -540,13 +569,12 @@ export class BookingComponent implements OnInit {
       discountAmount = subTotal * (this.selectedFrequency.discountPercentage / 100);
     }
   
-    // Apply first time discount (20%) only if explicitly applied
+    // Apply EITHER first time discount OR promo code discount, not both
     if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
+      // Apply first time discount (20%)
       discountAmount += subTotal * 0.20;
-    }
-  
-    // Apply promo code discount
-    if (this.promoCodeApplied) {
+    } else if (this.promoCodeApplied) {
+      // Apply promo code discount
       if (this.promoIsPercentage) {
         discountAmount += subTotal * (this.promoDiscount / 100);
       } else {
@@ -580,17 +608,6 @@ export class BookingComponent implements OnInit {
       total,
       totalDuration: displayDuration // Use display duration for UI
     };
-  
-    // Add console logging to debug
-    console.log('Duration Calculation Debug:');
-    console.log('Use Explicit Hours:', useExplicitHours);
-    console.log('Total Duration (raw):', totalDuration);
-    console.log('Actual Total Duration:', actualTotalDuration);
-    console.log('Display Duration:', displayDuration);
-    console.log('Calculated Maids Count:', this.calculatedMaidsCount);
-    if (hoursService) {
-      console.log('Hours from Hours Service:', hoursService.quantity);
-    }
   }
 
    // Get cleaning type text
@@ -759,17 +776,13 @@ export class BookingComponent implements OnInit {
       state: formValue.state,
       zipCode: formValue.zipCode,
       apartmentId: formValue.selectedApartmentId,
-      promoCode: formValue.promoCode,
+      promoCode: this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode,
       tips: formValue.tips,
       maidsCount: this.calculatedMaidsCount,
+      discountAmount: this.calculation.discountAmount,
+      subTotal: this.calculation.subTotal,
       totalDuration: this.actualTotalDuration
     };
-
-    console.log('Sending to backend:');
-    console.log('- Actual Total Duration:', this.actualTotalDuration);
-    console.log('- Display Duration:', this.calculation.totalDuration);
-    console.log('- Maids Count:', this.calculatedMaidsCount);
-    console.log('- Calculated backend duration should be:', this.actualTotalDuration);
 
     this.bookingService.createBooking(bookingData).subscribe({
       next: (response) => {
@@ -802,6 +815,21 @@ export class BookingComponent implements OnInit {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  }
+
+  removePromoCode() {
+    this.promoCodeApplied = false;
+    this.promoDiscount = 0;
+    this.promoCode.setValue('');
+    this.errorMessage = ''; // Clear any error messages
+    this.calculateTotal();
+  }
+  
+  removeFirstTimeDiscount() {
+    this.firstTimeDiscountApplied = false;
+    // Re-enable the promo code input
+    this.promoCode.enable();
+    this.calculateTotal();
   }
 
   // Form control getters for type safety
