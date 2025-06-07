@@ -140,6 +140,12 @@ export class ProfileComponent implements OnInit {
   }
 
   startAddApartment() {
+    if (this.profile && this.profile.apartments.length >= 10) {
+      this.errorMessage = 'You have reached the maximum limit of 10 saved addresses';
+      setTimeout(() => this.errorMessage = '', 3000);
+      return;
+    }
+    
     this.isAddingApartment = true;
     this.newApartment = {
       name: '',

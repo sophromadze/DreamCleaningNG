@@ -105,6 +105,7 @@ export class BookingComponent implements OnInit {
       useApartmentAddress: [false],
       selectedApartmentId: [''],
       serviceAddress: ['', Validators.required],
+      apartmentName: ['', Validators.required],
       aptSuite: [''],
       city: ['', Validators.required],
       state: ['', Validators.required],
@@ -221,6 +222,28 @@ export class BookingComponent implements OnInit {
         if (apartmentId) {
           this.fillApartmentAddress(apartmentId);
         }
+      }
+    });
+
+     // Add listener for useApartmentAddress to toggle apartment name requirement
+    this.bookingForm.get('useApartmentAddress')?.valueChanges.subscribe(useApartment => {
+      const apartmentNameControl = this.bookingForm.get('apartmentName');
+      
+      if (useApartment) {
+        // Using saved address - clear and disable apartment name
+        apartmentNameControl?.clearValidators();
+        apartmentNameControl?.setValue('');
+        apartmentNameControl?.disable();
+        
+        const apartmentId = this.bookingForm.get('selectedApartmentId')?.value;
+        if (apartmentId) {
+          this.fillApartmentAddress(apartmentId);
+        }
+      } else {
+        // Not using saved address - enable and require apartment name
+        apartmentNameControl?.enable();
+        apartmentNameControl?.setValidators([Validators.required]);
+        apartmentNameControl?.updateValueAndValidity();
       }
     });
 
@@ -781,6 +804,7 @@ export class BookingComponent implements OnInit {
       state: formValue.state,
       zipCode: formValue.zipCode,
       apartmentId: formValue.useApartmentAddress ? Number(formValue.selectedApartmentId) : null,
+      apartmentName: !formValue.useApartmentAddress ? formValue.apartmentName : undefined,
       promoCode: this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode,
       tips: formValue.tips,
       maidsCount: this.calculatedMaidsCount,
@@ -824,6 +848,8 @@ export class BookingComponent implements OnInit {
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   }
+
+  get apartmentName() { return this.bookingForm.get('apartmentName') as FormControl; }
 
   removePromoCode() {
     this.promoCodeApplied = false;

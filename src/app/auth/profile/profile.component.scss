@@ -123,8 +123,23 @@
         &:hover {
           background-color: #218838;
         }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          background-color: #ccc;
+        }
       }
     }
+  }
+  
+  .info-message {
+    background-color: #f0f8ff;
+    color: #0066cc;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
   }
   
   .info-display {

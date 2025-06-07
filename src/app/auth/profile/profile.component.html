@@ -101,8 +101,19 @@
       <!-- Apartments Section -->
       <div class="section">
         <div class="section-header">
-          <h2>My Apartments</h2>
-          <button *ngIf="!isAddingApartment" class="add-btn" (click)="startAddApartment()">Add Apartment</button>
+          <h2>Saved Addresses ({{ profile.apartments.length }}/5)</h2>
+          <button 
+            class="add-btn" 
+            (click)="startAddApartment()"
+            [disabled]="profile.apartments.length >= 5"
+            *ngIf="!isAddingApartment && !editingApartmentId">
+            Add New Address
+          </button>
+        </div>
+        
+        <!-- Show message when at limit -->
+        <div class="info-message" *ngIf="profile.apartments.length >= 5">
+          You have reached the maximum limit of 5 saved addresses.
         </div>
   
         <!-- Add New Apartment Form -->

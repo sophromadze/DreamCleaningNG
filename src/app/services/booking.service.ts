@@ -81,6 +81,7 @@ export interface BookingData {
   state: string;
   zipCode: string;
   apartmentId?: number | null;
+  apartmentName?: string;
   promoCode?: string;
   tips: number;
   maidsCount: number;
