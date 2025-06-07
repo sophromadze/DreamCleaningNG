@@ -64,7 +64,14 @@
                 </ng-container>
               </ng-container>
             </span>
-            <span class="service-duration">{{ formatDuration(service.duration) }}</span>
+            <span class="service-duration">
+              <ng-container *ngIf="service.serviceName.toLowerCase().includes('hour')">
+                {{ formatDuration(service.quantity * 60) }}
+              </ng-container>
+              <ng-container *ngIf="!service.serviceName.toLowerCase().includes('hour')">
+                {{ formatDuration(service.duration) }}
+              </ng-container>
+            </span>
             <span class="service-cost">${{ service.cost.toFixed(2) }}</span>
           </div>
         </div>
@@ -89,7 +96,9 @@
               <ng-container *ngIf="extra.quantity > 0">Qty: {{ extra.quantity }}</ng-container>
               <ng-container *ngIf="extra.hours > 0">Hours: {{ extra.hours }}</ng-container>
             </span>
-            <span class="service-duration">{{ formatDuration(extra.duration * (extra.quantity || 1)) }}</span>
+            <span class="service-duration">
+              {{ formatDuration(hasCleanerService() ? 0 : extra.duration) }}
+            </span>
             <span class="service-cost">${{ extra.cost.toFixed(2) }}</span>
           </div>
         </div>

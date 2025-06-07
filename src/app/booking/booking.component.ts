@@ -397,12 +397,13 @@ export class BookingComponent implements OnInit {
     let actualTotalDuration = 0; // Track the real total duration
     let deepCleaningFee = 0;
     let displayDuration = 0; // This will be the duration shown to the user
-
+    let useExplicitHours = false; // Flag to check if we should use hours from Hours service
+  
     // Check for deep cleaning multipliers FIRST
     let priceMultiplier = 1;
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
-
+  
     if (superDeepCleaning) {
       priceMultiplier = superDeepCleaning.extraService.priceMultiplier;
       deepCleaningFee = superDeepCleaning.extraService.price;
@@ -410,82 +411,98 @@ export class BookingComponent implements OnInit {
       priceMultiplier = deepCleaning.extraService.priceMultiplier;
       deepCleaningFee = deepCleaning.extraService.price;
     }
-
+  
     // Calculate base price with multiplier
     if (this.selectedServiceType) {
       subTotal += this.selectedServiceType.basePrice * priceMultiplier;
     }
-
+  
+    // Check if we have cleaner-hours relationship
+    const hasCleanerService = this.selectedServices.some(s => 
+      s.service.serviceRelationType === 'cleaner'
+    );
+    const hoursService = this.selectedServices.find(s => 
+      s.service.serviceRelationType === 'hours'
+    );
+  
+    // If we have both cleaner and hours services, use hours as the duration
+    if (hasCleanerService && hoursService) {
+      useExplicitHours = true;
+      // Set the duration from hours service
+      actualTotalDuration = hoursService.quantity * 60; // Convert hours to minutes
+      totalDuration = actualTotalDuration;
+    }
+  
     // Calculate service costs
     this.selectedServices.forEach(selected => {
-      // Special handling for cleaner-hours relationship - works for ANY service type
+      // Special handling for cleaner-hours relationship
       if (selected.service.serviceRelationType === 'cleaner') {
-        // Find the hours service
-        const hoursService = this.selectedServices.find(s => s.service.serviceRelationType === 'hours');
         if (hoursService) {
           const hours = hoursService.quantity;
           const cleaners = selected.quantity;
           const costPerCleanerPerHour = selected.service.cost * priceMultiplier;
           const cost = costPerCleanerPerHour * cleaners * hours;
           subTotal += cost;
-          totalDuration += hours * 60; // Convert hours to minutes
-          actualTotalDuration += hours * 60; // Track actual total
+          // Duration is already set from hours service above
         }
       } else if (selected.service.serviceKey === 'bedrooms' && selected.quantity === 0) {
         // Studio apartment - flat rate of $20
         const cost = 20 * priceMultiplier;
         subTotal += cost;
-        totalDuration += 20; // 20 minutes for studio
-        actualTotalDuration += 20; // Track actual total
+        if (!useExplicitHours) {
+          totalDuration += 20; // 20 minutes for studio
+          actualTotalDuration += 20;
+        }
       } else if (selected.service.serviceRelationType !== 'hours') {
         // Regular service calculation (not hours in a cleaner-hours relationship)
         const cost = selected.service.cost * selected.quantity * priceMultiplier;
         subTotal += cost;
-        totalDuration += selected.service.timeDuration * selected.quantity;
-        actualTotalDuration += selected.service.timeDuration * selected.quantity; // Track actual total
+        if (!useExplicitHours) {
+          totalDuration += selected.service.timeDuration * selected.quantity;
+          actualTotalDuration += selected.service.timeDuration * selected.quantity;
+        }
       }
       // Note: 'hours' services are not calculated separately when serviceRelationType is 'hours'
     });
-
+  
     // Calculate extra service costs
+    // When using explicit hours, extra services don't add to duration
     this.selectedExtraServices.forEach(selected => {
       if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
         // Regular extra services - apply multiplier EXCEPT for Same Day Service
         const currentMultiplier = selected.extraService.isSameDayService ? 1 : priceMultiplier;
-
+        
         if (selected.extraService.hasHours) {
           subTotal += selected.extraService.price * selected.hours * currentMultiplier;
-          totalDuration += selected.extraService.duration * selected.hours;
-          actualTotalDuration += selected.extraService.duration * selected.hours; // Track actual total
+          if (!useExplicitHours) {
+            totalDuration += selected.extraService.duration * selected.hours;
+            actualTotalDuration += selected.extraService.duration * selected.hours;
+          }
         } else if (selected.extraService.hasQuantity) {
           subTotal += selected.extraService.price * selected.quantity * currentMultiplier;
-          totalDuration += selected.extraService.duration * selected.quantity;
-          actualTotalDuration += selected.extraService.duration * selected.quantity; // Track actual total
+          if (!useExplicitHours) {
+            totalDuration += selected.extraService.duration * selected.quantity;
+            actualTotalDuration += selected.extraService.duration * selected.quantity;
+          }
         } else {
           subTotal += selected.extraService.price * currentMultiplier;
-          totalDuration += selected.extraService.duration;
-          actualTotalDuration += selected.extraService.duration; // Track actual total
+          if (!useExplicitHours) {
+            totalDuration += selected.extraService.duration;
+            actualTotalDuration += selected.extraService.duration;
+          }
         }
       } else {
         // Deep cleaning services - duration only (fee tracked separately)
-        totalDuration += selected.extraService.duration;
-        actualTotalDuration += selected.extraService.duration; // Track actual total
+        if (!useExplicitHours) {
+          totalDuration += selected.extraService.duration;
+          actualTotalDuration += selected.extraService.duration;
+        }
       }
     });
-
+  
     // Calculate maids count
     this.calculatedMaidsCount = 1;
-
-    // Check if cleaners are explicitly selected
-    const hasCleanerService = this.selectedServices.some(s => 
-      s.service.serviceRelationType === 'cleaner'
-    );
-
-    // Check if hours are explicitly selected
-    const hoursService = this.selectedServices.find(s => 
-      s.service.serviceRelationType === 'hours'
-    );
-
+  
     if (hasCleanerService) {
       // Use the selected cleaner count
       const cleanerService = this.selectedServices.find(s => 
@@ -494,18 +511,13 @@ export class BookingComponent implements OnInit {
       if (cleanerService) {
         this.calculatedMaidsCount = cleanerService.quantity;
       }
-
-      // If hours service is also selected, use only the hours from that service
-      if (hoursService) {
-        displayDuration = hoursService.quantity * 60; // Convert hours to minutes
-      } else {
-        // When cleaners are selected but no hours service, use calculated duration
-        displayDuration = totalDuration;
-      }
+  
+      // When cleaners are explicitly selected, always use the actual duration
+      displayDuration = actualTotalDuration;
     } else {
       // Calculate based on duration (every 6 hours = 1 maid)
       const totalHours = totalDuration / 60;
-
+  
       // Always start with 1 maid
       if (totalHours <= 6) {
         this.calculatedMaidsCount = 1;
@@ -513,26 +525,26 @@ export class BookingComponent implements OnInit {
       } else {
         // For duration > 6 hours, calculate number of maids needed
         this.calculatedMaidsCount = Math.ceil(totalHours / 6);
-
+  
         // Divide the total duration by number of maids to get display duration
         displayDuration = Math.ceil(totalDuration / this.calculatedMaidsCount);
       }
     }
-
+  
     // IMPORTANT: Store the actual total duration for backend
     this.actualTotalDuration = actualTotalDuration;
-
+  
     // Apply frequency discount to the subtotal (before adding deep cleaning fee)
     let discountAmount = 0;
     if (this.selectedFrequency && this.selectedFrequency.discountPercentage > 0) {
       discountAmount = subTotal * (this.selectedFrequency.discountPercentage / 100);
     }
-
+  
     // Apply first time discount (20%) only if explicitly applied
     if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
       discountAmount += subTotal * 0.20;
     }
-
+  
     // Apply promo code discount
     if (this.promoCodeApplied) {
       if (this.promoIsPercentage) {
@@ -541,28 +553,44 @@ export class BookingComponent implements OnInit {
         discountAmount += this.promoDiscount;
       }
     }
-
+  
     // Now add the deep cleaning fee AFTER discounts are calculated
     subTotal += deepCleaningFee;
-
+  
     // Calculate tax on discounted subtotal
     const discountedSubTotal = subTotal - discountAmount;
     const tax = discountedSubTotal * this.salesTaxRate;
-
+  
     // Get tips
     const tips = this.tips.value || 0;
-
+  
     // Calculate total
     const total = discountedSubTotal + tax + tips;
-
+  
+    // For display, when using explicit hours, show the hours directly
+    if (useExplicitHours && hoursService) {
+      displayDuration = hoursService.quantity * 60; // Show exact hours selected
+    }
+  
     this.calculation = {
       subTotal,
       tax,
       discountAmount,
       tips,
       total,
-      totalDuration: displayDuration // This is for display only (duration per maid)
+      totalDuration: displayDuration // Use display duration for UI
     };
+  
+    // Add console logging to debug
+    console.log('Duration Calculation Debug:');
+    console.log('Use Explicit Hours:', useExplicitHours);
+    console.log('Total Duration (raw):', totalDuration);
+    console.log('Actual Total Duration:', actualTotalDuration);
+    console.log('Display Duration:', displayDuration);
+    console.log('Calculated Maids Count:', this.calculatedMaidsCount);
+    if (hoursService) {
+      console.log('Hours from Hours Service:', hoursService.quantity);
+    }
   }
 
    // Get cleaning type text
@@ -734,8 +762,14 @@ export class BookingComponent implements OnInit {
       promoCode: formValue.promoCode,
       tips: formValue.tips,
       maidsCount: this.calculatedMaidsCount,
-      totalDuration: this.actualTotalDuration 
+      totalDuration: this.actualTotalDuration
     };
+
+    console.log('Sending to backend:');
+    console.log('- Actual Total Duration:', this.actualTotalDuration);
+    console.log('- Display Duration:', this.calculation.totalDuration);
+    console.log('- Maids Count:', this.calculatedMaidsCount);
+    console.log('- Calculated backend duration should be:', this.actualTotalDuration);
 
     this.bookingService.createBooking(bookingData).subscribe({
       next: (response) => {

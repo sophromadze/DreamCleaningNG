@@ -52,21 +52,19 @@ export class OrderDetailsComponent implements OnInit {
 
   getServiceDuration(): number {
     if (!this.order) return 0;
-    
-    // Use ! to tell TypeScript that order is not null
-    const hasCleanerWithHours = this.order!.services.some(s => 
-      s.serviceName.toLowerCase().includes('cleaner') && 
-      this.order!.services.some(h => h.serviceName.toLowerCase().includes('hour'))
+
+    // Check for Cleaners service
+    const cleanersService = this.order.services.find(s => 
+      s.serviceName.toLowerCase().includes('cleaner')
     );
     
-    if (hasCleanerWithHours) {
-      const hoursService = this.order!.services.find(s => 
-        s.serviceName.toLowerCase().includes('hour')
-      );
-      return hoursService ? hoursService.quantity * 60 : this.order!.totalDuration;
+    if (cleanersService) {
+      return cleanersService.duration; // This is already in minutes
     }
     
-    return Math.ceil(this.order!.totalDuration / (this.order!.maidsCount || 1));
+    // If no cleaners service, use the fallback calculation
+    const fallbackDuration = Math.ceil(this.order.totalDuration / (this.order.maidsCount || 1));
+    return fallbackDuration;
   }
 
   openCancelModal() {
@@ -170,5 +168,10 @@ export class OrderDetailsComponent implements OnInit {
       return 'Deep Cleaning';
     }
     return 'Normal Cleaning';
+  }
+
+  hasCleanerService(): boolean {
+    if (!this.order) return false;
+    return this.order.services.some(s => s.serviceName.toLowerCase().includes('cleaner'));
   }
 }
