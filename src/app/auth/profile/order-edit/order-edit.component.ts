@@ -64,6 +64,7 @@ export class OrderEditComponent implements OnInit {
   newSubTotal = 0;
   newTotal = 0;
   newTax = 0;
+  totalDuration: number = 0;
   
   // Constants
   salesTaxRate = 0.088; // 8.8%
@@ -378,12 +379,13 @@ export class OrderEditComponent implements OnInit {
 
   calculateNewTotal() {
     if (!this.serviceType) return;
-
+  
     let subtotal = 0;
-    let totalDuration = 0; // Track duration separately
+    let totalDuration = 0;
+    let displayDuration = 0; // This will be the duration shown to the user
     let priceMultiplier = 1;
     let deepCleaningFee = 0;
-
+  
     // Check for deep cleaning multipliers FIRST
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
@@ -395,10 +397,10 @@ export class OrderEditComponent implements OnInit {
       priceMultiplier = deepCleaning.extraService.priceMultiplier;
       deepCleaningFee = deepCleaning.extraService.price;
     }
-
+  
     // Add base price with multiplier
     subtotal += this.serviceType.basePrice * priceMultiplier;
-
+  
     // Calculate services cost and duration
     this.selectedServices.forEach(selectedService => {
       const { service, quantity, hours } = selectedService;
@@ -414,11 +416,12 @@ export class OrderEditComponent implements OnInit {
         totalDuration += service.timeDuration * quantity;
       }
     });
-
+  
     // Calculate extra service costs and duration
     this.selectedExtraServices.forEach(selected => {
       if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
-        const currentMultiplier = selected.extraService.isSameDayService ? 1 : priceMultiplier;
+        const currentMultiplier = selected.extraService.isSameDayService ? 
+          1 : priceMultiplier;
         
         if (selected.extraService.hasHours) {
           subtotal += selected.extraService.price * selected.hours * currentMultiplier;
@@ -434,12 +437,17 @@ export class OrderEditComponent implements OnInit {
         totalDuration += selected.extraService.duration;
       }
     });
-
+  
     // Calculate maids count
     this.calculatedMaidsCount = 1;
     
     const hasCleanerService = this.selectedServices.some(s => 
       s.service.serviceRelationType === 'cleaner'
+    );
+    
+    // Check if hours are explicitly selected
+    const hoursService = this.selectedServices.find(s => 
+      s.service.serviceRelationType === 'hours'
     );
     
     if (hasCleanerService) {
@@ -449,22 +457,44 @@ export class OrderEditComponent implements OnInit {
       if (cleanerService) {
         this.calculatedMaidsCount = cleanerService.quantity;
       }
+      
+      // If hours service is also selected, use only the hours from that service
+      if (hoursService) {
+        displayDuration = hoursService.quantity * 60; // Convert hours to minutes
+      } else {
+        // When cleaners are selected but no hours service, use calculated duration
+        displayDuration = totalDuration;
+      }
     } else {
       // Calculate based on duration (every 6 hours = 1 maid)
       const totalHours = totalDuration / 60;
-      this.calculatedMaidsCount = Math.max(1, Math.ceil(totalHours / 6));
+      
+      // Always start with 1 maid
+      if (totalHours <= 6) {
+        this.calculatedMaidsCount = 1;
+        displayDuration = totalDuration;
+      } else {
+        // For duration > 6 hours, calculate number of maids needed
+        this.calculatedMaidsCount = Math.ceil(totalHours / 6);
+        
+        // Divide the total duration by number of maids to get display duration
+        displayDuration = Math.ceil(totalDuration / this.calculatedMaidsCount);
+      }
     }
-
+  
+    // Store the display duration for use in the UI
+    this.totalDuration = displayDuration;
+  
     // Add deep cleaning fee AFTER all other calculations
     subtotal += deepCleaningFee;
-
+  
     // Calculate tax
     this.newTax = subtotal * this.salesTaxRate;
-
+  
     // Calculate new total
     this.newSubTotal = subtotal;
     this.newTotal = subtotal + this.newTax + (this.tips.value || 0);
-
+  
     // Calculate additional amount needed
     this.additionalAmount = this.newTotal - this.originalTotal;
   }

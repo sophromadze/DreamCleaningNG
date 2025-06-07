@@ -394,6 +394,7 @@ export class BookingComponent implements OnInit {
     let subTotal = 0;
     let totalDuration = 0;
     let deepCleaningFee = 0;
+    let displayDuration = 0; // This will be the duration shown to the user
   
     // Check for deep cleaning multipliers FIRST
     let priceMultiplier = 1;
@@ -445,7 +446,8 @@ export class BookingComponent implements OnInit {
     this.selectedExtraServices.forEach(selected => {
       if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
         // Regular extra services - apply multiplier EXCEPT for Same Day Service
-        const currentMultiplier = selected.extraService.isSameDayService ? 1 : priceMultiplier;
+        const currentMultiplier = selected.extraService.isSameDayService ? 
+          1 : priceMultiplier;
         
         if (selected.extraService.hasHours) {
           subTotal += selected.extraService.price * selected.hours * currentMultiplier;
@@ -471,6 +473,11 @@ export class BookingComponent implements OnInit {
       s.service.serviceRelationType === 'cleaner'
     );
     
+    // Check if hours are explicitly selected
+    const hoursService = this.selectedServices.find(s => 
+      s.service.serviceRelationType === 'hours'
+    );
+    
     if (hasCleanerService) {
       // Use the selected cleaner count
       const cleanerService = this.selectedServices.find(s => 
@@ -479,14 +486,28 @@ export class BookingComponent implements OnInit {
       if (cleanerService) {
         this.calculatedMaidsCount = cleanerService.quantity;
       }
+      
+      // If hours service is also selected, use only the hours from that service
+      if (hoursService) {
+        displayDuration = hoursService.quantity * 60; // Convert hours to minutes
+      } else {
+        // When cleaners are selected but no hours service, use calculated duration
+        displayDuration = totalDuration;
+      }
     } else {
       // Calculate based on duration (every 6 hours = 1 maid)
       const totalHours = totalDuration / 60;
-      this.calculatedMaidsCount = Math.max(1, Math.ceil(totalHours / 6));
       
-      // Adjust duration based on maids count
-      if (this.calculatedMaidsCount > 1) {
-        totalDuration = Math.floor(totalDuration / this.calculatedMaidsCount);
+      // Always start with 1 maid
+      if (totalHours <= 6) {
+        this.calculatedMaidsCount = 1;
+        displayDuration = totalDuration;
+      } else {
+        // For duration > 6 hours, calculate number of maids needed
+        this.calculatedMaidsCount = Math.ceil(totalHours / 6);
+        
+        // Divide the total duration by number of maids to get display duration
+        displayDuration = Math.ceil(totalDuration / this.calculatedMaidsCount);
       }
     }
   
@@ -529,7 +550,7 @@ export class BookingComponent implements OnInit {
       discountAmount,
       tips,
       total,
-      totalDuration
+      totalDuration: displayDuration // Use the display duration here
     };
   }
 
