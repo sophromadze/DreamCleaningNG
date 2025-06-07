@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { OrderService } from '../../services/order.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-booking-confirmation',
@@ -19,7 +20,8 @@ export class BookingConfirmationComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private orderService: OrderService
+    private orderService: OrderService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -37,6 +39,16 @@ export class BookingConfirmationComponent implements OnInit {
       next: (response) => {
         this.paymentCompleted = true;
         this.isProcessing = false;
+        
+        // Refresh user profile to get updated phone number
+        this.authService.refreshUserProfile().subscribe({
+          next: () => {
+            console.log('User profile refreshed with new phone number');
+          },
+          error: (error) => {
+            console.error('Failed to refresh user profile:', error);
+          }
+        });
         
         // Redirect to order details after 3 seconds
         setTimeout(() => {

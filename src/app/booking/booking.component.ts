@@ -714,11 +714,16 @@ export class BookingComponent implements OnInit {
       this.errorMessage = 'Please fill in all required fields';
       return;
     }
-
+  
     this.isLoading = true;
     
     // Get form values, including disabled fields
     const formValue = this.bookingForm.getRawValue();
+    
+    // Debug log to check apartment ID
+    console.log('Form values:', formValue);
+    console.log('Selected Apartment ID:', formValue.selectedApartmentId);
+    console.log('Use Apartment Address:', formValue.useApartmentAddress);
     
     // Check if serviceDate exists
     if (!formValue.serviceDate) {
@@ -775,7 +780,7 @@ export class BookingComponent implements OnInit {
       city: formValue.city,
       state: formValue.state,
       zipCode: formValue.zipCode,
-      apartmentId: formValue.selectedApartmentId,
+      apartmentId: formValue.useApartmentAddress ? Number(formValue.selectedApartmentId) : null,
       promoCode: this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode,
       tips: formValue.tips,
       maidsCount: this.calculatedMaidsCount,
@@ -783,6 +788,9 @@ export class BookingComponent implements OnInit {
       subTotal: this.calculation.subTotal,
       totalDuration: this.actualTotalDuration
     };
+
+    // Debug log the booking data
+    console.log('Booking data being sent:', bookingData);
 
     this.bookingService.createBooking(bookingData).subscribe({
       next: (response) => {

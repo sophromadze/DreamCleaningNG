@@ -6,6 +6,7 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { OrderService, Order, UpdateOrder } from '../../../services/order.service';
 import { BookingService, ServiceType, Service, ExtraService, Frequency } from '../../../services/booking.service';
 import { LocationService } from '../../../services/location.service';
+import { AuthService } from '../../../services/auth.service';
 
 interface SelectedService {
   service: Service;
@@ -82,7 +83,8 @@ export class OrderEditComponent implements OnInit {
     private bookingService: BookingService,
     private locationService: LocationService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.orderForm = this.fb.group({
       serviceDate: ['', Validators.required],
@@ -649,12 +651,20 @@ export class OrderEditComponent implements OnInit {
     if (!this.order) return;
   
     this.isSaving = true;
-    this.errorMessage = ''; // Clear previous errors
+    this.errorMessage = '';
     const updateData = this.prepareUpdateData();
   
     this.orderService.updateOrder(this.order.id, updateData).subscribe({
       next: (updatedOrder) => {
         this.successMessage = 'Order updated successfully';
+        
+        // Refresh user profile to ensure phone is updated if changed
+        this.authService.refreshUserProfile().subscribe({
+          next: () => {
+            console.log('User profile refreshed');
+          }
+        });
+        
         setTimeout(() => {
           this.router.navigate(['/order', this.order!.id]);
         }, 1500);
@@ -663,8 +673,6 @@ export class OrderEditComponent implements OnInit {
         console.error('Update error:', error);
         this.errorMessage = error.error?.message || error.error || 'Failed to update order';
         this.isSaving = false;
-        
-        // Scroll to top to show error message
         window.scrollTo(0, 0);
       }
     });
@@ -672,13 +680,17 @@ export class OrderEditComponent implements OnInit {
 
   processAdditionalPayment() {
     if (!this.order) return;
-
-    // Simulate payment for additional amount
+  
+    // For order edits with additional payment, we just simulate the UI flow
+    // In a real implementation, this would process the additional payment through Stripe
     this.isSaving = true;
     
-    // In real implementation, this would process the payment
+    // Simulate payment processing delay
     setTimeout(() => {
       this.showPaymentModal = false;
+      
+      // The phone number update happens in the saveOrder method
+      // when we call updateOrder on the backend
       this.saveOrder();
     }, 1000);
   }

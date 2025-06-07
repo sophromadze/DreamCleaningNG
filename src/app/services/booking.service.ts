@@ -80,7 +80,7 @@ export interface BookingData {
   city: string;
   state: string;
   zipCode: string;
-  apartmentId?: number;
+  apartmentId?: number | null;
   promoCode?: string;
   tips: number;
   maidsCount: number;
