@@ -31,12 +31,12 @@
                       <span class="value">
                         <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0">Studio</ng-container>
                         <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0)">
-                          <ng-container *ngIf="service?.serviceKey === 'cleaners'">
+                          <ng-container *ngIf="service?.serviceRelationType === 'cleaner'">
                             Cleaners: {{ getOriginalServiceQuantity(service) }}
                             <br>
                             Hours: {{ getOriginalServiceHours(service) }}
                           </ng-container>
-                          <ng-container *ngIf="service?.serviceKey !== 'cleaners'">
+                          <ng-container *ngIf="service?.serviceRelationType !== 'cleaner'">
                             {{ getOriginalServiceQuantity(service) }}
                           </ng-container>
                         </ng-container>
@@ -44,10 +44,10 @@
                       <span class="price">
                         <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0">+$20</ng-container>
                         <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0)">
-                          <ng-container *ngIf="service?.serviceKey === 'cleaners'">
+                          <ng-container *ngIf="service?.serviceRelationType === 'cleaner'">
                             +${{ service.cost * getOriginalServiceQuantity(service) * getOriginalServiceHours(service) }}
                           </ng-container>
-                          <ng-container *ngIf="service?.serviceKey !== 'cleaners'">
+                          <ng-container *ngIf="service?.serviceRelationType !== 'cleaner'">
                             +${{ service.cost * getOriginalServiceQuantity(service) }}
                           </ng-container>
                         </ng-container>
@@ -62,10 +62,10 @@
                         <option *ngFor="let option of getServiceOptions(service)" [value]="option">
                           <ng-container *ngIf="service?.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
                           <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && option === 0)">
-                            <ng-container *ngIf="service?.serviceKey === 'cleaners'">
+                            <ng-container *ngIf="service?.serviceRelationType === 'cleaner'">
                               Cleaners: {{ option }}
                             </ng-container>
-                            <ng-container *ngIf="service?.serviceKey !== 'cleaners'">
+                            <ng-container *ngIf="service?.serviceRelationType !== 'cleaner'">
                               {{ option }}
                             </ng-container>
                           </ng-container>
@@ -74,10 +74,10 @@
                       <span class="price">
                         <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0">+$20</ng-container>
                         <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0)">
-                          <ng-container *ngIf="service?.serviceKey === 'cleaners'">
+                          <ng-container *ngIf="service?.serviceRelationType === 'cleaner'">
                             +${{ service.cost * getServiceQuantity(service) * getServiceHours(service) }}
                           </ng-container>
-                          <ng-container *ngIf="service?.serviceKey !== 'cleaners'">
+                          <ng-container *ngIf="service?.serviceRelationType !== 'cleaner'">
                             +${{ service.cost * getServiceQuantity(service) }}
                           </ng-container>
                         </ng-container>
@@ -86,7 +86,7 @@
                   </div>
                 </div>
                 <!-- Hours input for cleaner services -->
-                <div class="hours-input" *ngIf="service?.serviceKey === 'cleaners'">
+                <div class="hours-input" *ngIf="service?.serviceRelationType === 'cleaner'">
                   <label>Hours:</label>
                   <select (change)="updateServiceHours(service, +$any($event.target).value)">
                     <option *ngFor="let hour of [1,2,3,4,5,6,7,8,9]" [value]="hour" [selected]="hour === getServiceHours(service)">
@@ -303,6 +303,11 @@
           <div class="maids-count-display">
             <strong>Number of Maids:</strong>
             <span class="maids-badge">{{ calculatedMaidsCount }} {{ calculatedMaidsCount > 1 ? 'Maids' : 'Maid' }}</span>
+          </div>
+          
+          <div class="duration-display">
+            <strong>Total Duration:</strong>
+            <span class="duration-badge">{{ formatDuration(totalDuration) }}</span>
           </div>
           
           <div class="price-row">

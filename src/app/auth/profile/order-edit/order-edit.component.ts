@@ -65,6 +65,7 @@ export class OrderEditComponent implements OnInit {
   newTotal = 0;
   newTax = 0;
   totalDuration: number = 0;
+  actualTotalDuration: number = 0;
   
   // Constants
   salesTaxRate = 0.088; // 8.8%
@@ -351,12 +352,18 @@ export class OrderEditComponent implements OnInit {
     
     if (hoursService) {
       const orderHoursService = this.order.services.find(s => s.serviceId === hoursService.id);
-      return orderHoursService ? orderHoursService.quantity : 0;
+      if (orderHoursService) {
+        return orderHoursService.quantity;
+      }
     }
     
     // Fallback: check if duration is stored with cleaner service
     const orderService = this.order.services.find(s => s.serviceId === service.id);
-    return orderService ? orderService.duration / 60 : 0;
+    if (orderService && orderService.duration) {
+      return Math.floor(orderService.duration / 60);
+    }
+    
+    return 0;
   }
 
   updateServiceHours(service: Service, hours: number): void {
@@ -378,15 +385,14 @@ export class OrderEditComponent implements OnInit {
   }
 
   calculateNewTotal() {
-    if (!this.serviceType) return;
-  
     let subtotal = 0;
     let totalDuration = 0;
-    let displayDuration = 0; // This will be the duration shown to the user
-    let priceMultiplier = 1;
     let deepCleaningFee = 0;
+    let displayDuration = 0;
+    let actualTotalDuration = 0; // Track the actual total duration for backend
   
-    // Check for deep cleaning multipliers FIRST
+    // Check for deep cleaning multipliers
+    let priceMultiplier = 1;
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
     
@@ -398,73 +404,116 @@ export class OrderEditComponent implements OnInit {
       deepCleaningFee = deepCleaning.extraService.price;
     }
   
-    // Add base price with multiplier
-    subtotal += this.serviceType.basePrice * priceMultiplier;
+    // Calculate base price with multiplier
+    if (this.serviceType) {
+      subtotal += this.serviceType.basePrice * priceMultiplier;
+    }
   
-    // Calculate services cost and duration
-    this.selectedServices.forEach(selectedService => {
-      const { service, quantity, hours } = selectedService;
-      
-      if (service.serviceKey === 'bedrooms' && quantity === 0) {
-        subtotal += 20 * priceMultiplier;
-        totalDuration += 20; // 20 minutes for studio
-      } else if (service.serviceRelationType === 'cleaner' && hours) {
-        subtotal += service.cost * quantity * hours * priceMultiplier;
-        totalDuration += hours * 60; // Convert hours to minutes
-      } else if (service.serviceRelationType !== 'hours') {
-        subtotal += service.cost * quantity * priceMultiplier;
-        totalDuration += service.timeDuration * quantity;
+    // Check if cleaners are explicitly selected
+    const hasCleanerService = this.selectedServices.some(s => 
+      s.service.serviceRelationType === 'cleaner'
+    );
+    
+    // Check if hours are explicitly selected  
+    const hoursService = this.selectedServices.find(s => 
+      s.service.serviceRelationType === 'hours'
+    );
+    
+    // Track if we should use explicit hours (only when hours service is explicitly selected)
+    const useExplicitHours = hasCleanerService && hoursService;
+  
+    // Calculate service costs
+    this.selectedServices.forEach(selected => {
+      // Special handling for cleaner-hours relationship
+      if (selected.service.serviceRelationType === 'cleaner') {
+        // Find the hours service
+        const hoursService = this.selectedServices.find(s => s.service.serviceRelationType === 'hours');
+        if (hoursService) {
+          const hours = hoursService.quantity;
+          const cleaners = selected.quantity;
+          const costPerCleanerPerHour = selected.service.cost * priceMultiplier;
+          const cost = costPerCleanerPerHour * cleaners * hours;
+          subtotal += cost;
+          
+          if (useExplicitHours) {
+            // When hours are explicitly selected, use that for both actual and display
+            actualTotalDuration += hours * 60; // Convert hours to minutes
+            totalDuration += hours * 60;
+          } else {
+            // When hours are not explicitly selected, calculate based on service duration
+            actualTotalDuration += selected.service.timeDuration * selected.quantity;
+            totalDuration += selected.service.timeDuration * selected.quantity;
+          }
+        }
+      } else if (selected.service.serviceKey === 'bedrooms' && selected.quantity === 0) {
+        // Studio apartment - flat rate of $20
+        const cost = 20 * priceMultiplier;
+        subtotal += cost;
+        if (!useExplicitHours) {
+          totalDuration += 20; // 20 minutes for studio
+          actualTotalDuration += 20;
+        }
+      } else if (selected.service.serviceRelationType !== 'hours') {
+        // Regular service calculation (not hours in a cleaner-hours relationship)
+        const cost = selected.service.cost * selected.quantity * priceMultiplier;
+        subtotal += cost;
+        if (!useExplicitHours) {
+          totalDuration += selected.service.timeDuration * selected.quantity;
+          actualTotalDuration += selected.service.timeDuration * selected.quantity;
+        }
       }
+      // Note: 'hours' services are not calculated separately when serviceRelationType is 'hours'
     });
   
-    // Calculate extra service costs and duration
+    // Calculate extra service costs  
     this.selectedExtraServices.forEach(selected => {
       if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
+        // Regular extra services - apply multiplier EXCEPT for Same Day Service
         const currentMultiplier = selected.extraService.isSameDayService ? 
           1 : priceMultiplier;
         
         if (selected.extraService.hasHours) {
           subtotal += selected.extraService.price * selected.hours * currentMultiplier;
-          totalDuration += selected.extraService.duration * selected.hours;
+          if (!useExplicitHours) {
+            totalDuration += selected.extraService.duration * selected.hours;
+            actualTotalDuration += selected.extraService.duration * selected.hours;
+          }
         } else if (selected.extraService.hasQuantity) {
           subtotal += selected.extraService.price * selected.quantity * currentMultiplier;
-          totalDuration += selected.extraService.duration * selected.quantity;
+          if (!useExplicitHours) {
+            totalDuration += selected.extraService.duration * selected.quantity;
+            actualTotalDuration += selected.extraService.duration * selected.quantity;
+          }
         } else {
           subtotal += selected.extraService.price * currentMultiplier;
-          totalDuration += selected.extraService.duration;
+          if (!useExplicitHours) {
+            totalDuration += selected.extraService.duration;
+            actualTotalDuration += selected.extraService.duration;
+          }
         }
       } else {
-        totalDuration += selected.extraService.duration;
+        // Deep cleaning services - duration only (fee tracked separately)
+        if (!useExplicitHours) {
+          totalDuration += selected.extraService.duration;
+          actualTotalDuration += selected.extraService.duration;
+        }
       }
     });
   
     // Calculate maids count
     this.calculatedMaidsCount = 1;
     
-    const hasCleanerService = this.selectedServices.some(s => 
-      s.service.serviceRelationType === 'cleaner'
-    );
-    
-    // Check if hours are explicitly selected
-    const hoursService = this.selectedServices.find(s => 
-      s.service.serviceRelationType === 'hours'
-    );
-    
     if (hasCleanerService) {
+      // Use the selected cleaner count
       const cleanerService = this.selectedServices.find(s => 
         s.service.serviceRelationType === 'cleaner'
       );
       if (cleanerService) {
         this.calculatedMaidsCount = cleanerService.quantity;
       }
-      
-      // If hours service is also selected, use only the hours from that service
-      if (hoursService) {
-        displayDuration = hoursService.quantity * 60; // Convert hours to minutes
-      } else {
-        // When cleaners are selected but no hours service, use calculated duration
-        displayDuration = totalDuration;
-      }
+  
+      // When cleaners are explicitly selected, always use the actual duration
+      displayDuration = actualTotalDuration;
     } else {
       // Calculate based on duration (every 6 hours = 1 maid)
       const totalHours = totalDuration / 60;
@@ -482,8 +531,9 @@ export class OrderEditComponent implements OnInit {
       }
     }
   
-    // Store the display duration for use in the UI
-    this.totalDuration = displayDuration;
+    // Store both durations
+    this.totalDuration = displayDuration; // For UI display
+    this.actualTotalDuration = actualTotalDuration; // For backend
   
     // Add deep cleaning fee AFTER all other calculations
     subtotal += deepCleaningFee;
@@ -540,8 +590,8 @@ export class OrderEditComponent implements OnInit {
     return {
       serviceDate: new Date(formValue.serviceDate),
       serviceTime: formValue.serviceTime,
-      maidsCount: this.calculatedMaidsCount,
-      entryMethod: formValue.entryMethod === 'Other' ? formValue.customEntryMethod : formValue.entryMethod,
+      entryMethod: formValue.entryMethod === 'Other' ? 
+        formValue.customEntryMethod : formValue.entryMethod,
       specialInstructions: formValue.specialInstructions || '',
       contactFirstName: formValue.contactFirstName,
       contactLastName: formValue.contactLastName,
@@ -558,7 +608,10 @@ export class OrderEditComponent implements OnInit {
         quantity: s.quantity,
         hours: s.hours
       })),
-      tips: formValue.tips || 0
+      tips: formValue.tips || 0,
+      // Add these two fields that were missing:
+      totalDuration: this.actualTotalDuration,
+      maidsCount: this.calculatedMaidsCount
     };
   }
 

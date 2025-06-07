@@ -89,6 +89,7 @@ export interface UpdateOrder {
   extraServices: { extraServiceId: number; quantity: number; hours: number }[];
   tips: number;
   maidsCount: number;
+  totalDuration: number;
 }
 
 export interface CancelOrder {
