@@ -721,7 +721,8 @@ export class BookingComponent implements OnInit {
       zipCode: formValue.zipCode,
       apartmentId: formValue.selectedApartmentId,
       promoCode: formValue.promoCode,
-      tips: formValue.tips
+      tips: formValue.tips,
+      maidsCount: this.calculatedMaidsCount // Add this line
     };
 
     this.bookingService.createBooking(bookingData).subscribe({

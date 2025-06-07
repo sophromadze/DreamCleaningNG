@@ -540,6 +540,7 @@ export class OrderEditComponent implements OnInit {
     return {
       serviceDate: new Date(formValue.serviceDate),
       serviceTime: formValue.serviceTime,
+      maidsCount: this.calculatedMaidsCount,
       entryMethod: formValue.entryMethod === 'Other' ? formValue.customEntryMethod : formValue.entryMethod,
       specialInstructions: formValue.specialInstructions || '',
       contactFirstName: formValue.contactFirstName,

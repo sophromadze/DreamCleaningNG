@@ -88,6 +88,7 @@ export interface UpdateOrder {
   services: { serviceId: number; quantity: number }[];
   extraServices: { extraServiceId: number; quantity: number; hours: number }[];
   tips: number;
+  maidsCount: number;
 }
 
 export interface CancelOrder {

@@ -83,6 +83,7 @@ export interface BookingData {
   apartmentId?: number;
   promoCode?: string;
   tips: number;
+  maidsCount: number; // Add this line
 }
 
 export interface BookingCalculation {
