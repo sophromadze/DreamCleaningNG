@@ -140,18 +140,25 @@ export class BookingComponent implements OnInit {
     this.serviceDate.setValue(formattedDate);
     this.serviceTime.setValue('08:00');
     
-    // Refresh user data to ensure we have the latest firstTimeOrder status
-    this.authService.refreshUserProfile().subscribe({
-      next: () => {
-        this.loadInitialData();
-        this.setupFormListeners();
-      },
-      error: () => {
-        // Even if refresh fails, continue with cached data
-        this.loadInitialData();
-        this.setupFormListeners();
-      }
-    });
+    // Only refresh user profile if logged in
+    if (this.authService.isLoggedIn()) {
+      // Refresh user data to ensure we have the latest firstTimeOrder status
+      this.authService.refreshUserProfile().subscribe({
+        next: () => {
+          this.loadInitialData();
+          this.setupFormListeners();
+        },
+        error: () => {
+          // Even if refresh fails, continue with cached data
+          this.loadInitialData();
+          this.setupFormListeners();
+        }
+      });
+    } else {
+      // Not logged in, skip refresh and just load initial data
+      this.loadInitialData();
+      this.setupFormListeners();
+    }
   }
 
   private loadInitialData() {
@@ -778,6 +785,19 @@ export class BookingComponent implements OnInit {
   }
 
   onSubmit() {
+
+    if (!this.authService.isLoggedIn()) {
+      // Store the current booking state if needed
+      // You could implement a service to save the form state
+      
+      // Redirect to login with return URL
+      this.router.navigate(['/login'], { 
+        queryParams: { returnUrl: '/booking' }
+      });
+      return;
+    }
+
+    // Check if the form is valid
     if (!this.bookingForm.valid || !this.selectedServiceType || !this.selectedFrequency) {
       this.errorMessage = 'Please fill in all required fields';
       return;
@@ -789,9 +809,10 @@ export class BookingComponent implements OnInit {
     const formValue = this.bookingForm.getRawValue();
     
     // Debug log to check apartment ID
-    console.log('Form values:', formValue);
-    console.log('Selected Apartment ID:', formValue.selectedApartmentId);
+    // console.log('Form values:', formValue);
     console.log('Use Apartment Address:', formValue.useApartmentAddress);
+    console.log('Selected apartment ID:', formValue.selectedApartmentId);
+    console.log('Apartment ID being sent:', formValue.apartmentId);
     
     // Check if serviceDate exists
     if (!formValue.serviceDate) {
@@ -867,7 +888,18 @@ export class BookingComponent implements OnInit {
         this.router.navigate(['/booking-confirmation', response.orderId]);
       },
       error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to create booking';
+        console.error('Booking creation failed:', error);
+        
+        // Check if it's an authentication error
+        if (error.status === 401) {
+          // Token might have expired, redirect to login
+          this.authService.logout();
+          this.router.navigate(['/login'], { 
+            queryParams: { returnUrl: '/booking' }
+          });
+        } else {
+          this.errorMessage = error.error?.message || 'Failed to create booking';
+        }
         this.isLoading = false;
       }
     });
