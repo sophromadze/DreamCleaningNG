@@ -161,11 +161,17 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  cancelAddApartment() {
-    this.isAddingApartment = false;
-  }
-
   addApartment() {
+    // Clear any previous error messages
+    this.errorMessage = '';
+    
+    // Validate for duplicates
+    const validationError = this.validateApartment(this.newApartment);
+    if (validationError) {
+      this.errorMessage = validationError;
+      return;
+    }
+    
     this.profileService.addApartment(this.newApartment).subscribe({
       next: (apartment) => {
         if (this.profile) {
@@ -176,10 +182,40 @@ export class ProfileComponent implements OnInit {
         setTimeout(() => this.successMessage = '', 3000);
       },
       error: (error) => {
-        this.errorMessage = 'Failed to add apartment';
+        this.errorMessage = error.error?.message || 'Failed to add apartment';
       }
     });
   }
+  
+
+  // Add this method to check for duplicate apartments
+  validateApartment(apartment: CreateApartment | Apartment, excludeId?: number): string | null {
+    if (!this.profile || !this.profile.apartments) return null;
+    
+    // Check only active apartments
+    const activeApartments = this.profile.apartments.filter(a => a.id !== excludeId);
+    
+    // Check for duplicate name (case-insensitive)
+    const duplicateName = activeApartments.find(a => 
+      a.name.toLowerCase() === apartment.name.toLowerCase()
+    );
+    
+    if (duplicateName) {
+      return `An apartment with the name '${apartment.name}' already exists`;
+    }
+    
+    // Check for duplicate address (case-insensitive) - just the address field
+    const duplicateAddress = activeApartments.find(a => 
+      a.address.toLowerCase() === apartment.address.toLowerCase()
+    );
+    
+    if (duplicateAddress) {
+      return `An apartment with the address '${apartment.address}' already exists`;
+    }
+    
+    return null;
+  }
+  
 
   startEditApartment(apartment: Apartment) {
     this.editingApartmentId = apartment.id;
@@ -187,11 +223,6 @@ export class ProfileComponent implements OnInit {
     if (this.editingApartment.state) {
       this.onStateChange(this.editingApartment.state);
     }
-  }
-
-  cancelEditApartment() {
-    this.editingApartmentId = null;
-    this.editingApartment = null;
   }
 
   saveApartment() {
@@ -210,9 +241,63 @@ export class ProfileComponent implements OnInit {
           setTimeout(() => this.successMessage = '', 3000);
         },
         error: (error) => {
-          this.errorMessage = 'Failed to update apartment';
+          this.errorMessage = error.error?.message || 'Failed to update apartment';
         }
       });
+    }
+  }
+
+  // Optional: Add real-time validation on form input
+  onApartmentNameChange() {
+    // Clear error first
+    this.errorMessage = '';
+    
+    if (this.isAddingApartment && this.newApartment.name) {
+      const duplicateName = this.profile?.apartments.find(a => 
+        a.name.toLowerCase() === this.newApartment.name.toLowerCase()
+      );
+      if (duplicateName) {
+        this.errorMessage = `An apartment with the name '${this.newApartment.name}' already exists`;
+        return;
+      }
+    }
+  }
+  
+  // Add the cancel methods to clear errors
+  cancelAddApartment() {
+    this.isAddingApartment = false;
+    this.errorMessage = '';
+    // Reset the form
+    this.newApartment = {
+      name: '',
+      address: '',
+      aptSuite: '',
+      city: '',
+      state: this.states.length > 0 ? this.states[0] : '',
+      postalCode: '',
+      specialInstructions: ''
+    };
+  }
+  
+  cancelEditApartment() {
+    this.editingApartmentId = null;
+    this.editingApartment = null;
+    this.errorMessage = '';
+  }
+  
+  onApartmentAddressChange() {
+    // Clear error first
+    this.errorMessage = '';
+    
+    // Check for duplicate name first
+    if (this.isAddingApartment && this.newApartment.address) {
+      const duplicateName = this.profile?.apartments.find(a => 
+        a.address.toLowerCase() === this.newApartment.address.toLowerCase()
+      );
+      if (duplicateName) {
+        this.errorMessage = `An apartment with the address '${this.newApartment.address}' already exists`;
+        return;
+      }
     }
   }
 

@@ -101,32 +101,45 @@
       <!-- Apartments Section -->
       <div class="section">
         <div class="section-header">
-          <h2>Saved Addresses ({{ profile.apartments.length }}/5)</h2>
+          <h2>Saved Addresses ({{ profile.apartments.length }}/10)</h2>
           <button 
             class="add-btn" 
             (click)="startAddApartment()"
-            [disabled]="profile.apartments.length >= 5"
+            [disabled]="profile.apartments.length >= 10"
             *ngIf="!isAddingApartment && !editingApartmentId">
             Add New Address
           </button>
         </div>
         
         <!-- Show message when at limit -->
-        <div class="info-message" *ngIf="profile.apartments.length >= 5">
-          You have reached the maximum limit of 5 saved addresses.
+        <div class="info-message" *ngIf="profile.apartments.length >= 10">
+          You have reached the maximum limit of 10 saved addresses.
         </div>
-  
+      
         <!-- Add New Apartment Form -->
         <div *ngIf="isAddingApartment" class="apartment-form">
           <h3>Add New Apartment</h3>
+          
+          <!-- Show error message at the top of the form -->
+          <div class="error-message" *ngIf="errorMessage">
+            {{ errorMessage }}
+          </div>
+          
           <div class="form-grid">
             <div class="form-group">
               <label>Name *</label>
-              <input type="text" [(ngModel)]="newApartment.name" placeholder="e.g., My Home" required>
+              <input type="text" 
+                     [(ngModel)]="newApartment.name" 
+                     (ngModelChange)="onApartmentNameChange()"
+                     placeholder="e.g., My Home" 
+                     required>
             </div>
             <div class="form-group full-width">
               <label>Address *</label>
-              <input type="text" [(ngModel)]="newApartment.address" required>
+              <input type="text" 
+                     [(ngModel)]="newApartment.address" 
+                     (input)="onApartmentAddressChange()"
+                     required>
             </div>
             <div class="form-group">
               <label>Apt/Suite</label>
@@ -134,21 +147,25 @@
             </div>
             <div class="form-group">
               <label>State *</label>
-              <select [(ngModel)]="newApartment.state" (change)="onStateChange(newApartment.state)" required>
+              <select [(ngModel)]="newApartment.state" 
+                      (change)="onStateChange(newApartment.state)" 
+                      required>
                 <option value="">Select state</option>
                 <option *ngFor="let state of states" [value]="state">{{ state }}</option>
               </select>
             </div>
             <div class="form-group">
               <label>City *</label>
-              <select [(ngModel)]="newApartment.city" required>
+              <select [(ngModel)]="newApartment.city" 
+                      required>
                 <option value="">Select city</option>
                 <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
               </select>
             </div>
             <div class="form-group">
               <label>Zip Code *</label>
-              <input type="text" [(ngModel)]="newApartment.postalCode" 
+              <input type="text" 
+                     [(ngModel)]="newApartment.postalCode" 
                      pattern="[0-9]{5}" 
                      maxlength="5" 
                      placeholder="12345" 
@@ -160,11 +177,16 @@
             </div>
           </div>
           <div class="form-actions">
-            <button class="save-btn" (click)="addApartment()">Add Apartment</button>
+            <button class="save-btn" 
+                    (click)="addApartment()"
+                    [disabled]="!newApartment.name || !newApartment.address || !newApartment.city || 
+                               !newApartment.state || !newApartment.postalCode || errorMessage">
+              Add Apartment
+            </button>
             <button class="cancel-btn" (click)="cancelAddApartment()">Cancel</button>
           </div>
         </div>
-  
+      
         <!-- Apartments List -->
         <div class="apartments-list" *ngIf="!isAddingApartment">
           <div *ngFor="let apartment of profile.apartments" class="apartment-card">
@@ -182,9 +204,15 @@
                 <button class="delete-btn" (click)="deleteApartment(apartment)">Delete</button>
               </div>
             </div>
-  
+      
             <!-- Edit Apartment Form -->
             <div *ngIf="editingApartmentId === apartment.id && editingApartment" class="edit-apartment-form">
+              
+              <!-- Show error message at the top of the form -->
+              <div class="error-message" *ngIf="errorMessage">
+                {{ errorMessage }}
+              </div>
+              
               <div class="form-grid">
                 <div class="form-group">
                   <label>Name *</label>
@@ -200,7 +228,9 @@
                 </div>
                 <div class="form-group">
                   <label>State *</label>
-                  <select [(ngModel)]="editingApartment.state" (change)="onStateChange(editingApartment.state)" required>
+                  <select [(ngModel)]="editingApartment.state" 
+                          (change)="onStateChange(editingApartment.state)" 
+                          required>
                     <option value="">Select state</option>
                     <option *ngFor="let state of states" [value]="state">{{ state }}</option>
                   </select>
@@ -214,7 +244,8 @@
                 </div>
                 <div class="form-group">
                   <label>Zip Code *</label>
-                  <input type="text" [(ngModel)]="editingApartment.postalCode" 
+                  <input type="text" 
+                         [(ngModel)]="editingApartment.postalCode" 
                          pattern="[0-9]{5}" 
                          maxlength="5" 
                          placeholder="12345" 
@@ -226,12 +257,17 @@
                 </div>
               </div>
               <div class="form-actions">
-                <button class="save-btn" (click)="saveApartment()">Save</button>
+                <button class="save-btn" 
+                  (click)="saveApartment()"
+                  [disabled]="!editingApartment.name || !editingApartment.address || !editingApartment.city || 
+                             !editingApartment.state || !editingApartment.postalCode">
+            Save
+          </button>
                 <button class="cancel-btn" (click)="cancelEditApartment()">Cancel</button>
               </div>
             </div>
           </div>
-  
+      
           <div *ngIf="profile.apartments.length === 0" class="no-apartments">
             <p>You haven't added any apartments yet.</p>
           </div>
