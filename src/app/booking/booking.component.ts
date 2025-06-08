@@ -123,9 +123,22 @@ export class BookingComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Set minimum date to today
+    // Set minimum date to tomorrow
     this.minDate = new Date();
+    this.minDate.setDate(this.minDate.getDate() + 2); // Add one day to make it tomorrow
     this.minDate.setHours(0, 0, 0, 0);
+    
+    // Set default date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    
+    // Set default values
+    this.serviceDate.setValue(formattedDate);
+    this.serviceTime.setValue('08:00');
     
     // Refresh user data to ensure we have the latest firstTimeOrder status
     this.authService.refreshUserProfile().subscribe({
@@ -424,8 +437,16 @@ export class BookingComponent implements OnInit {
       const formattedDate = `${year}-${month}-${day}`;
       
       this.serviceDate.setValue(formattedDate);
-      this.serviceDate.disable();
     } else {
+      // Set date to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const year = tomorrow.getFullYear();
+      const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const day = String(tomorrow.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      
+      this.serviceDate.setValue(formattedDate);
       this.serviceDate.enable();
     }
   }
