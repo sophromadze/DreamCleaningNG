@@ -266,6 +266,30 @@ export class BookingComponent implements OnInit {
       }
     });
 
+     // Listen to date changes to unselect same day service
+     this.serviceDate.valueChanges.subscribe(value => {
+      if (this.isSameDaySelected && value) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const todayFormatted = `${year}-${month}-${day}`;
+        
+        // If the selected date is not today, unselect same day service
+        if (value !== todayFormatted) {
+          const sameDayService = this.selectedExtraServices.find(s => s.extraService.isSameDayService);
+          if (sameDayService) {
+            // Remove same day service from selected extra services
+            this.selectedExtraServices = this.selectedExtraServices.filter(
+              s => !s.extraService.isSameDayService
+            );
+            this.isSameDaySelected = false;
+            this.calculateTotal();
+          }
+        }
+      }
+    });
+
     // Listen to tips changes
     this.bookingForm.get('tips')?.valueChanges.subscribe(() => {
       this.calculateTotal();
