@@ -86,12 +86,11 @@ export class ProfileComponent implements OnInit {
 
   onStateChange(state: string) {
     this.loadCities(state);
-    // Reset city selection when state changes
+    // Only reset city if we're adding a new apartment
     if (this.isAddingApartment) {
       this.newApartment.city = '';
-    } else if (this.editingApartment) {
-      this.editingApartment.city = '';
     }
+    // Don't reset city when editing - it should keep its value
   }
 
   loadProfile() {
@@ -220,13 +219,29 @@ export class ProfileComponent implements OnInit {
   startEditApartment(apartment: Apartment) {
     this.editingApartmentId = apartment.id;
     this.editingApartment = { ...apartment };
+    // Load cities for the current state without resetting the city
     if (this.editingApartment.state) {
-      this.onStateChange(this.editingApartment.state);
+      this.loadCities(this.editingApartment.state);
     }
   }
 
   saveApartment() {
     if (this.editingApartment && this.editingApartmentId) {
+      // Validate required fields
+      if (!this.editingApartment.name || !this.editingApartment.address || 
+          !this.editingApartment.city || !this.editingApartment.state || 
+          !this.editingApartment.postalCode) {
+        this.errorMessage = 'Please fill in all required fields';
+        return;
+      }
+
+      // Validate for duplicates before making the API call
+      const validationError = this.validateApartment(this.editingApartment, this.editingApartmentId);
+      if (validationError) {
+        this.errorMessage = validationError;
+        return;
+      }
+
       this.profileService.updateApartment(this.editingApartmentId, this.editingApartment).subscribe({
         next: (updatedApartment) => {
           if (this.profile) {
@@ -241,7 +256,12 @@ export class ProfileComponent implements OnInit {
           setTimeout(() => this.successMessage = '', 3000);
         },
         error: (error) => {
-          this.errorMessage = error.error?.message || 'Failed to update apartment';
+          // Handle validation errors from the backend
+          if (error.status === 400) {
+            this.errorMessage = error.error?.message || 'Invalid apartment data';
+          } else {
+            this.errorMessage = 'Failed to update apartment. Please try again.';
+          }
         }
       });
     }

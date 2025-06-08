@@ -258,11 +258,11 @@
               </div>
               <div class="form-actions">
                 <button class="save-btn" 
-                  (click)="saveApartment()"
-                  [disabled]="!editingApartment.name || !editingApartment.address || !editingApartment.city || 
-                             !editingApartment.state || !editingApartment.postalCode">
-            Save
-          </button>
+                        (click)="saveApartment()"
+                        [disabled]="!editingApartment.name || !editingApartment.address || !editingApartment.city || 
+                                   !editingApartment.state || !editingApartment.postalCode">
+                  Save
+                </button>
                 <button class="cancel-btn" (click)="cancelEditApartment()">Cancel</button>
               </div>
             </div>
