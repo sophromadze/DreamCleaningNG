@@ -47,6 +47,7 @@ export class OrderEditComponent implements OnInit {
   successMessage = '';
   additionalAmount = 0;
   showPaymentModal = false;
+  isSameDaySelected = false;
   
   // Entry methods
   entryMethods = [
@@ -116,6 +117,30 @@ export class OrderEditComponent implements OnInit {
     this.orderForm.get('tips')?.valueChanges.subscribe(() => {
       this.calculateNewTotal();
     });
+
+    // Listen to date changes to unselect same day service
+    this.orderForm.get('serviceDate')?.valueChanges.subscribe(value => {
+      if (this.isSameDaySelected && value) {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const todayFormatted = `${year}-${month}-${day}`;
+        
+        // If the selected date is not today, unselect same day service
+        if (value !== todayFormatted) {
+          const sameDayService = this.selectedExtraServices.find(s => s.extraService.isSameDayService);
+          if (sameDayService) {
+            // Remove same day service from selected extra services
+            this.selectedExtraServices = this.selectedExtraServices.filter(
+              s => !s.extraService.isSameDayService
+            );
+            this.isSameDaySelected = false;
+            this.calculateNewTotal();
+          }
+        }
+      }
+    });
   }
 
   loadLocationData() {
@@ -158,8 +183,15 @@ export class OrderEditComponent implements OnInit {
   }
 
   populateForm(order: Order) {
+    // Fix date handling to prevent timezone issues
+    const serviceDate = new Date(order.serviceDate);
+    const year = serviceDate.getFullYear();
+    const month = String(serviceDate.getMonth() + 1).padStart(2, '0');
+    const day = String(serviceDate.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+
     this.orderForm.patchValue({
-      serviceDate: new Date(order.serviceDate).toISOString().split('T')[0],
+      serviceDate: formattedDate,
       serviceTime: order.serviceTime.substring(0, 5), // HH:mm format
       entryMethod: order.entryMethod === 'Other' ? 'Other' : order.entryMethod,
       customEntryMethod: order.entryMethod === 'Other' ? order.entryMethod : '',
@@ -280,7 +312,13 @@ export class OrderEditComponent implements OnInit {
     const index = this.selectedExtraServices.findIndex(s => s.extraService.id === extraService.id);
     
     if (index > -1) {
+      // Remove if already selected
       this.selectedExtraServices.splice(index, 1);
+      
+      if (extraService.isSameDayService) {
+        this.isSameDaySelected = false;
+        this.updateDateRestrictions();
+      }
     } else {
       // If selecting a cleaning type, remove other cleaning types
       if (extraService.isDeepCleaning || extraService.isSuperDeepCleaning) {
@@ -290,14 +328,43 @@ export class OrderEditComponent implements OnInit {
         );
       }
       
+      // Add new selection
       this.selectedExtraServices.push({
         extraService: extraService,
         quantity: 1,
         hours: extraService.hasHours ? 0.5 : 0
       });
+      
+      if (extraService.isSameDayService) {
+        this.isSameDaySelected = true;
+        this.updateDateRestrictions();
+      }
     }
     
     this.calculateNewTotal();
+  }
+
+  private updateDateRestrictions() {
+    if (this.isSameDaySelected) {
+      const today = new Date();
+      // Format date properly for HTML date input (YYYY-MM-DD)
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      
+      this.orderForm.patchValue({ serviceDate: formattedDate });
+    } else {
+      // Set date to tomorrow
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const year = tomorrow.getFullYear();
+      const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const day = String(tomorrow.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      
+      this.orderForm.patchValue({ serviceDate: formattedDate });
+    }
   }
 
   updateExtraServiceQuantity(extraService: ExtraService, quantity: number) {
@@ -719,7 +786,12 @@ export class OrderEditComponent implements OnInit {
   }
 
   get minDate(): string {
-    return new Date().toISOString().split('T')[0];
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   get tips() {

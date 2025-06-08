@@ -345,12 +345,12 @@
             </select>
           </div>
 
-          <div class="form-group" *ngIf="!useApartmentAddress.value">
+          <div class="form-group">
             <label>Address Name * <small>(e.g., Home, Office, Mom's House)</small></label>
-            <input type="text" 
-                   [formControl]="apartmentName" 
-                   placeholder="Give this address a name"
-                   maxlength="100">
+            <input type="text"
+                    [formControl]="apartmentName"
+                    placeholder="Give this address a name"
+                    maxlength="100">
             <div class="error-message" *ngIf="apartmentName.invalid && apartmentName.touched">
               Please provide a name for this address
             </div>

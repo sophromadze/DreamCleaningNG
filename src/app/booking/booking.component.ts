@@ -243,10 +243,9 @@ export class BookingComponent implements OnInit {
       const apartmentNameControl = this.bookingForm.get('apartmentName');
       
       if (useApartment) {
-        // Using saved address - clear and disable apartment name
-        apartmentNameControl?.clearValidators();
-        apartmentNameControl?.setValue('');
-        apartmentNameControl?.disable();
+        // Using saved address - keep apartment name field but populate it from selected apartment
+        apartmentNameControl?.enable();
+        apartmentNameControl?.setValidators([Validators.required]);
         
         const apartmentId = this.bookingForm.get('selectedApartmentId')?.value;
         if (apartmentId) {
@@ -480,6 +479,7 @@ export class BookingComponent implements OnInit {
     if (apartment) {
       this.bookingForm.patchValue({
         serviceAddress: apartment.address,
+        apartmentName: apartment.name || '',
         aptSuite: apartment.aptSuite || '',
         city: apartment.city,
         state: apartment.state,
@@ -833,7 +833,7 @@ export class BookingComponent implements OnInit {
         hours: s.hours
       })),
       frequencyId: this.selectedFrequency.id,
-      serviceDate: serviceDate,
+      serviceDate: formValue.serviceDate,
       serviceTime: formValue.serviceTime,
       entryMethod: formValue.entryMethod === 'Other' 
         ? formValue.customEntryMethod 
@@ -849,7 +849,7 @@ export class BookingComponent implements OnInit {
       state: formValue.state,
       zipCode: formValue.zipCode,
       apartmentId: formValue.useApartmentAddress ? Number(formValue.selectedApartmentId) : null,
-      apartmentName: !formValue.useApartmentAddress ? formValue.apartmentName : undefined,
+      apartmentName: formValue.apartmentName || undefined,
       promoCode: this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode,
       tips: formValue.tips,
       maidsCount: this.calculatedMaidsCount,
