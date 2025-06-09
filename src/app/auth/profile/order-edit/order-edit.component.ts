@@ -412,6 +412,14 @@ export class OrderEditComponent implements OnInit {
     return this.originalServiceQuantities.get(service.id) ?? 0;
   }
 
+  getFilteredExtraServices(): ExtraService[] {
+    if (!this.serviceType || !this.serviceType.extraServices) {
+      return [];
+    }
+    // Filter out same day service in order edit
+    return this.serviceType.extraServices.filter(extra => !extra.isSameDayService);
+  }
+
   getOriginalServiceHours(service: Service): number {
     if (!this.order || service.serviceRelationType !== 'cleaner') return 0;
     

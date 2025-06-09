@@ -124,7 +124,7 @@
 
           <div class="extra-services">
             <div class="extra-service-card" 
-                 *ngFor="let extra of serviceType.extraServices"
+                 *ngFor="let extra of getFilteredExtraServices()"
                  [class.selected]="isExtraServiceSelected(extra)">
               <div class="extra-header" (click)="toggleExtraService(extra)">
                 <div class="extra-info">
