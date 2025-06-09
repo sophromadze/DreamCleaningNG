@@ -1,45 +1,46 @@
 <div class="booking-confirmation-container">
-    <div class="confirmation-content" *ngIf="!paymentCompleted">
-      <h1>Complete Your Booking</h1>
-      <p class="order-info">Order #{{ orderId }} has been created</p>
+  <div class="confirmation-content" *ngIf="!paymentCompleted">
+    <h1>Complete Your Booking</h1>
+    <p class="order-info" *ngIf="orderId">Order #{{ orderId }} has been created</p>
+    <p class="order-info" *ngIf="!orderId && bookingData">Please complete payment to confirm your booking</p>
+    
+    <div class="payment-section">
+      <h2>Payment Required</h2>
+      <p>Please complete the payment to confirm your booking.</p>
       
-      <div class="payment-section">
-        <h2>Payment Required</h2>
-        <p>Please complete the payment to confirm your booking.</p>
-        
-        <div class="test-notice">
-          <p><strong>Test Mode:</strong> This is a simulated payment for testing purposes.</p>
-          <p>In production, this would integrate with a real payment processor.</p>
-        </div>
-        
-        <div class="payment-actions">
-          <button 
-            class="pay-btn" 
-            (click)="simulatePayment()" 
-            [disabled]="isProcessing">
-            {{ isProcessing ? 'Processing...' : 'Complete Payment (Test)' }}
-          </button>
-          <button 
-            class="cancel-btn" 
-            (click)="cancelBooking()"
-            [disabled]="isProcessing">
-            Cancel Booking
-          </button>
-        </div>
-        
-        <div class="error-message" *ngIf="errorMessage">
-          {{ errorMessage }}
-        </div>
+      <div class="test-notice">
+        <p><strong>Test Mode:</strong> This is a simulated payment for testing purposes.</p>
+        <p>In production, this would integrate with a real payment processor.</p>
+      </div>
+      
+      <div class="payment-actions">
+        <button 
+          class="pay-btn" 
+          (click)="simulatePayment()" 
+          [disabled]="isProcessing">
+          {{ isProcessing ? 'Processing...' : 'Complete Payment (Test)' }}
+        </button>
+        <button 
+          class="cancel-btn" 
+          (click)="cancelBooking()"
+          [disabled]="isProcessing">
+          Cancel Booking
+        </button>
+      </div>
+      
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
       </div>
     </div>
-    
-    <div class="success-content" *ngIf="paymentCompleted">
-      <div class="success-icon">✓</div>
-      <h1>Payment Successful!</h1>
-      <p>Your booking has been confirmed.</p>
-      <p class="order-info">Order #{{ orderId }}</p>
-      <p class="redirect-info">Redirecting to your order details...</p>
-      
-      <a [routerLink]="['/order', orderId]" class="view-order-btn">View Order Now</a>
-    </div>
   </div>
+  
+  <div class="success-content" *ngIf="paymentCompleted">
+    <div class="success-icon">✓</div>
+    <h1>Payment Successful!</h1>
+    <p>Your booking has been confirmed.</p>
+    <p class="order-info">Order #{{ orderId }}</p>
+    <p class="redirect-info">Redirecting to your order details...</p>
+    
+    <a [routerLink]="['/order', orderId]" class="view-order-btn">View Order Now</a>
+  </div>
+</div>

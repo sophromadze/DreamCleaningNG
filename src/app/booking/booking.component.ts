@@ -7,6 +7,7 @@ import { BookingService, ServiceType, Service, ExtraService, Frequency, BookingC
 import { AuthService } from '../services/auth.service';
 import { ProfileService } from '../services/profile.service';
 import { LocationService } from '../services/location.service';
+import { BookingDataService } from '../services/booking-data.service';
 
 interface SelectedService {
   service: Service;
@@ -90,7 +91,8 @@ export class BookingComponent implements OnInit {
     private authService: AuthService,
     private profileService: ProfileService,
     private locationService: LocationService,
-    private router: Router
+    private router: Router,
+    private bookingDataService: BookingDataService
   ) {
     this.bookingForm = this.fb.group({
       serviceDate: [{value: '', disabled: false}, Validators.required],
@@ -840,7 +842,7 @@ export class BookingComponent implements OnInit {
       return;
     }
     
-    // NEW CODE: Determine apartmentId and apartmentName based on whether using saved apartment
+    // Determine apartmentId and apartmentName based on whether using saved apartment
     let apartmentId: number | null = null;
     let apartmentName: string | undefined = undefined;
     
@@ -885,8 +887,8 @@ export class BookingComponent implements OnInit {
       city: formValue.city,
       state: formValue.state,
       zipCode: formValue.zipCode,
-      apartmentId: apartmentId,  // CHANGED: Now uses the computed apartmentId
-      apartmentName: apartmentName,  // CHANGED: Now uses the computed apartmentName
+      apartmentId: apartmentId,
+      apartmentName: apartmentName,
       promoCode: this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode,
       tips: formValue.tips,
       maidsCount: this.calculatedMaidsCount,
@@ -896,29 +898,14 @@ export class BookingComponent implements OnInit {
     };
 
     // Debug log the booking data
-    console.log('Booking data being sent:', bookingData);
+    console.log('Booking data being stored temporarily:', bookingData);
 
-    this.bookingService.createBooking(bookingData).subscribe({
-      next: (response) => {
-        // Navigate to payment or confirmation page
-        this.router.navigate(['/booking-confirmation', response.orderId]);
-      },
-      error: (error) => {
-        console.error('Booking creation failed:', error);
-        
-        // Check if it's an authentication error
-        if (error.status === 401) {
-          // Token might have expired, redirect to login
-          this.authService.logout();
-          this.router.navigate(['/login'], { 
-            queryParams: { returnUrl: '/booking' }
-          });
-        } else {
-          this.errorMessage = error.error?.message || 'Failed to create booking';
-        }
-        this.isLoading = false;
-      }
-    });
+    // Store booking data in service instead of creating order immediately
+    this.bookingDataService.setBookingData(bookingData);
+    this.isLoading = false;
+    
+    // Navigate to booking confirmation without creating the order yet
+    this.router.navigate(['/booking-confirmation']);
   }
 
   getServiceOptions(service: Service): number[] {

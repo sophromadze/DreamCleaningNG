@@ -66,7 +66,7 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/profile/order-edit/order-edit.component').then(m => m.OrderEditComponent)
   },
   {
-    path: 'booking-confirmation/:orderId',
+    path: 'booking-confirmation',
     canActivate: [authGuard],
     loadComponent: () => import('./booking/booking-confirmation/booking-confirmation.component').then(m => m.BookingConfirmationComponent)
   },
