@@ -8,6 +8,7 @@ import { AuthService } from '../services/auth.service';
 import { ProfileService } from '../services/profile.service';
 import { LocationService } from '../services/location.service';
 import { BookingDataService } from '../services/booking-data.service';
+import { DurationUtils } from '../utils/duration.utils';
 
 interface SelectedService {
   service: Service;
@@ -758,14 +759,28 @@ export class BookingComponent implements OnInit {
   }
 
   formatDuration(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    const baseFormat = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    // Use rounded duration
+    const baseFormat = DurationUtils.formatDurationRounded(minutes);
     
+    // Preserve your "per maid" logic
     if (this.calculatedMaidsCount > 1) {
       return `${baseFormat} per maid`;
     }
     return baseFormat;
+  }
+  
+  formatServiceDuration(minutes: number): string {
+    // Use actual duration for individual services
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    
+    if (hours === 0) {
+      return `${mins}m`;
+    } else if (mins === 0) {
+      return `${hours}h`;
+    } else {
+      return `${hours}h ${mins}m`;
+    }
   }
 
   getServiceTypeIcon(serviceType: ServiceType): string {

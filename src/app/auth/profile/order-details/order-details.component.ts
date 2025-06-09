@@ -4,6 +4,7 @@ import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { OrderService, Order } from '../../../services/order.service';
 import { BookingService, Service, ExtraService } from '../../../services/booking.service';
+import { DurationUtils } from '../../../utils/duration.utils';
 
 @Component({
   selector: 'app-order-details',
@@ -133,9 +134,22 @@ export class OrderDetailsComponent implements OnInit {
   }
 
   formatDuration(minutes: number): string {
+    // Simply use the rounded duration
+    return DurationUtils.formatDurationRounded(minutes);
+  }
+
+  formatServiceDuration(minutes: number): string {
+    // Use actual duration for individual services
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    
+    if (hours === 0) {
+      return `${mins}m`;
+    } else if (mins === 0) {
+      return `${hours}h`;
+    } else {
+      return `${hours}h ${mins}m`;
+    }
   }
 
   getHoursUntilService(): number {

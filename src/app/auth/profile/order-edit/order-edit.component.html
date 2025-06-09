@@ -52,6 +52,10 @@
                           </ng-container>
                         </ng-container>
                       </span>
+                      <span class="service-duration" *ngIf="service.timeDuration">
+                        <span class="duration-icon">⏱️</span>
+                        {{ formatServiceDuration(service.timeDuration * getOriginalServiceQuantity(service)) }}
+                      </span>
                     </div>
                   </div>
                   <div class="quantity-section">
@@ -81,6 +85,10 @@
                             +${{ service.cost * getServiceQuantity(service) }}
                           </ng-container>
                         </ng-container>
+                      </span>
+                      <span class="service-duration" *ngIf="service.timeDuration">
+                        <span class="duration-icon">⏱️</span>
+                        {{ formatServiceDuration(service.timeDuration * getServiceQuantity(service)) }}
                       </span>
                     </div>
                   </div>
@@ -122,7 +130,13 @@
                 <div class="extra-info">
                   <h4>{{ extra.name }}</h4>
                   <p>{{ extra.description }}</p>
-                  <div class="extra-price">${{ extra.price }}</div>
+                  <div class="extra-details">
+                    <div class="extra-price">${{ extra.price }}</div>
+                    <div class="extra-duration" *ngIf="extra.duration">
+                      <span class="duration-icon">⏱️</span>
+                      {{ formatServiceDuration(extra.duration * (isExtraServiceSelected(extra) ? getExtraServiceQuantity(extra) : 1)) }}
+                    </div>
+                  </div>
                 </div>
                 <div class="checkbox">
                   <input type="checkbox" [checked]="isExtraServiceSelected(extra)" (click)="$event.stopPropagation()">

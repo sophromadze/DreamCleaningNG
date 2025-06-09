@@ -740,3 +740,37 @@
       font-weight: 500;
     }
   }
+
+  .service-duration {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.9em;
+    color: #666;
+    margin-top: 4px;
+    white-space: nowrap;
+  }
+
+  .extra-details {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .extra-details .extra-price {
+    font-weight: bold;
+    color: #2c3e50;
+  }
+
+  .extra-details .extra-duration {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.9em;
+    color: #666;
+  }
+
+  .extra-details .extra-duration .duration-icon {
+    font-size: 1.1em;
+  }

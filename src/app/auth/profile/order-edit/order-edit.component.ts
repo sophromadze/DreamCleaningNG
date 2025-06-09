@@ -7,6 +7,7 @@ import { OrderService, Order, UpdateOrder } from '../../../services/order.servic
 import { BookingService, ServiceType, Service, ExtraService, Frequency } from '../../../services/booking.service';
 import { LocationService } from '../../../services/location.service';
 import { AuthService } from '../../../services/auth.service';
+import { DurationUtils } from '../../../utils/duration.utils';
 
 interface SelectedService {
   service: Service;
@@ -780,9 +781,22 @@ export class OrderEditComponent implements OnInit {
   }
 
   formatDuration(minutes: number): string {
+    // Simply use the rounded duration
+    return DurationUtils.formatDurationRounded(minutes);
+  }
+
+  formatServiceDuration(minutes: number): string {
+    // Use actual duration for individual services
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    
+    if (hours === 0) {
+      return `${mins}m`;
+    } else if (mins === 0) {
+      return `${hours}h`;
+    } else {
+      return `${hours}h ${mins}m`;
+    }
   }
 
   get minDate(): string {
