@@ -548,22 +548,50 @@
   
   // Address Options
   .address-options {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
   
-    label {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-      cursor: pointer;
-    }
-  
-    select {
-      width: 100%;
-      padding: 0.5rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      margin-top: 0.5rem;
+    .saved-address-container {
+      label {
+        display: block;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+      }
+      
+      .dropdown-with-clear {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        
+        select {
+          flex: 1;
+          padding: 0.75rem;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          font-size: 1rem;
+          background-color: white;
+          
+          &:focus {
+            outline: none;
+            border-color: #007bff;
+          }
+        }
+        
+        .clear-btn {
+          padding: 0.75rem 1rem;
+          background-color: #6c757d;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.9rem;
+          transition: background-color 0.3s ease;
+          
+          &:hover {
+            background-color: #5a6268;
+          }
+        }
+      }
     }
   }
   

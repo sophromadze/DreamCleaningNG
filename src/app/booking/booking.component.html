@@ -331,21 +331,30 @@
         <!-- Step 11: Service Address -->
         <section class="booking-section" *ngIf="selectedServiceType">
           <h2>11. Service Address</h2>
+          
+          <!-- Saved Address Dropdown - Always visible if user has apartments -->
           <div class="address-options" *ngIf="userApartments.length > 0">
-            <label>
-              <input type="checkbox" [formControl]="useApartmentAddress">
-              Use saved address
-            </label>
-            <select [formControl]="selectedApartmentId"
-                    *ngIf="useApartmentAddress.value">
-              <option value="">Select apartment</option>
-              <option *ngFor="let apt of userApartments" [value]="apt.id">
-                {{ apt.name }} - {{ apt.address }}
-              </option>
-            </select>
+            <div class="saved-address-container">
+              <label>Saved Addresses</label>
+              <div class="dropdown-with-clear">
+                <select [formControl]="selectedApartmentId" (change)="onApartmentSelect($event)">
+                  <option value="">Enter new address</option>
+                  <option *ngFor="let apt of userApartments" [value]="apt.id">
+                    {{ apt.name }} - {{ apt.address }}
+                  </option>
+                </select>
+                <button type="button" 
+                        class="clear-btn" 
+                        *ngIf="selectedApartmentId.value"
+                        (click)="clearApartmentSelection()">
+                  Clear
+                </button>
+              </div>
+            </div>
           </div>
-
-          <div class="form-group">
+        
+          <!-- Address Name Field - Only show when entering new address -->
+          <div class="form-group" *ngIf="!selectedApartmentId.value">
             <label>Address Name * <small>(e.g., Home, Office, Mom's House)</small></label>
             <input type="text"
                     [formControl]="apartmentName"

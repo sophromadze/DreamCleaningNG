@@ -105,7 +105,7 @@ export class BookingComponent implements OnInit {
       useApartmentAddress: [false],
       selectedApartmentId: [''],
       serviceAddress: ['', Validators.required],
-      apartmentName: ['', Validators.required],
+      apartmentName: [''],
       aptSuite: [''],
       city: ['', Validators.required],
       state: ['', Validators.required],
@@ -215,6 +215,15 @@ export class BookingComponent implements OnInit {
         this.profileService.getApartments().subscribe({
           next: (apartments) => {
             this.userApartments = apartments;
+
+            // Auto-fill with first apartment if available
+            if (apartments.length > 0) {
+              const firstApartment = apartments[0];
+              this.bookingForm.patchValue({
+                selectedApartmentId: firstApartment.id.toString()
+              });
+              this.fillApartmentAddress(firstApartment.id.toString());
+            }
           }
         });
       }
@@ -235,71 +244,49 @@ export class BookingComponent implements OnInit {
   }
 
   private setupFormListeners() {
-    // Listen to apartment selection
-    this.bookingForm.get('useApartmentAddress')?.valueChanges.subscribe(useApartment => {
-      if (useApartment) {
-        const apartmentId = this.bookingForm.get('selectedApartmentId')?.value;
-        if (apartmentId) {
-          this.fillApartmentAddress(apartmentId);
-        }
-      }
-    });
-
-     // Add listener for useApartmentAddress to toggle apartment name requirement
-    this.bookingForm.get('useApartmentAddress')?.valueChanges.subscribe(useApartment => {
+    // Listen to apartment selection changes
+    this.bookingForm.get('selectedApartmentId')?.valueChanges.subscribe(apartmentId => {
       const apartmentNameControl = this.bookingForm.get('apartmentName');
       
-      if (useApartment) {
-        // Using saved address - keep apartment name field but populate it from selected apartment
-        apartmentNameControl?.enable();
-        apartmentNameControl?.setValidators([Validators.required]);
-        
-        const apartmentId = this.bookingForm.get('selectedApartmentId')?.value;
-        if (apartmentId) {
-          this.fillApartmentAddress(apartmentId);
-        }
+      if (apartmentId) {
+        // Using saved apartment - remove apartment name requirement
+        apartmentNameControl?.clearValidators();
+        apartmentNameControl?.setValue('');
       } else {
-        // Not using saved address - enable and require apartment name
-        apartmentNameControl?.enable();
+        // Entering new address - apartment name is required
         apartmentNameControl?.setValidators([Validators.required]);
-        apartmentNameControl?.updateValueAndValidity();
       }
+      
+      apartmentNameControl?.updateValueAndValidity();
     });
-
-    this.bookingForm.get('selectedApartmentId')?.valueChanges.subscribe(apartmentId => {
-      if (this.bookingForm.get('useApartmentAddress')?.value && apartmentId) {
-        this.fillApartmentAddress(apartmentId);
-      }
-    });
-
-     // Listen to date changes to unselect same day service
-     this.serviceDate.valueChanges.subscribe(value => {
-      if (this.isSameDaySelected && value) {
-        const today = new Date();
-        const year = today.getFullYear();
-        const month = String(today.getMonth() + 1).padStart(2, '0');
-        const day = String(today.getDate()).padStart(2, '0');
-        const todayFormatted = `${year}-${month}-${day}`;
-        
-        // If the selected date is not today, unselect same day service
-        if (value !== todayFormatted) {
-          const sameDayService = this.selectedExtraServices.find(s => s.extraService.isSameDayService);
-          if (sameDayService) {
-            // Remove same day service from selected extra services
-            this.selectedExtraServices = this.selectedExtraServices.filter(
-              s => !s.extraService.isSameDayService
-            );
-            this.isSameDaySelected = false;
-            this.calculateTotal();
-          }
-        }
-      }
-    });
-
+  
     // Listen to tips changes
     this.bookingForm.get('tips')?.valueChanges.subscribe(() => {
       this.calculateTotal();
     });
+  }
+
+  onApartmentSelect(event: any) {
+    const apartmentId = event.target.value;
+    if (apartmentId) {
+      this.fillApartmentAddress(apartmentId);
+    }
+  }
+
+  clearApartmentSelection() {
+    this.bookingForm.patchValue({
+      selectedApartmentId: '',
+      serviceAddress: '',
+      aptSuite: '',
+      city: '',
+      state: this.states.length > 0 ? this.states[0] : '',
+      zipCode: ''
+    });
+    
+    // Load cities for the default state
+    if (this.states.length > 0) {
+      this.loadCities(this.states[0]);
+    }
   }
 
   selectServiceType(serviceType: ServiceType) {
@@ -484,13 +471,24 @@ export class BookingComponent implements OnInit {
   private fillApartmentAddress(apartmentId: string) {
     const apartment = this.userApartments.find(a => a.id === +apartmentId);
     if (apartment) {
+      // First set the state and load cities
       this.bookingForm.patchValue({
-        serviceAddress: apartment.address,
-        apartmentName: apartment.name || '',
-        aptSuite: apartment.aptSuite || '',
-        city: apartment.city,
-        state: apartment.state,
-        zipCode: apartment.postalCode
+        state: apartment.state
+      });
+      
+      // Load cities for the state, then set the rest of the address
+      this.locationService.getCities(apartment.state).subscribe({
+        next: (cities) => {
+          this.cities = cities;
+          
+          // Now set all address fields including city
+          this.bookingForm.patchValue({
+            serviceAddress: apartment.address,
+            aptSuite: apartment.aptSuite || '',
+            city: apartment.city,
+            zipCode: apartment.postalCode
+          });
+        }
       });
     }
   }
@@ -842,6 +840,24 @@ export class BookingComponent implements OnInit {
       return;
     }
     
+    // NEW CODE: Determine apartmentId and apartmentName based on whether using saved apartment
+    let apartmentId: number | null = null;
+    let apartmentName: string | undefined = undefined;
+    
+    if (formValue.selectedApartmentId) {
+      // Using a saved apartment
+      apartmentId = Number(formValue.selectedApartmentId);
+      // Find the apartment name from the selected apartment
+      const selectedApartment = this.userApartments.find(a => a.id === apartmentId);
+      if (selectedApartment) {
+        apartmentName = selectedApartment.name;
+      }
+    } else if (formValue.apartmentName) {
+      // Entering a new apartment
+      apartmentName = formValue.apartmentName;
+      // apartmentId remains null for new apartments
+    }
+    
     const bookingData = {
       serviceTypeId: this.selectedServiceType.id,
       services: this.selectedServices.map(s => ({
@@ -869,8 +885,8 @@ export class BookingComponent implements OnInit {
       city: formValue.city,
       state: formValue.state,
       zipCode: formValue.zipCode,
-      apartmentId: formValue.useApartmentAddress ? Number(formValue.selectedApartmentId) : null,
-      apartmentName: formValue.apartmentName || undefined,
+      apartmentId: apartmentId,  // CHANGED: Now uses the computed apartmentId
+      apartmentName: apartmentName,  // CHANGED: Now uses the computed apartmentName
       promoCode: this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode,
       tips: formValue.tips,
       maidsCount: this.calculatedMaidsCount,
