@@ -131,4 +131,8 @@ export class BookingService {
     const dateStr = date.toISOString().split('T')[0];
     return this.http.get<string[]>(`${this.apiUrl}/booking/available-times?date=${dateStr}&serviceTypeId=${serviceTypeId}`);
   }
+
+  getUserSubscription(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/booking/user-subscription`);
+  }
 }

@@ -139,18 +139,33 @@
             <span>Subtotal:</span>
             <span>${{ order.subTotal.toFixed(2) }}</span>
           </div>
+          
+          <!-- Show subscription discount if present -->
+          <div class="price-row" *ngIf="order.subscriptionDiscountAmount && order.subscriptionDiscountAmount > 0">
+            <span>Subscription Discount:</span>
+            <span class="discount">-${{ order.subscriptionDiscountAmount.toFixed(2) }}</span>
+          </div>
+          
+          <!-- Show other discounts (promo/first-time) -->
           <div class="price-row" *ngIf="order.discountAmount > 0">
-            <span>Discount:</span>
+            <span>
+              <ng-container *ngIf="order.promoCode === 'firstUse'">First-Time Discount:</ng-container>
+              <ng-container *ngIf="order.promoCode && order.promoCode !== 'firstUse'">Promo Discount:</ng-container>
+              <ng-container *ngIf="!order.promoCode">Discount:</ng-container>
+            </span>
             <span class="discount">-${{ order.discountAmount.toFixed(2) }}</span>
           </div>
+          
           <div class="price-row">
             <span>Tax (8.8%):</span>
             <span>${{ order.tax.toFixed(2) }}</span>
           </div>
+          
           <div class="price-row" *ngIf="order.tips > 0">
             <span>Tips:</span>
             <span>${{ order.tips.toFixed(2) }}</span>
           </div>
+          
           <div class="price-row total">
             <span>Total:</span>
             <span>${{ order.total.toFixed(2) }}</span>

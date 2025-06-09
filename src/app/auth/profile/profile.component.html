@@ -39,7 +39,15 @@
           </div>
           <div class="info-row">
             <label>Subscription:</label>
-            <span>{{ profile.subscriptionName || 'No active subscription' }}</span>
+            <span *ngIf="!profile.subscriptionId">No active subscription</span>
+            <span *ngIf="profile.subscriptionId">
+              <span class="subscription-active">{{ profile.subscriptionName }} ({{ profile.subscriptionDiscountPercentage }}% discount)</span>
+              <br>
+              <small class="subscription-details">
+                Expires: {{ profile.subscriptionExpiryDate | date: 'MMM d, y' }}
+                | Orders: {{ profile.subscriptionOrderCount }}
+              </small>
+            </span>
           </div>
           <div class="info-row" *ngIf="profile.firstTimeOrder">
             <label>Special Offer:</label>

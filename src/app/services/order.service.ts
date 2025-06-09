@@ -28,6 +28,7 @@ export interface Order {
   tips: number;
   total: number;
   discountAmount: number;
+  subscriptionDiscountAmount?: number;
   promoCode?: string;
   frequencyId: number;
   frequencyName: string;

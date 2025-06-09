@@ -186,17 +186,27 @@
         <!-- Step 5: Frequency -->
         <section class="booking-section" *ngIf="selectedServiceType">
           <h2>5. Select Frequency</h2>
+          <div class="active-subscription-notice" *ngIf="hasActiveSubscription && userSubscription">
+            <i class="fas fa-info-circle"></i>
+            <span>You have an active {{ userSubscription?.subscriptionName }} subscription 
+                  ({{ userSubscription?.discountPercentage }}% discount)</span>
+          </div>
           <div class="frequency-options">
             <div class="frequency-card" 
-                 *ngFor="let frequency of frequencies"
-                 [class.selected]="selectedFrequency?.id === frequency.id"
-                 (click)="selectFrequency(frequency)">
-              <h4>{{ frequency.name }}</h4>
-              <p>{{ frequency.description }}</p>
-              <div class="discount" *ngIf="frequency.discountPercentage > 0">
-                Save {{ frequency.discountPercentage }}%
-              </div>
-            </div>
+     *ngFor="let frequency of frequencies"
+     [class.selected]="selectedFrequency?.id === frequency.id"
+     [class.user-subscription]="hasActiveSubscription && getFrequencyDaysForSubscription(userSubscription?.subscriptionName) === frequency.frequencyDays"
+     (click)="selectFrequency(frequency)">
+  <h4>{{ frequency.name }}</h4>
+  <p>{{ frequency.description }}</p>
+  <div class="discount" *ngIf="frequency.discountPercentage > 0">
+    Save {{ frequency.discountPercentage }}%
+  </div>
+  <div class="current-subscription" 
+       *ngIf="hasActiveSubscription && getFrequencyDaysForSubscription(userSubscription?.subscriptionName) === frequency.frequencyDays">
+    Your Current Plan
+  </div>
+</div>
           </div>
         </section>
 
@@ -217,7 +227,7 @@
                 <button 
                   class="apply-btn" 
                   (click)="applyFirstTimeDiscount()" 
-                  [disabled]="firstTimeDiscountApplied || promoCodeApplied">
+                  [disabled]="firstTimeDiscountApplied">
                   {{ firstTimeDiscountApplied ? 'Applied' : 'Apply' }}
                 </button>
                 <button 
@@ -247,9 +257,6 @@
                   Remove
                 </button>
               </div>
-              <p class="discount-note" *ngIf="firstTimeDiscountApplied || promoCodeApplied">
-                <small>Note: Only one discount can be applied per order</small>
-              </p>
             </div>
           </div>
         </section>
@@ -447,10 +454,23 @@
               <span>Subtotal:</span>
               <span>${{ calculation.subTotal.toFixed(2) }}</span>
             </div>
+
+            <!-- Show subscription discount if active -->
+            <div class="price-item subscription-discount" *ngIf="subscriptionDiscountAmount > 0">
+              <span>Subscription Discount ({{ userSubscription?.discountPercentage }}%):</span>
+              <span class="discount">-${{ subscriptionDiscountAmount.toFixed(2) }}</span>
+            </div>
             
-            <div class="price-item" *ngIf="calculation.discountAmount > 0">
-              <span>Discount:</span>
-              <span class="discount">-${{ calculation.discountAmount.toFixed(2) }}</span>
+            <!-- Show promo/first-time discount if active -->
+            <div class="price-item" *ngIf="promoOrFirstTimeDiscountAmount > 0">
+              <span>
+                <ng-container *ngIf="firstTimeDiscountApplied">First-Time Customer Discount (20%)</ng-container>
+                <ng-container *ngIf="promoCodeApplied && !firstTimeDiscountApplied">
+                  Promo Code Discount
+                  <ng-container *ngIf="promoIsPercentage">({{ promoDiscount }}%)</ng-container>
+                </ng-container>
+              </span>
+              <span class="discount">-${{ promoOrFirstTimeDiscountAmount.toFixed(2) }}</span>
             </div>
             
             <div class="price-item">
@@ -466,6 +486,20 @@
             <div class="total">
               <span>Total:</span>
               <span>${{ calculation.total.toFixed(2) }}</span>
+            </div>
+
+            <!-- Show next order discount for subscription -->
+            <div class="next-order-info" *ngIf="selectedFrequency && (selectedFrequency.frequencyDays || 0) > 0 && (!hasActiveSubscription || (userSubscription?.orderCount || 0) === 0)">
+              <div class="divider"></div>
+              <div class="next-order-title">Next Order with {{ selectedFrequency.name }} Subscription:</div>
+              <div class="price-item">
+                <span>Discount ({{ selectedFrequency.discountPercentage }}%):</span>
+                <span class="discount">-${{ nextOrderDiscount.toFixed(2) }}</span>
+              </div>
+              <div class="price-item next-total">
+                <span>Next Order Total:</span>
+                <span>${{ nextOrderTotal.toFixed(2) }}</span>
+              </div>
             </div>
           </div>
         </div>

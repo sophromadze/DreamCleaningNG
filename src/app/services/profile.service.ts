@@ -12,6 +12,9 @@ export interface Profile {
   firstTimeOrder: boolean;
   subscriptionId?: number;
   subscriptionName?: string;
+  subscriptionDiscountPercentage?: number;  
+  subscriptionExpiryDate?: Date;             
+  subscriptionOrderCount?: number;           
   apartments: Apartment[];
 }
 

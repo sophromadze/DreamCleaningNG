@@ -67,6 +67,14 @@ export class BookingComponent implements OnInit {
   calculatedMaidsCount = 1;
   actualTotalDuration: number = 0;
   
+  // Subscription-related properties
+  userSubscription: any = null;
+  hasActiveSubscription = false;
+  nextOrderDiscount = 0;
+  nextOrderTotal = 0;
+  subscriptionDiscountAmount = 0;
+  promoOrFirstTimeDiscountAmount = 0;
+  
   // Constants
   salesTaxRate = 0.088; // 8.8%
   minDate = new Date();
@@ -229,6 +237,9 @@ export class BookingComponent implements OnInit {
             }
           }
         });
+
+        // Load user subscription after loading user data
+        this.loadUserSubscription();
       }
     });
   }
@@ -424,16 +435,19 @@ export class BookingComponent implements OnInit {
     if (this.promoCode.disabled) {
       return;
     }
-  
+
     const code = this.promoCode.value;
     if (!code) return;
-  
+
     // If first-time discount is already applied, show error
     if (this.firstTimeDiscountApplied) {
       this.errorMessage = 'Cannot apply promo code when first-time discount is already applied. Please remove the first-time discount first.';
       return;
     }
-  
+
+    // Clear any previous error
+    this.errorMessage = '';
+
     this.bookingService.validatePromoCode(code).subscribe({
       next: (validation) => {
         if (validation.isValid) {
@@ -461,6 +475,7 @@ export class BookingComponent implements OnInit {
     this.firstTimeDiscountApplied = true;
     // Disable the promo code input
     this.promoCode.disable();
+    this.errorMessage = '';
     this.calculateTotal();
   }
 
@@ -516,16 +531,16 @@ export class BookingComponent implements OnInit {
   private calculateTotal() {
     let subTotal = 0;
     let totalDuration = 0;
-    let actualTotalDuration = 0; // Track the real total duration
+    let actualTotalDuration = 0;
     let deepCleaningFee = 0;
-    let displayDuration = 0; // This will be the duration shown to the user
-    let useExplicitHours = false; // Flag to check if we should use hours from Hours service
-  
+    let displayDuration = 0;
+    let useExplicitHours = false;
+
     // Check for deep cleaning multipliers FIRST
     let priceMultiplier = 1;
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
-  
+
     if (superDeepCleaning) {
       priceMultiplier = superDeepCleaning.extraService.priceMultiplier;
       deepCleaningFee = superDeepCleaning.extraService.price;
@@ -533,12 +548,12 @@ export class BookingComponent implements OnInit {
       priceMultiplier = deepCleaning.extraService.priceMultiplier;
       deepCleaningFee = deepCleaning.extraService.price;
     }
-  
+
     // Calculate base price with multiplier
     if (this.selectedServiceType) {
       subTotal += this.selectedServiceType.basePrice * priceMultiplier;
     }
-  
+
     // Check if we have cleaner-hours relationship
     const hasCleanerService = this.selectedServices.some(s => 
       s.service.serviceRelationType === 'cleaner'
@@ -546,18 +561,16 @@ export class BookingComponent implements OnInit {
     const hoursService = this.selectedServices.find(s => 
       s.service.serviceRelationType === 'hours'
     );
-  
+
     // If we have both cleaner and hours services, use hours as the duration
     if (hasCleanerService && hoursService) {
       useExplicitHours = true;
-      // Set the duration from hours service
-      actualTotalDuration = hoursService.quantity * 60; // Convert hours to minutes
+      actualTotalDuration = hoursService.quantity * 60;
       totalDuration = actualTotalDuration;
     }
-  
+
     // Calculate service costs
     this.selectedServices.forEach(selected => {
-      // Special handling for cleaner-hours relationship
       if (selected.service.serviceRelationType === 'cleaner') {
         if (hoursService) {
           const hours = hoursService.quantity;
@@ -565,18 +578,15 @@ export class BookingComponent implements OnInit {
           const costPerCleanerPerHour = selected.service.cost * priceMultiplier;
           const cost = costPerCleanerPerHour * cleaners * hours;
           subTotal += cost;
-          // Duration is already set from hours service above
         }
       } else if (selected.service.serviceKey === 'bedrooms' && selected.quantity === 0) {
-        // Studio apartment - flat rate of $20
         const cost = 20 * priceMultiplier;
         subTotal += cost;
         if (!useExplicitHours) {
-          totalDuration += 20; // 20 minutes for studio
+          totalDuration += 20;
           actualTotalDuration += 20;
         }
       } else if (selected.service.serviceRelationType !== 'hours') {
-        // Regular service calculation (not hours in a cleaner-hours relationship)
         const cost = selected.service.cost * selected.quantity * priceMultiplier;
         subTotal += cost;
         if (!useExplicitHours) {
@@ -584,14 +594,11 @@ export class BookingComponent implements OnInit {
           actualTotalDuration += selected.service.timeDuration * selected.quantity;
         }
       }
-      // Note: 'hours' services are not calculated separately when serviceRelationType is 'hours'
     });
-  
+
     // Calculate extra service costs
-    // When using explicit hours, extra services don't add to duration
     this.selectedExtraServices.forEach(selected => {
       if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
-        // Regular extra services - apply multiplier EXCEPT for Same Day Service
         const currentMultiplier = selected.extraService.isSameDayService ? 1 : priceMultiplier;
         
         if (selected.extraService.hasHours) {
@@ -614,93 +621,121 @@ export class BookingComponent implements OnInit {
           }
         }
       } else {
-        // Deep cleaning services - duration only (fee tracked separately)
         if (!useExplicitHours) {
           totalDuration += selected.extraService.duration;
           actualTotalDuration += selected.extraService.duration;
         }
       }
     });
-  
+
     // Calculate maids count
     this.calculatedMaidsCount = 1;
-  
+
     if (hasCleanerService) {
-      // Use the selected cleaner count
       const cleanerService = this.selectedServices.find(s => 
         s.service.serviceRelationType === 'cleaner'
       );
       if (cleanerService) {
         this.calculatedMaidsCount = cleanerService.quantity;
       }
-  
-      // When cleaners are explicitly selected, always use the actual duration
       displayDuration = actualTotalDuration;
     } else {
-      // Calculate based on duration (every 6 hours = 1 maid)
       const totalHours = totalDuration / 60;
-  
-      // Always start with 1 maid
       if (totalHours <= 6) {
         this.calculatedMaidsCount = 1;
         displayDuration = totalDuration;
       } else {
-        // For duration > 6 hours, calculate number of maids needed
         this.calculatedMaidsCount = Math.ceil(totalHours / 6);
-  
-        // Divide the total duration by number of maids to get display duration
         displayDuration = Math.ceil(totalDuration / this.calculatedMaidsCount);
       }
     }
-  
-    // IMPORTANT: Store the actual total duration for backend
+
+    // Store the actual total duration for backend
     this.actualTotalDuration = actualTotalDuration;
-  
-    // Apply frequency discount to the subtotal (before adding deep cleaning fee)
-    let discountAmount = 0;
-    if (this.selectedFrequency && this.selectedFrequency.discountPercentage > 0) {
-      discountAmount = subTotal * (this.selectedFrequency.discountPercentage / 100);
+
+    // Reset discount amounts
+    this.subscriptionDiscountAmount = 0;
+    this.promoOrFirstTimeDiscountAmount = 0;
+
+    // Calculate subscription discount if applicable
+    const isUsingSubscriptionFrequency = this.hasActiveSubscription && 
+      this.userSubscription && 
+      this.userSubscription.orderCount > 0 && 
+      this.selectedFrequency && 
+      this.selectedFrequency.frequencyDays > 0 &&
+      this.getFrequencyDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedFrequency.frequencyDays;
+
+    if (isUsingSubscriptionFrequency) {
+      console.log('Applying subscription discount:', {
+        hasActiveSubscription: this.hasActiveSubscription,
+        orderCount: this.userSubscription.orderCount,
+        subscriptionName: this.userSubscription.subscriptionName,
+        discountPercentage: this.userSubscription.discountPercentage
+      });
+      this.subscriptionDiscountAmount = subTotal * (this.userSubscription.discountPercentage / 100);
+    } else {
+      console.log('NOT applying subscription discount:', {
+        hasActiveSubscription: this.hasActiveSubscription,
+        orderCount: this.userSubscription?.orderCount || 0,
+        reason: !this.hasActiveSubscription ? 'No active subscription' : 
+                !this.userSubscription ? 'No subscription data' :
+                this.userSubscription.orderCount === 0 ? 'First order with subscription' :
+                'Not using subscription frequency'
+      });
+      this.subscriptionDiscountAmount = 0;
     }
-  
-    // Apply EITHER first time discount OR promo code discount, not both
+
+    // Calculate promo or first-time discount (can stack with subscription)
     if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
-      // Apply first time discount (20%)
-      discountAmount += subTotal * 0.20;
+      this.promoOrFirstTimeDiscountAmount = subTotal * 0.20;
     } else if (this.promoCodeApplied) {
-      // Apply promo code discount
       if (this.promoIsPercentage) {
-        discountAmount += subTotal * (this.promoDiscount / 100);
+        this.promoOrFirstTimeDiscountAmount = subTotal * (this.promoDiscount / 100);
       } else {
-        discountAmount += this.promoDiscount;
+        this.promoOrFirstTimeDiscountAmount = this.promoDiscount;
       }
     }
-  
-    // Now add the deep cleaning fee AFTER discounts are calculated
+
+    // Total discount is the sum of both
+    const totalDiscountAmount = this.subscriptionDiscountAmount + this.promoOrFirstTimeDiscountAmount;
+
+    // Add deep cleaning fee AFTER discounts are calculated
     subTotal += deepCleaningFee;
-  
+
     // Calculate tax on discounted subtotal
-    const discountedSubTotal = subTotal - discountAmount;
+    const discountedSubTotal = subTotal - totalDiscountAmount;
     const tax = discountedSubTotal * this.salesTaxRate;
-  
+
     // Get tips
     const tips = this.tips.value || 0;
-  
+
     // Calculate total
     const total = discountedSubTotal + tax + tips;
-  
+
     // For display, when using explicit hours, show the hours directly
     if (useExplicitHours && hoursService) {
-      displayDuration = hoursService.quantity * 60; // Show exact hours selected
+      displayDuration = hoursService.quantity * 60;
     }
-  
+
     this.calculation = {
       subTotal,
       tax,
-      discountAmount,
+      discountAmount: totalDiscountAmount,
       tips,
       total,
-      totalDuration: displayDuration // Use display duration for UI
+      totalDuration: displayDuration
     };
+
+    // Calculate next order's total with subscription discount
+    if (this.selectedFrequency && this.selectedFrequency.frequencyDays > 0 && 
+        (!this.hasActiveSubscription || (this.userSubscription?.orderCount || 0) === 0)) {
+      const nextOrderDiscountPercentage = this.selectedFrequency.discountPercentage;
+      this.nextOrderDiscount = subTotal * (nextOrderDiscountPercentage / 100);
+      this.nextOrderTotal = subTotal - this.nextOrderDiscount + tax;
+    } else {
+      this.nextOrderDiscount = 0;
+      this.nextOrderTotal = 0;
+    }
   }
 
    // Get cleaning type text
@@ -891,6 +926,13 @@ export class BookingComponent implements OnInit {
       apartmentName = formValue.apartmentName;
       // apartmentId remains null for new apartments
     }
+
+    const shouldApplySubscriptionDiscount = this.hasActiveSubscription && 
+      this.userSubscription && 
+      this.userSubscription.orderCount > 0 && 
+      this.selectedFrequency && 
+      this.selectedFrequency.frequencyDays > 0 &&
+      this.getFrequencyDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedFrequency.frequencyDays;
     
     const bookingData = {
       serviceTypeId: this.selectedServiceType.id,
@@ -924,9 +966,12 @@ export class BookingComponent implements OnInit {
       promoCode: this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode,
       tips: formValue.tips,
       maidsCount: this.calculatedMaidsCount,
-      discountAmount: this.calculation.discountAmount,
+      discountAmount: this.promoOrFirstTimeDiscountAmount,
+      subscriptionDiscountAmount: shouldApplySubscriptionDiscount ? this.subscriptionDiscountAmount : 0,
       subTotal: this.calculation.subTotal,
-      totalDuration: this.actualTotalDuration
+      totalDuration: this.actualTotalDuration,
+      hasActiveSubscription: this.hasActiveSubscription,
+      userSubscriptionId: this.userSubscription?.subscriptionId
     };
 
     // Debug log the booking data
@@ -975,6 +1020,7 @@ export class BookingComponent implements OnInit {
     this.firstTimeDiscountApplied = false;
     // Re-enable the promo code input
     this.promoCode.enable();
+    this.errorMessage = '';
     this.calculateTotal();
   }
 
@@ -997,4 +1043,39 @@ export class BookingComponent implements OnInit {
   get zipCode() { return this.bookingForm.get('zipCode') as FormControl; }
   get promoCode() { return this.bookingForm.get('promoCode') as FormControl; }
   get tips() { return this.bookingForm.get('tips') as FormControl; }
+
+  // Add new method to load user subscription
+  private loadUserSubscription() {
+    this.bookingService.getUserSubscription().subscribe({
+      next: (subscription) => {
+        if (subscription.hasSubscription) {
+          this.userSubscription = subscription;
+          this.hasActiveSubscription = true;
+          
+          // Auto-select user's current subscription frequency
+          const userFrequency = this.frequencies.find(f => 
+            this.getFrequencyDaysForSubscription(subscription.subscriptionName) === f.frequencyDays
+          );
+          if (userFrequency) {
+            this.selectedFrequency = userFrequency;
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load user subscription:', error);
+      }
+    });
+  }
+
+  // Helper method to map subscription name to frequency days
+  getFrequencyDaysForSubscription(subscriptionName: string | undefined): number {
+    if (!subscriptionName) return 0;
+    
+    const mapping: { [key: string]: number } = {
+      'Weekly': 7,
+      'Bi-Weekly': 14,
+      'Monthly': 30
+    };
+    return mapping[subscriptionName] || 0;
+  }
 }

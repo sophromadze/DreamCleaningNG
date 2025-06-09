@@ -42,9 +42,17 @@ export class OrderDetailsComponent implements OnInit {
     this.orderService.getOrderById(orderId).subscribe({
       next: (order) => {
         this.order = order;
+        
+        // Add debugging to see what's being received
+        console.log('Order received:', order);
+        console.log('Subscription Discount Amount:', order.subscriptionDiscountAmount);
+        console.log('Regular Discount Amount:', order.discountAmount);
+        console.log('Total:', order.total);
+        
         this.isLoading = false;
       },
       error: (error) => {
+        console.error('Error loading order:', error);
         this.errorMessage = 'Failed to load order details';
         this.isLoading = false;
       }

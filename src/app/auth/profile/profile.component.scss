@@ -163,8 +163,20 @@
         color: #333;
       }
   
-      .special-offer {
+      .subscription-details {
+        display: block;
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 0.25rem;
+      }
+  
+      .subscription-active {
         color: #28a745;
+        font-weight: 600;
+      }
+  
+      .special-offer {
+        color: #ffc107;
         font-weight: 600;
       }
     }
