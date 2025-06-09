@@ -653,6 +653,9 @@ export class BookingComponent implements OnInit {
     // Store the actual total duration for backend
     this.actualTotalDuration = actualTotalDuration;
 
+    // Add deep cleaning fee AFTER discounts are calculated
+    subTotal += deepCleaningFee;
+
     // Reset discount amounts
     this.subscriptionDiscountAmount = 0;
     this.promoOrFirstTimeDiscountAmount = 0;
@@ -699,8 +702,7 @@ export class BookingComponent implements OnInit {
     // Total discount is the sum of both
     const totalDiscountAmount = this.subscriptionDiscountAmount + this.promoOrFirstTimeDiscountAmount;
 
-    // Add deep cleaning fee AFTER discounts are calculated
-    subTotal += deepCleaningFee;
+    
 
     // Calculate tax on discounted subtotal
     const discountedSubTotal = subTotal - totalDiscountAmount;
