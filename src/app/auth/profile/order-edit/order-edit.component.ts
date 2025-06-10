@@ -62,6 +62,7 @@ export class OrderEditComponent implements OnInit {
   // Original values for comparison
   originalTotal = 0;
   originalDiscountAmount = 0;
+  originalSubscriptionDiscountAmount = 0;
   
   // Calculated values
   newSubTotal = 0;
@@ -172,7 +173,8 @@ export class OrderEditComponent implements OnInit {
         this.order = order;
         this.originalTotal = order.total;
         this.originalDiscountAmount = order.discountAmount;
-        this.originalMaidsCount = order.maidsCount; // Add this
+        this.originalSubscriptionDiscountAmount = order.subscriptionDiscountAmount || 0;
+        this.originalMaidsCount = order.maidsCount;
         this.populateForm(order);
         this.loadServiceType(order.serviceTypeId);
       },
@@ -614,8 +616,8 @@ export class OrderEditComponent implements OnInit {
     // Add deep cleaning fee AFTER all other calculations
     subtotal += deepCleaningFee;
   
-    // Apply original discount amount (not percentage, to keep the same discount)
-    const discountedSubTotal = subtotal - this.originalDiscountAmount;
+    // Apply original discounts (both regular and subscription)
+    const discountedSubTotal = subtotal - this.originalDiscountAmount - this.originalSubscriptionDiscountAmount;
   
     // Make sure we don't go negative
     if (discountedSubTotal < 0) {
@@ -839,5 +841,12 @@ export class OrderEditComponent implements OnInit {
       return 'Deep Cleaning';
     }
     return 'Normal Cleaning';
+  }
+
+  getServiceDuration(service: Service): number {
+    if (service.serviceKey === 'bedrooms' && this.getServiceQuantity(service) === 0) {
+      return 20; // 20 minutes for studio apartment
+    }
+    return service.timeDuration;
   }
 }

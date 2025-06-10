@@ -54,7 +54,7 @@
                       </span>
                       <span class="service-duration" *ngIf="service.timeDuration">
                         <span class="duration-icon">⏱️</span>
-                        {{ formatServiceDuration(service.timeDuration * getOriginalServiceQuantity(service)) }}
+                        {{ formatServiceDuration(getServiceDuration(service)) }}
                       </span>
                     </div>
                   </div>
@@ -88,7 +88,7 @@
                       </span>
                       <span class="service-duration" *ngIf="service.timeDuration">
                         <span class="duration-icon">⏱️</span>
-                        {{ formatServiceDuration(service.timeDuration * getServiceQuantity(service)) }}
+                        {{ formatServiceDuration(getServiceDuration(service)) }}
                       </span>
                     </div>
                   </div>
@@ -326,7 +326,12 @@
           
           <div class="price-row">
             <span>Subtotal:</span>
-            <span class="amount">${{ (newSubTotal + originalDiscountAmount).toFixed(2) }}</span>
+            <span class="amount">${{ (newSubTotal + originalDiscountAmount + originalSubscriptionDiscountAmount).toFixed(2) }}</span>
+          </div>
+          
+          <div class="price-row" *ngIf="originalSubscriptionDiscountAmount > 0">
+            <span>Subscription Discount:</span>
+            <span class="amount discount">-${{ originalSubscriptionDiscountAmount.toFixed(2) }}</span>
           </div>
           
           <div class="price-row" *ngIf="originalDiscountAmount > 0">

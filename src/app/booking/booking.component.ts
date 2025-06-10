@@ -329,9 +329,11 @@ export class BookingComponent implements OnInit {
     if (serviceType.services) {
       serviceType.services.forEach(service => {
         if (service.inputType === 'dropdown') {
+          // Set default to 0 for bedrooms, otherwise use minValue or 1
+          const defaultQuantity = service.serviceKey === 'bedrooms' ? 0 : (service.minValue || 1);
           this.selectedServices.push({
             service: service,
-            quantity: service.minValue || 1
+            quantity: defaultQuantity
           });
         } else if (service.isRangeInput) {
           this.selectedServices.push({
@@ -835,6 +837,18 @@ export class BookingComponent implements OnInit {
     } else {
       return `${hours}h ${mins}m`;
     }
+  }
+
+  getServiceDuration(service: Service): number {
+    if (service.serviceKey === 'bedrooms' && this.getServiceQuantity(service) === 0) {
+      return 20; // 20 minutes for studio apartment
+    }
+    return service.timeDuration;
+  }
+
+  getServiceQuantity(service: Service): number {
+    const selected = this.selectedServices.find(s => s.service.id === service.id);
+    return selected ? selected.quantity : (service.minValue || 0);
   }
 
   getServiceTypeIcon(serviceType: ServiceType): string {
