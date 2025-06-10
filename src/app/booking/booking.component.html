@@ -128,7 +128,7 @@
                   </div>
                 </div>
                 <div class="checkbox">
-                  <input type="checkbox" [checked]="isExtraServiceSelected(extra)" (click)="$event.stopPropagation()">
+                  <input type="checkbox" [checked]="isExtraServiceSelected(extra)" style="pointer-events: none; cursor: default;">
                 </div>
               </div>
               
@@ -428,14 +428,9 @@
               <span>{{ selectedFrequency.name }}</span>
             </div>
             
-            <div class="summary-item" *ngIf="serviceDate.value">
-              <span>Date:</span>
-              <span>{{ serviceDate.value | date }}</span>
-            </div>
-            
-            <div class="summary-item" *ngIf="serviceTime.value">
-              <span>Time:</span>
-              <span>{{ serviceTime.value }}</span>
+            <div class="summary-item" *ngIf="serviceDate.value && serviceTime.value">
+              <span>Date & Time:</span>
+              <span>{{ serviceDate.value | date:'MMM d' }} at {{ formatTime(serviceTime.value) }}</span>
             </div>
             
             <div class="summary-item">

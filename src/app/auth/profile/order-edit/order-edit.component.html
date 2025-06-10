@@ -125,8 +125,9 @@
           <div class="extra-services">
             <div class="extra-service-card" 
                  *ngFor="let extra of getFilteredExtraServices()"
-                 [class.selected]="isExtraServiceSelected(extra)">
-              <div class="extra-header" (click)="toggleExtraService(extra)">
+                 [class.selected]="isExtraServiceSelected(extra)"
+                 (click)="toggleExtraService(extra)">
+              <div class="extra-header">
                 <div class="extra-info">
                   <h4>{{ extra.name }}</h4>
                   <p>{{ extra.description }}</p>
@@ -139,25 +140,25 @@
                   </div>
                 </div>
                 <div class="checkbox">
-                  <input type="checkbox" [checked]="isExtraServiceSelected(extra)" (click)="$event.stopPropagation()">
+                  <input type="checkbox" [checked]="isExtraServiceSelected(extra)" style="pointer-events: none; cursor: default;">
                 </div>
               </div>
               
               <div class="extra-controls" *ngIf="isExtraServiceSelected(extra)">
                 <div class="quantity-control" *ngIf="extra.hasQuantity">
                   <label>Quantity:</label>
-                  <button type="button" (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1)" 
+                  <button type="button" (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
                           [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
                   <span>{{ getExtraServiceQuantity(extra) }}</span>
-                  <button type="button" (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1)">+</button>
+                  <button type="button" (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1); $event.stopPropagation()">+</button>
                 </div>
                 
                 <div class="hours-control" *ngIf="extra.hasHours">
                   <label>Hours:</label>
-                  <button type="button" (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) - 0.5)" 
+                  <button type="button" (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) - 0.5); $event.stopPropagation()" 
                           [disabled]="getExtraServiceHours(extra) <= 0.5">-</button>
                   <span>{{ getExtraServiceHours(extra) }}</span>
-                  <button type="button" (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) + 0.5)">+</button>
+                  <button type="button" (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) + 0.5); $event.stopPropagation()">+</button>
                 </div>
               </div>
             </div>
@@ -313,15 +314,19 @@
         </div>
         
         <div class="calculator-content">
-          <!-- Add this after the header -->
-          <div class="maids-count-display">
-            <strong>Number of Maids:</strong>
-            <span class="maids-badge">{{ calculatedMaidsCount }} {{ calculatedMaidsCount > 1 ? 'Maids' : 'Maid' }}</span>
+          <div class="price-row">
+            <span>Date & Time:</span>
+            <span class="amount">{{ orderForm.get('serviceDate')?.value | date:'MMM d' }} at {{ formatTime(orderForm.get('serviceTime')?.value) }}</span>
+          </div>
+
+          <div class="price-row">
+            <span>Number of Maids:</span>
+            <span class="amount">{{ calculatedMaidsCount }} {{ calculatedMaidsCount > 1 ? 'Maids' : 'Maid' }}</span>
           </div>
           
-          <div class="duration-display">
-            <strong>Total Duration:</strong>
-            <span class="duration-badge">{{ formatDuration(totalDurationDisplay) }}</span>
+          <div class="price-row">
+            <span>Total Duration:</span>
+            <span class="amount">{{ formatDuration(totalDurationDisplay) }}</span>
           </div>
           
           <div class="price-row">
@@ -351,10 +356,10 @@
           
           <div class="price-row total">
             <span>New Total:</span>
-            <span class="amount">${{ newTotal.toFixed(2) }}</span>
+            <span class="amount positive">${{ newTotal.toFixed(2) }}</span>
           </div>
           
-          <div class="price-row" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e0e0e0;">
+          <div class="price-row original-total">
             <span>Original Total:</span>
             <span class="amount">${{ originalTotal.toFixed(2) }}</span>
           </div>

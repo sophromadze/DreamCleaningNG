@@ -540,6 +540,7 @@ export class BookingComponent implements OnInit {
 
     // Check for deep cleaning multipliers FIRST
     let priceMultiplier = 1;
+
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
 
@@ -677,7 +678,7 @@ export class BookingComponent implements OnInit {
         subscriptionName: this.userSubscription.subscriptionName,
         discountPercentage: this.userSubscription.discountPercentage
       });
-      this.subscriptionDiscountAmount = subTotal * (this.userSubscription.discountPercentage / 100);
+      this.subscriptionDiscountAmount = Math.round(subTotal * (this.userSubscription.discountPercentage / 100) * 100) / 100;
     } else {
       console.log('NOT applying subscription discount:', {
         hasActiveSubscription: this.hasActiveSubscription,
@@ -692,10 +693,10 @@ export class BookingComponent implements OnInit {
 
     // Calculate promo or first-time discount (can stack with subscription)
     if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
-      this.promoOrFirstTimeDiscountAmount = subTotal * 0.20;
+      this.promoOrFirstTimeDiscountAmount = Math.round(subTotal * 0.20 * 100) / 100;
     } else if (this.promoCodeApplied) {
       if (this.promoIsPercentage) {
-        this.promoOrFirstTimeDiscountAmount = subTotal * (this.promoDiscount / 100);
+        this.promoOrFirstTimeDiscountAmount = Math.round(subTotal * (this.promoDiscount / 100) * 100) / 100;
       } else {
         this.promoOrFirstTimeDiscountAmount = this.promoDiscount;
       }
@@ -708,7 +709,7 @@ export class BookingComponent implements OnInit {
 
     // Calculate tax on discounted subtotal
     const discountedSubTotal = subTotal - totalDiscountAmount;
-    const tax = discountedSubTotal * this.salesTaxRate;
+    const tax = Math.round(discountedSubTotal * this.salesTaxRate * 100) / 100;
 
     // Get tips
     const tips = this.tips.value || 0;
@@ -722,20 +723,25 @@ export class BookingComponent implements OnInit {
     }
 
     this.calculation = {
-      subTotal,
+      subTotal: Math.round(subTotal * 100) / 100,
       tax,
       discountAmount: totalDiscountAmount,
       tips,
-      total,
+      total: Math.round(total * 100) / 100,
       totalDuration: displayDuration
     };
 
     // Calculate next order's total with subscription discount
     if (this.selectedFrequency && this.selectedFrequency.frequencyDays > 0 && 
-        (!this.hasActiveSubscription || (this.userSubscription?.orderCount || 0) === 0)) {
-      const nextOrderDiscountPercentage = this.selectedFrequency.discountPercentage;
-      this.nextOrderDiscount = subTotal * (nextOrderDiscountPercentage / 100);
-      this.nextOrderTotal = subTotal - this.nextOrderDiscount + tax;
+      (!this.hasActiveSubscription || (this.userSubscription?.orderCount || 0) === 0)) {
+    const nextOrderDiscountPercentage = this.selectedFrequency.discountPercentage;
+    this.nextOrderDiscount = Math.round(subTotal * (nextOrderDiscountPercentage / 100) * 100) / 100;
+    
+    // Calculate tax on the discounted subtotal for next order
+    const nextOrderDiscountedSubTotal = subTotal - this.nextOrderDiscount;
+    const nextOrderTax = Math.round(nextOrderDiscountedSubTotal * this.salesTaxRate * 100) / 100;
+    
+    this.nextOrderTotal = nextOrderDiscountedSubTotal + nextOrderTax;
     } else {
       this.nextOrderDiscount = 0;
       this.nextOrderTotal = 0;
@@ -837,6 +843,18 @@ export class BookingComponent implements OnInit {
     } else {
       return `${hours}h ${mins}m`;
     }
+  }
+
+  formatTime(time: string): string {
+    if (!time) return '';
+    console.log('Formatting time:', time);
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    const formatted = `${hour12}:${minutes} ${ampm}`;
+    console.log('Formatted time:', formatted);
+    return formatted;
   }
 
   getServiceDuration(service: Service): number {

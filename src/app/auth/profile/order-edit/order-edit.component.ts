@@ -625,7 +625,7 @@ export class OrderEditComponent implements OnInit {
       this.newTax = 0;
     } else {
       this.newSubTotal = discountedSubTotal;
-      this.newTax = discountedSubTotal * this.salesTaxRate;
+      this.newTax = Math.round(discountedSubTotal * this.salesTaxRate * 100) / 100;
     }
   
     // Get tips
@@ -700,7 +700,10 @@ export class OrderEditComponent implements OnInit {
       tips: formValue.tips || 0,
       // Add these two fields that were missing:
       totalDuration: this.actualTotalDuration,
-      maidsCount: this.calculatedMaidsCount
+      maidsCount: this.calculatedMaidsCount,
+      calculatedSubTotal: this.newSubTotal + this.originalDiscountAmount + this.originalSubscriptionDiscountAmount,
+      calculatedTax: this.newTax,
+      calculatedTotal: this.newTotal
     };
   }
 
@@ -791,8 +794,16 @@ export class OrderEditComponent implements OnInit {
   }
 
   formatDuration(minutes: number): string {
-    // Simply use the rounded duration
     return DurationUtils.formatDurationRounded(minutes);
+  }
+
+  formatTime(timeString: string): string {
+    if (!timeString) return '';
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
   }
 
   formatServiceDuration(minutes: number): string {

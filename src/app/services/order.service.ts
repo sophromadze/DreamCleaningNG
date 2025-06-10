@@ -91,6 +91,9 @@ export interface UpdateOrder {
   tips: number;
   maidsCount: number;
   totalDuration: number;
+  calculatedSubTotal: number;
+  calculatedTax: number;
+  calculatedTotal: number;
 }
 
 export interface CancelOrder {

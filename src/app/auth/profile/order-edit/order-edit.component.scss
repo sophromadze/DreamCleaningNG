@@ -53,6 +53,22 @@
           font-weight: 600;
           color: #333;
           font-size: 1.1rem;
+  
+          .amount {
+            &.positive {
+              color: #28a745;
+            }
+          }
+        }
+  
+        &.original-total {
+          margin-top: 1rem;
+          padding-top: 1rem;
+          border-top: 1px solid #e0e0e0;
+  
+          .amount {
+            color: #007bff;
+          }
         }
   
         .amount {
