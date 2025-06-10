@@ -12,7 +12,7 @@ import { DurationUtils } from '../../../utils/duration.utils';
 interface SelectedService {
   service: Service;
   quantity: number;
-  hours?: number;  // Add hours field for cleaner services
+  hours?: number;  
 }
 
 interface SelectedExtraService {
@@ -636,6 +636,10 @@ export class OrderEditComponent implements OnInit {
   
     // Calculate the additional amount needed
     this.additionalAmount = this.newTotal - this.originalTotal;
+
+    if (Math.abs(this.additionalAmount) < 0.01) {
+      this.additionalAmount = 0;
+    }
   }
 
   prepareUpdateData(): UpdateOrder {

@@ -76,6 +76,7 @@
   
   .service-types-list {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     justify-content: center;
     align-items: center;
@@ -777,11 +778,6 @@
       grid-template-columns: 1fr;
     }
     
-    .service-types-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1rem;
-    }
   }
   
   @media (max-width: 768px) {

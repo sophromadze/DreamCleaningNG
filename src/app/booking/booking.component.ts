@@ -201,10 +201,18 @@ export class BookingComponent implements OnInit {
     this.bookingService.getSubscriptions().subscribe({
       next: (subscriptions) => {
         this.subscriptions = subscriptions;
-        // Set "One Time" as default selected subscription
-        if (subscriptions.length > 0) {
-          const oneTimeSubscription = subscriptions.find(s => s.name === 'One Time') || subscriptions[0];
-          this.selectedSubscription = oneTimeSubscription;
+
+        // Only set default if user doesn't have an active subscription
+        // OR if we haven't loaded the user subscription data yet
+        if (!this.hasActiveSubscription) {
+          // Set "One Time" as default selected subscription
+          if (subscriptions.length > 0) {
+            const oneTimeSubscription = subscriptions.find(s => s.name === 'One Time') || subscriptions[0];
+            this.selectedSubscription = oneTimeSubscription;
+          }
+        } else if (this.userSubscription) {
+          // If we already have user subscription data, update the selection now
+          this.updateSelectedSubscription();
         }
       },
       error: (error) => {
@@ -672,7 +680,7 @@ export class BookingComponent implements OnInit {
     this.selectedSubscription.subscriptionDays > 0 &&
     this.getSubscriptionDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedSubscription.subscriptionDays;
       
-    if (isUsingSubscriptionSubscription) {
+    if (this.hasActiveSubscription && this.userSubscription && this.userSubscription.discountPercentage > 0) {
     console.log('Applying subscription discount:', {
       hasActiveSubscription: this.hasActiveSubscription,
       subscriptionName: this.userSubscription.subscriptionName,
@@ -957,10 +965,9 @@ export class BookingComponent implements OnInit {
     }
 
     const shouldApplySubscriptionDiscount = this.hasActiveSubscription && 
-      this.userSubscription && 
-      this.selectedSubscription && 
-      this.selectedSubscription.subscriptionDays > 0 &&
-      this.getSubscriptionDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedSubscription.subscriptionDays;
+  this.userSubscription && 
+  this.userSubscription.discountPercentage > 0;
+
     
     const bookingData = {
       serviceTypeId: this.selectedServiceType.id,
@@ -1097,11 +1104,12 @@ export class BookingComponent implements OnInit {
   
   private updateSelectedSubscription() {
     if (this.userSubscription && this.subscriptions) {
-      const subscriptionSubscriptionDays = this.getSubscriptionDaysForSubscription(this.userSubscription.subscriptionName);
-      const matchingSubscription = this.subscriptions.find(s => s.subscriptionDays === subscriptionSubscriptionDays);
-      
+      const matchingSubscription = this.subscriptions.find(s => s.id === this.userSubscription.subscriptionId);
+
       if (matchingSubscription) {
         this.selectedSubscription = matchingSubscription;
+        // Trigger calculation when subscription is updated
+        this.calculateTotal();
       }
     }
   }
