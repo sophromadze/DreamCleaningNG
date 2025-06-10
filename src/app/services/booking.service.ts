@@ -47,12 +47,12 @@ export interface ExtraService {
   isActive: boolean;
 }
 
-export interface Frequency {
+export interface Subscription {
   id: number;
   name: string;
   description?: string;
   discountPercentage: number;
-  frequencyDays: number;
+  subscriptionDays: number;
 }
 
 export interface PromoCodeValidation {
@@ -66,7 +66,7 @@ export interface BookingData {
   serviceTypeId: number;
   services: { serviceId: number; quantity: number }[];
   extraServices: { extraServiceId: number; quantity: number; hours: number }[];
-  frequencyId: number;
+  subscriptionId: number;
   serviceDate: Date;
   serviceTime: string;
   entryMethod: string;
@@ -111,8 +111,8 @@ export class BookingService {
     return this.http.get<ServiceType[]>(`${this.apiUrl}/booking/service-types`);
   }
 
-  getFrequencies(): Observable<Frequency[]> {
-    return this.http.get<Frequency[]>(`${this.apiUrl}/booking/frequencies`);
+  getSubscriptions(): Observable<Subscription[]> {
+    return this.http.get<Subscription[]>(`${this.apiUrl}/booking/subscriptions`);
   }
 
   validatePromoCode(code: string): Observable<PromoCodeValidation> {

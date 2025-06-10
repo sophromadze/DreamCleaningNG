@@ -64,9 +64,9 @@ export class BookingConfirmationComponent implements OnInit {
             // Clear the booking data
             this.bookingDataService.clearBookingData();
             
-            // Check if user selected a subscription frequency
-            const selectedFrequency = this.bookingData.frequency;
-            if (selectedFrequency && selectedFrequency.frequencyDays > 0) {
+            // Check if user selected a subscription subscription
+            const selectedSubscription = this.bookingData.subscription;
+            if (selectedSubscription && selectedSubscription.subscriptionDays > 0) {
               // Refresh subscription data
               this.bookingService.getUserSubscription().subscribe({
                 next: (subscriptionData) => {

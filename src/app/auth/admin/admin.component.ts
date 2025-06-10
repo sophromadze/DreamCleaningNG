@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminService, PromoCode, CreatePromoCode, UpdatePromoCode, UserAdmin, CreateService, CreateExtraService, CreateFrequency } from '../../services/admin.service';
-import { ServiceType, Service, ExtraService, Frequency } from '../../services/booking.service';
+import { AdminService, PromoCode, CreatePromoCode, UpdatePromoCode, UserAdmin, CreateService, CreateExtraService, CreateSubscription } from '../../services/admin.service';
+import { ServiceType, Service, ExtraService, Subscription } from '../../services/booking.service';
 
 @Component({
   selector: 'app-admin',
@@ -71,15 +71,15 @@ export class AdminComponent implements OnInit {
   selectedExistingExtraServiceId: number | null = null;
   showExistingExtraServices = false;
   
-  // Frequencies
-  frequencies: Frequency[] = [];
-  isAddingFrequency = false;
-  editingFrequencyId: number | null = null;
-  newFrequency: CreateFrequency = {
+  // subscriptions
+  subscriptions: Subscription[] = [];
+  isAddingSubscription = false;
+  editingSubscriptionId: number | null = null;
+  newSubscription: CreateSubscription = {
     name: '',
     description: '',
     discountPercentage: 0,
-    frequencyDays: 0,
+    subscriptionDays: 0,
     displayOrder: 1
   };
   
@@ -114,7 +114,7 @@ export class AdminComponent implements OnInit {
     this.loadServiceTypes();
     this.loadAllServices();
     this.loadAllExtraServices();
-    this.loadFrequencies();
+    this.loadSubscriptions();
     this.loadPromoCodes();
     this.loadUsers();
   }
@@ -577,83 +577,83 @@ export class AdminComponent implements OnInit {
     });
   }
 
-  // Frequencies Methods
-  loadFrequencies() {
-    this.adminService.getFrequencies().subscribe({
-      next: (frequencies) => {
-        this.frequencies = frequencies;
+  // Subscriptions Methods
+  loadSubscriptions() {
+    this.adminService.getSubscriptions().subscribe({
+      next: (subscriptions) => {
+        this.subscriptions = subscriptions;
       },
       error: () => {
-        this.errorMessage = 'Failed to load frequencies';
+        this.errorMessage = 'Failed to load subscriptions';
       }
     });
   }
 
-  startAddingFrequency() {
-    this.isAddingFrequency = true;
-    this.newFrequency = {
+  startAddingSubscription() {
+    this.isAddingSubscription = true;
+    this.newSubscription = {
       name: '',
       description: '',
       discountPercentage: 0,
-      frequencyDays: 0,
-      displayOrder: this.frequencies.length + 1
+      subscriptionDays: 0,
+      displayOrder: this.subscriptions.length + 1
     };
   }
 
-  cancelAddFrequency() {
-    this.isAddingFrequency = false;
+  cancelAddSubscription() {
+    this.isAddingSubscription = false;
   }
 
-  addFrequency() {
-    this.adminService.createFrequency(this.newFrequency).subscribe({
+  addSubscription() {
+    this.adminService.createSubscription(this.newSubscription).subscribe({
       next: () => {
-        this.successMessage = 'Frequency created successfully';
-        this.isAddingFrequency = false;
-        this.loadFrequencies();
+        this.successMessage = 'Subscription created successfully';
+        this.isAddingSubscription = false;
+        this.loadSubscriptions();
       },
       error: () => {
-        this.errorMessage = 'Failed to create frequency';
+        this.errorMessage = 'Failed to create subscription';
       }
     });
   }
 
-  editFrequency(frequency: Frequency) {
-    this.editingFrequencyId = frequency.id;
+  editSubscription(subscription: Subscription) {
+    this.editingSubscriptionId = subscription.id;
   }
 
-  cancelEditFrequency() {
-    this.editingFrequencyId = null;
-    this.loadFrequencies();
+  cancelEditSubscription() {
+    this.editingSubscriptionId = null;
+    this.loadSubscriptions();
   }
 
-  saveFrequency(frequency: Frequency) {
-    this.adminService.updateFrequency(frequency.id, {
-      name: frequency.name,
-      description: frequency.description,
-      discountPercentage: frequency.discountPercentage,
-      frequencyDays: frequency.frequencyDays,
+  saveSubscription(subscription: Subscription) {
+    this.adminService.updateSubscription(subscription.id, {
+      name: subscription.name,
+      description: subscription.description,
+      discountPercentage: subscription.discountPercentage,
+      subscriptionDays: subscription.subscriptionDays,
       displayOrder: 1
     }).subscribe({
       next: () => {
-        this.successMessage = 'Frequency updated successfully';
-        this.editingFrequencyId = null;
-        this.loadFrequencies();
+        this.successMessage = 'Subscription updated successfully';
+        this.editingSubscriptionId = null;
+        this.loadSubscriptions();
       },
       error: () => {
-        this.errorMessage = 'Failed to update frequency';
+        this.errorMessage = 'Failed to update subscription';
       }
     });
   }
 
-  deleteFrequency(frequency: Frequency) {
-    if (confirm(`Are you sure you want to delete "${frequency.name}"?`)) {
-      this.adminService.deleteFrequency(frequency.id).subscribe({
+  deleteSubscription(subscription: Subscription) {
+    if (confirm(`Are you sure you want to delete "${subscription.name}"?`)) {
+      this.adminService.deleteSubscription(subscription.id).subscribe({
         next: () => {
-          this.successMessage = 'Frequency deleted successfully';
-          this.loadFrequencies();
+          this.successMessage = 'Subscription deleted successfully';
+          this.loadSubscriptions();
         },
         error: () => {
-          this.errorMessage = 'Failed to delete frequency';
+          this.errorMessage = 'Failed to delete subscription';
         }
       });
     }

@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { OrderService, Order, UpdateOrder } from '../../../services/order.service';
-import { BookingService, ServiceType, Service, ExtraService, Frequency } from '../../../services/booking.service';
+import { BookingService, ServiceType, Service, ExtraService, Subscription } from '../../../services/booking.service';
 import { LocationService } from '../../../services/location.service';
 import { AuthService } from '../../../services/auth.service';
 import { DurationUtils } from '../../../utils/duration.utils';

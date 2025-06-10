@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
-import { BookingService, ServiceType, Service, ExtraService, Frequency, BookingCalculation } from '../services/booking.service';
+import { BookingService, ServiceType, Service, ExtraService, Subscription, BookingCalculation } from '../services/booking.service';
 import { AuthService } from '../services/auth.service';
 import { ProfileService } from '../services/profile.service';
 import { LocationService } from '../services/location.service';
@@ -32,7 +32,7 @@ interface SelectedExtraService {
 export class BookingComponent implements OnInit {
   // Data
   serviceTypes: ServiceType[] = [];
-  frequencies: Frequency[] = [];
+  subscriptions: Subscription[] = [];
   currentUser: any = null;
   userApartments: any[] = [];
   
@@ -40,7 +40,7 @@ export class BookingComponent implements OnInit {
   selectedServiceType: ServiceType | null = null;
   selectedServices: SelectedService[] = [];
   selectedExtraServices: SelectedExtraService[] = [];
-  selectedFrequency: Frequency | null = null;
+  selectedSubscription: Subscription | null = null;
   
   // Form
   bookingForm: FormGroup;
@@ -197,18 +197,18 @@ export class BookingComponent implements OnInit {
       }
     });
 
-    // Load frequencies
-    this.bookingService.getFrequencies().subscribe({
-      next: (frequencies) => {
-        this.frequencies = frequencies;
-        // Set "One Time" as default selected frequency
-        if (frequencies.length > 0) {
-          const oneTimeFrequency = frequencies.find(f => f.name === 'One Time') || frequencies[0];
-          this.selectedFrequency = oneTimeFrequency;
+    // Load subscriptions
+    this.bookingService.getSubscriptions().subscribe({
+      next: (subscriptions) => {
+        this.subscriptions = subscriptions;
+        // Set "One Time" as default selected subscription
+        if (subscriptions.length > 0) {
+          const oneTimeSubscription = subscriptions.find(s => s.name === 'One Time') || subscriptions[0];
+          this.selectedSubscription = oneTimeSubscription;
         }
       },
       error: (error) => {
-        this.errorMessage = 'Failed to load frequencies';
+        this.errorMessage = 'Failed to load subscriptions';
       }
     });
 
@@ -429,8 +429,8 @@ export class BookingComponent implements OnInit {
     return selected ? selected.hours : 0.5;
   }
 
-  selectFrequency(frequency: Frequency) {
-    this.selectedFrequency = frequency;
+  selectSubscription(subscription: Subscription) {
+    this.selectedSubscription = subscription;
     this.calculateTotal();
   }
 
@@ -666,13 +666,13 @@ export class BookingComponent implements OnInit {
     this.promoOrFirstTimeDiscountAmount = 0;
 
     // Calculate subscription discount if applicable
-    const isUsingSubscriptionFrequency = this.hasActiveSubscription && 
+    const isUsingSubscriptionSubscription = this.hasActiveSubscription && 
     this.userSubscription && 
-    this.selectedFrequency && 
-    this.selectedFrequency.frequencyDays > 0 &&
-    this.getFrequencyDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedFrequency.frequencyDays;
+    this.selectedSubscription && 
+    this.selectedSubscription.subscriptionDays > 0 &&
+    this.getSubscriptionDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedSubscription.subscriptionDays;
       
-    if (isUsingSubscriptionFrequency) {
+    if (isUsingSubscriptionSubscription) {
     console.log('Applying subscription discount:', {
       hasActiveSubscription: this.hasActiveSubscription,
       subscriptionName: this.userSubscription.subscriptionName,
@@ -684,7 +684,7 @@ export class BookingComponent implements OnInit {
       hasActiveSubscription: this.hasActiveSubscription,
       reason: !this.hasActiveSubscription ? 'No active subscription' : 
               !this.userSubscription ? 'No subscription data' :
-              'Not using subscription frequency'
+              'Not using subscription subscription'
     });
     this.subscriptionDiscountAmount = 0;
     }
@@ -730,8 +730,8 @@ export class BookingComponent implements OnInit {
     };
 
     // Calculate next order's total with subscription discount
-    if (this.selectedFrequency && this.selectedFrequency.frequencyDays > 0 && !this.hasActiveSubscription) {
-    const nextOrderDiscountPercentage = this.selectedFrequency.discountPercentage;
+    if (this.selectedSubscription && this.selectedSubscription.subscriptionDays > 0 && !this.hasActiveSubscription) {
+    const nextOrderDiscountPercentage = this.selectedSubscription.discountPercentage;
     this.nextOrderDiscount = Math.round(subTotal * (nextOrderDiscountPercentage / 100) * 100) / 100;
     
     // Calculate tax on the discounted subtotal for next order
@@ -877,7 +877,7 @@ export class BookingComponent implements OnInit {
   isFormValid(): boolean {
     return this.bookingForm.valid && 
            this.selectedServiceType !== null && 
-           this.selectedFrequency !== null;
+           this.selectedSubscription !== null;
   }
 
   onSubmit() {
@@ -894,7 +894,7 @@ export class BookingComponent implements OnInit {
     }
 
     // Check if the form is valid
-    if (!this.bookingForm.valid || !this.selectedServiceType || !this.selectedFrequency) {
+    if (!this.bookingForm.valid || !this.selectedServiceType || !this.selectedSubscription) {
       this.errorMessage = 'Please fill in all required fields';
       return;
     }
@@ -958,9 +958,9 @@ export class BookingComponent implements OnInit {
 
     const shouldApplySubscriptionDiscount = this.hasActiveSubscription && 
       this.userSubscription && 
-      this.selectedFrequency && 
-      this.selectedFrequency.frequencyDays > 0 &&
-      this.getFrequencyDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedFrequency.frequencyDays;
+      this.selectedSubscription && 
+      this.selectedSubscription.subscriptionDays > 0 &&
+      this.getSubscriptionDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedSubscription.subscriptionDays;
     
     const bookingData = {
       serviceTypeId: this.selectedServiceType.id,
@@ -973,7 +973,7 @@ export class BookingComponent implements OnInit {
         quantity: s.quantity,
         hours: s.hours
       })),
-      frequencyId: this.selectedFrequency.id,
+      subscriptionId: this.selectedSubscription.id,
       serviceDate: formValue.serviceDate,
       serviceTime: formValue.serviceTime,
       entryMethod: formValue.entryMethod === 'Other' 
@@ -1079,9 +1079,9 @@ export class BookingComponent implements OnInit {
           this.hasActiveSubscription = true;
           this.userSubscription = data;
           
-          // If frequency is already loaded, update the selection
-          if (this.frequencies && this.frequencies.length > 0) {
-            this.updateSelectedFrequency();
+          // If subscription is already loaded, update the selection
+          if (this.subscriptions && this.subscriptions.length > 0) {
+            this.updateSelectedSubscription();
           }
         } else {
           this.hasActiveSubscription = false;
@@ -1095,19 +1095,19 @@ export class BookingComponent implements OnInit {
     });
   }
   
-  private updateSelectedFrequency() {
-    if (this.userSubscription && this.frequencies) {
-      const subscriptionFrequencyDays = this.getFrequencyDaysForSubscription(this.userSubscription.subscriptionName);
-      const matchingFrequency = this.frequencies.find(f => f.frequencyDays === subscriptionFrequencyDays);
+  private updateSelectedSubscription() {
+    if (this.userSubscription && this.subscriptions) {
+      const subscriptionSubscriptionDays = this.getSubscriptionDaysForSubscription(this.userSubscription.subscriptionName);
+      const matchingSubscription = this.subscriptions.find(s => s.subscriptionDays === subscriptionSubscriptionDays);
       
-      if (matchingFrequency) {
-        this.selectedFrequency = matchingFrequency;
+      if (matchingSubscription) {
+        this.selectedSubscription = matchingSubscription;
       }
     }
   }
 
-  // Helper method to map subscription name to frequency days
-  getFrequencyDaysForSubscription(subscriptionName: string | undefined): number {
+  // Helper method to map subscription name to subscription days
+  getSubscriptionDaysForSubscription(subscriptionName: string | undefined): number {
     if (!subscriptionName) return 0;
     
     const mapping: { [key: string]: number } = {

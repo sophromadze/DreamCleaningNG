@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { ServiceType, Service, ExtraService, Frequency } from './booking.service';
+import { ServiceType, Service, ExtraService, Subscription } from './booking.service';
 
 // DTOs
 export interface PromoCode {
@@ -138,19 +138,19 @@ export interface UpdateExtraService {
   displayOrder: number;
 }
 
-export interface CreateFrequency {
+export interface CreateSubscription {
   name: string;
   description?: string;
   discountPercentage: number;
-  frequencyDays: number;
+  subscriptionDays: number;
   displayOrder: number;
 }
 
-export interface UpdateFrequency {
+export interface UpdateSubscription {
   name: string;
   description?: string;
   discountPercentage: number;
-  frequencyDays: number;
+  subscriptionDays: number;
   displayOrder: number;
 }
 
@@ -255,21 +255,21 @@ export class AdminService {
     return this.http.delete(`${this.apiUrl}/extra-services/${id}`);
   }
 
-  // Frequencies
-  getFrequencies(): Observable<Frequency[]> {
-    return this.http.get<Frequency[]>(`${this.apiUrl}/frequencies`);
+  // Subscriptions
+  getSubscriptions(): Observable<Subscription[]> {
+    return this.http.get<Subscription[]>(`${this.apiUrl}/subscriptions`);
   }
 
-  createFrequency(frequency: CreateFrequency): Observable<Frequency> {
-    return this.http.post<Frequency>(`${this.apiUrl}/frequencies`, frequency);
+  createSubscription(subscription: CreateSubscription): Observable<Subscription> {
+    return this.http.post<Subscription>(`${this.apiUrl}/subscriptions`, subscription);
   }
 
-  updateFrequency(id: number, frequency: UpdateFrequency): Observable<Frequency> {
-    return this.http.put<Frequency>(`${this.apiUrl}/frequencies/${id}`, frequency);
+  updateSubscription(id: number, subscription: UpdateSubscription): Observable<Subscription> {
+    return this.http.put<Subscription>(`${this.apiUrl}/subscriptions/${id}`, subscription);
   }
 
-  deleteFrequency(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/frequencies/${id}`);
+  deleteSubscription(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/subscriptions/${id}`);
   }
 
   // Promo Codes

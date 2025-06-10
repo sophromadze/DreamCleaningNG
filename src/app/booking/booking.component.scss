@@ -300,14 +300,14 @@
     }
   }
   
-  // Frequency Options
-  .frequency-options {
+  // Subscription Options
+  .subscription-options {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
   }
   
-  .frequency-card {
+  .subscription-card {
     border: 2px solid #e0e0e0;
     border-radius: 8px;
     padding: 1.5rem;
@@ -770,7 +770,7 @@
     }
   }
 
-  .frequency-card {
+  .subscription-card {
     &.user-subscription {
       border: 2px solid #4caf50;
       background: #f1f8e9;

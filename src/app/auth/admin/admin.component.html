@@ -484,42 +484,42 @@
         </div>
       </div>
   
-      <!-- Frequencies Section -->
-      <div class="frequencies-section">
+      <!-- Subscriptions Section -->
+      <div class="subscriptions-section">
         <div class="section-header">
-          <h2>Frequencies</h2>
-          <button class="add-btn" (click)="startAddingFrequency()">Add Frequency</button>
+          <h2>Subscriptions</h2>
+          <button class="add-btn" (click)="startAddingSubscription()">Add Subscription</button>
         </div>
   
-        <!-- Add Frequency Form -->
-        <div class="frequency-form" *ngIf="isAddingFrequency">
-          <h3>Create New Frequency</h3>
+        <!-- Add Subscription Form -->
+        <div class="subscription-form" *ngIf="isAddingSubscription">
+          <h3>Create New Subscription</h3>
           <div class="form-grid">
             <div class="form-group">
               <label>Name</label>
-              <input type="text" [(ngModel)]="newFrequency.name" placeholder="e.g., Weekly">
+              <input type="text" [(ngModel)]="newSubscription.name" placeholder="e.g., Weekly">
             </div>
             <div class="form-group">
               <label>Description</label>
-              <input type="text" [(ngModel)]="newFrequency.description">
+              <input type="text" [(ngModel)]="newSubscription.description">
             </div>
             <div class="form-group">
               <label>Discount Percentage</label>
-              <input type="number" [(ngModel)]="newFrequency.discountPercentage" min="0" max="100">
+              <input type="number" [(ngModel)]="newSubscription.discountPercentage" min="0" max="100">
             </div>
             <div class="form-group">
-              <label>Frequency Days</label>
-              <input type="number" [(ngModel)]="newFrequency.frequencyDays" min="0">
+              <label>Subscription Days</label>
+              <input type="number" [(ngModel)]="newSubscription.subscriptionDays" min="0">
             </div>
           </div>
           <div class="form-actions">
-            <button class="save-btn" (click)="addFrequency()">Create</button>
-            <button class="cancel-btn" (click)="cancelAddFrequency()">Cancel</button>
+            <button class="save-btn" (click)="addSubscription()">Create</button>
+            <button class="cancel-btn" (click)="cancelAddSubscription()">Cancel</button>
           </div>
         </div>
   
-        <!-- Frequencies List -->
-        <div class="frequencies-list">
+        <!-- Subscriptions List -->
+        <div class="subscriptions-list">
           <table class="data-table">
             <thead>
               <tr>
@@ -532,41 +532,41 @@
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let frequency of frequencies">
-                <td *ngIf="editingFrequencyId !== frequency.id">#{{ frequency.id }}</td>
-                <td *ngIf="editingFrequencyId !== frequency.id">{{ frequency.name }}</td>
-                <td *ngIf="editingFrequencyId !== frequency.id">{{ frequency.description || '-' }}</td>
-                <td *ngIf="editingFrequencyId !== frequency.id">{{ frequency.discountPercentage }}%</td>
-                <td *ngIf="editingFrequencyId !== frequency.id">{{ frequency.frequencyDays === 0 ? 'One Time' : frequency.frequencyDays }}</td>
-                <td *ngIf="editingFrequencyId !== frequency.id">
-                  <button class="action-btn edit" (click)="editFrequency(frequency)">Edit</button>
-                  <button class="action-btn delete" (click)="deleteFrequency(frequency)">Delete</button>
+              <tr *ngFor="let subscription of subscriptions">
+                <td *ngIf="editingSubscriptionId !== subscription.id">#{{ subscription.id }}</td>
+                <td *ngIf="editingSubscriptionId !== subscription.id">{{ subscription.name }}</td>
+                <td *ngIf="editingSubscriptionId !== subscription.id">{{ subscription.description || '-' }}</td>
+                <td *ngIf="editingSubscriptionId !== subscription.id">{{ subscription.discountPercentage }}%</td>
+                <td *ngIf="editingSubscriptionId !== subscription.id">{{ subscription.subscriptionDays === 0 ? 'One Time' : subscription.subscriptionDays }}</td>
+                <td *ngIf="editingSubscriptionId !== subscription.id">
+                  <button class="action-btn edit" (click)="editSubscription(subscription)">Edit</button>
+                  <button class="action-btn delete" (click)="deleteSubscription(subscription)">Delete</button>
                 </td>
                 
                 <!-- Edit mode -->
-                <td colspan="6" *ngIf="editingFrequencyId === frequency.id">
+                <td colspan="6" *ngIf="editingSubscriptionId === subscription.id">
                   <div class="inline-edit-form">
                     <div class="form-row">
                       <div class="form-group">
                         <label>Name</label>
-                        <input type="text" [(ngModel)]="frequency.name">
+                        <input type="text" [(ngModel)]="subscription.name">
                       </div>
                       <div class="form-group">
                         <label>Description</label>
-                        <input type="text" [(ngModel)]="frequency.description">
+                        <input type="text" [(ngModel)]="subscription.description">
                       </div>
                       <div class="form-group">
                         <label>Discount %</label>
-                        <input type="number" [(ngModel)]="frequency.discountPercentage" min="0" max="100">
+                        <input type="number" [(ngModel)]="subscription.discountPercentage" min="0" max="100">
                       </div>
                       <div class="form-group">
                         <label>Days</label>
-                        <input type="number" [(ngModel)]="frequency.frequencyDays" min="0">
+                        <input type="number" [(ngModel)]="subscription.subscriptionDays" min="0">
                       </div>
                     </div>
                     <div class="form-actions">
-                      <button class="save-btn" (click)="saveFrequency(frequency)">Save</button>
-                      <button class="cancel-btn" (click)="cancelEditFrequency()">Cancel</button>
+                      <button class="save-btn" (click)="saveSubscription(subscription)">Save</button>
+                      <button class="cancel-btn" (click)="cancelEditSubscription()">Cancel</button>
                     </div>
                   </div>
                 </td>

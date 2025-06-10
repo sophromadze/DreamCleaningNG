@@ -183,27 +183,27 @@
           </div>
         </section>
 
-        <!-- Step 5: Frequency -->
+        <!-- Step 5: Subscription -->
         <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>5. Select Frequency</h2>
+          <h2>5. Select Subscription</h2>
           <div class="active-subscription-notice" *ngIf="hasActiveSubscription && userSubscription">
             <i class="fas fa-info-circle"></i>
             <span>You have an active {{ userSubscription?.subscriptionName }} subscription 
                   ({{ userSubscription?.discountPercentage }}% discount)</span>
           </div>
-          <div class="frequency-options">
-            <div class="frequency-card" 
-     *ngFor="let frequency of frequencies"
-     [class.selected]="selectedFrequency?.id === frequency.id"
-     [class.user-subscription]="hasActiveSubscription && getFrequencyDaysForSubscription(userSubscription?.subscriptionName) === frequency.frequencyDays"
-     (click)="selectFrequency(frequency)">
-  <h4>{{ frequency.name }}</h4>
-  <p>{{ frequency.description }}</p>
-  <div class="discount" *ngIf="frequency.discountPercentage > 0">
-    Save {{ frequency.discountPercentage }}%
+          <div class="subscription-options">
+            <div class="subscription-card" 
+     *ngFor="let subscription of subscriptions"
+     [class.selected]="selectedSubscription?.id === subscription.id"
+     [class.user-subscription]="hasActiveSubscription && getSubscriptionDaysForSubscription(userSubscription?.subscriptionName) === subscription.subscriptionDays"
+     (click)="selectSubscription(subscription)">
+  <h4>{{ subscription.name }}</h4>
+  <p>{{ subscription.description }}</p>
+  <div class="discount" *ngIf="subscription.discountPercentage > 0">
+    Save {{ subscription.discountPercentage }}%
   </div>
   <div class="current-subscription" 
-       *ngIf="hasActiveSubscription && getFrequencyDaysForSubscription(userSubscription?.subscriptionName) === frequency.frequencyDays">
+       *ngIf="hasActiveSubscription && getSubscriptionDaysForSubscription(userSubscription?.subscriptionName) === subscription.subscriptionDays">
     Your Current Plan
   </div>
 </div>
@@ -423,9 +423,9 @@
               <span>{{ selectedServiceType.name }}</span>
             </div>
             
-            <div class="summary-item" *ngIf="selectedFrequency">
-              <span>Frequency:</span>
-              <span>{{ selectedFrequency.name }}</span>
+            <div class="summary-item" *ngIf="selectedSubscription">
+              <span>Subscription:</span>
+              <span>{{ selectedSubscription.name }}</span>
             </div>
             
             <div class="summary-item" *ngIf="serviceDate.value && serviceTime.value">
@@ -484,11 +484,11 @@
             </div>
 
             <!-- Show next order discount for subscription -->
-            <div class="next-order-info" *ngIf="selectedFrequency && (selectedFrequency.frequencyDays || 0) > 0 && !hasActiveSubscription">
+            <div class="next-order-info" *ngIf="selectedSubscription && (selectedSubscription.subscriptionDays || 0) > 0 && !hasActiveSubscription">
               <div class="divider"></div>
-              <div class="next-order-title">Next Order with {{ selectedFrequency.name }} Subscription:</div>
+              <div class="next-order-title">Next Order with {{ selectedSubscription.name }} Subscription:</div>
               <div class="price-item">
-                <span>Discount ({{ selectedFrequency.discountPercentage }}%):</span>
+                <span>Discount ({{ selectedSubscription.discountPercentage }}%):</span>
                 <span class="discount">-${{ nextOrderDiscount.toFixed(2) }}</span>
               </div>
               <div class="price-item next-total">
