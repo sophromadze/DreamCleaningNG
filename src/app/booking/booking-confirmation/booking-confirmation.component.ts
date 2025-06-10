@@ -49,7 +49,7 @@ export class BookingConfirmationComponent implements OnInit {
   simulatePayment() {
     this.isProcessing = true;
     this.errorMessage = '';
-
+  
     // First, create the booking
     this.bookingService.createBooking(this.bookingData).subscribe({
       next: (response) => {
@@ -63,6 +63,20 @@ export class BookingConfirmationComponent implements OnInit {
             
             // Clear the booking data
             this.bookingDataService.clearBookingData();
+            
+            // Check if user selected a subscription frequency
+            const selectedFrequency = this.bookingData.frequency;
+            if (selectedFrequency && selectedFrequency.frequencyDays > 0) {
+              // Refresh subscription data
+              this.bookingService.getUserSubscription().subscribe({
+                next: (subscriptionData) => {
+                  console.log('Subscription data refreshed:', subscriptionData);
+                },
+                error: (error) => {
+                  console.error('Failed to refresh subscription data:', error);
+                }
+              });
+            }
             
             // Refresh user profile to get updated phone number
             this.authService.refreshUserProfile().subscribe({

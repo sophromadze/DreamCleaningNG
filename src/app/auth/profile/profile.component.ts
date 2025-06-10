@@ -125,6 +125,12 @@ export class ProfileComponent implements OnInit {
   }
 
   saveProfile() {
+    // Validate phone number format
+    if (this.editProfileForm.phone && !/^\d{10}$/.test(this.editProfileForm.phone)) {
+      this.errorMessage = 'Please enter a valid 10-digit phone number';
+      return;
+    }
+
     this.profileService.updateProfile(this.editProfileForm).subscribe({
       next: (updatedProfile) => {
         this.profile = updatedProfile;
@@ -359,5 +365,14 @@ export class ProfileComponent implements OnInit {
 
   formatDate(date: any): string {
     return new Date(date).toLocaleDateString();
+  }
+
+  // Add method to handle phone input
+  onPhoneInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    // Remove any non-digit characters
+    input.value = input.value.replace(/\D/g, '');
+    // Update the model
+    this.editProfileForm.phone = input.value;
   }
 }

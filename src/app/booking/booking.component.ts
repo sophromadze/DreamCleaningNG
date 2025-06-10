@@ -134,6 +134,8 @@ export class BookingComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Always load fresh subscription data
+    this.loadUserSubscription();
     // Set minimum date to tomorrow
     this.minDate = new Date();
     this.minDate.setDate(this.minDate.getDate() + 2); // Add one day to make it tomorrow
@@ -665,30 +667,26 @@ export class BookingComponent implements OnInit {
 
     // Calculate subscription discount if applicable
     const isUsingSubscriptionFrequency = this.hasActiveSubscription && 
-      this.userSubscription && 
-      this.userSubscription.orderCount > 0 && 
-      this.selectedFrequency && 
-      this.selectedFrequency.frequencyDays > 0 &&
-      this.getFrequencyDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedFrequency.frequencyDays;
-
+    this.userSubscription && 
+    this.selectedFrequency && 
+    this.selectedFrequency.frequencyDays > 0 &&
+    this.getFrequencyDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedFrequency.frequencyDays;
+      
     if (isUsingSubscriptionFrequency) {
-      console.log('Applying subscription discount:', {
-        hasActiveSubscription: this.hasActiveSubscription,
-        orderCount: this.userSubscription.orderCount,
-        subscriptionName: this.userSubscription.subscriptionName,
-        discountPercentage: this.userSubscription.discountPercentage
-      });
-      this.subscriptionDiscountAmount = Math.round(subTotal * (this.userSubscription.discountPercentage / 100) * 100) / 100;
+    console.log('Applying subscription discount:', {
+      hasActiveSubscription: this.hasActiveSubscription,
+      subscriptionName: this.userSubscription.subscriptionName,
+      discountPercentage: this.userSubscription.discountPercentage
+    });
+    this.subscriptionDiscountAmount = Math.round(subTotal * (this.userSubscription.discountPercentage / 100) * 100) / 100;
     } else {
-      console.log('NOT applying subscription discount:', {
-        hasActiveSubscription: this.hasActiveSubscription,
-        orderCount: this.userSubscription?.orderCount || 0,
-        reason: !this.hasActiveSubscription ? 'No active subscription' : 
-                !this.userSubscription ? 'No subscription data' :
-                this.userSubscription.orderCount === 0 ? 'First order with subscription' :
-                'Not using subscription frequency'
-      });
-      this.subscriptionDiscountAmount = 0;
+    console.log('NOT applying subscription discount:', {
+      hasActiveSubscription: this.hasActiveSubscription,
+      reason: !this.hasActiveSubscription ? 'No active subscription' : 
+              !this.userSubscription ? 'No subscription data' :
+              'Not using subscription frequency'
+    });
+    this.subscriptionDiscountAmount = 0;
     }
 
     // Calculate promo or first-time discount (can stack with subscription)
@@ -732,8 +730,7 @@ export class BookingComponent implements OnInit {
     };
 
     // Calculate next order's total with subscription discount
-    if (this.selectedFrequency && this.selectedFrequency.frequencyDays > 0 && 
-      (!this.hasActiveSubscription || (this.userSubscription?.orderCount || 0) === 0)) {
+    if (this.selectedFrequency && this.selectedFrequency.frequencyDays > 0 && !this.hasActiveSubscription) {
     const nextOrderDiscountPercentage = this.selectedFrequency.discountPercentage;
     this.nextOrderDiscount = Math.round(subTotal * (nextOrderDiscountPercentage / 100) * 100) / 100;
     
@@ -847,13 +844,11 @@ export class BookingComponent implements OnInit {
 
   formatTime(time: string): string {
     if (!time) return '';
-    console.log('Formatting time:', time);
     const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const hour12 = hour % 12 || 12;
     const formatted = `${hour12}:${minutes} ${ampm}`;
-    console.log('Formatted time:', formatted);
     return formatted;
   }
 
@@ -963,7 +958,6 @@ export class BookingComponent implements OnInit {
 
     const shouldApplySubscriptionDiscount = this.hasActiveSubscription && 
       this.userSubscription && 
-      this.userSubscription.orderCount > 0 && 
       this.selectedFrequency && 
       this.selectedFrequency.frequencyDays > 0 &&
       this.getFrequencyDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedFrequency.frequencyDays;
@@ -1078,27 +1072,38 @@ export class BookingComponent implements OnInit {
   get promoCode() { return this.bookingForm.get('promoCode') as FormControl; }
   get tips() { return this.bookingForm.get('tips') as FormControl; }
 
-  // Add new method to load user subscription
   private loadUserSubscription() {
     this.bookingService.getUserSubscription().subscribe({
-      next: (subscription) => {
-        if (subscription.hasSubscription) {
-          this.userSubscription = subscription;
+      next: (data) => {
+        if (data.hasSubscription) {
           this.hasActiveSubscription = true;
+          this.userSubscription = data;
           
-          // Auto-select user's current subscription frequency
-          const userFrequency = this.frequencies.find(f => 
-            this.getFrequencyDaysForSubscription(subscription.subscriptionName) === f.frequencyDays
-          );
-          if (userFrequency) {
-            this.selectedFrequency = userFrequency;
+          // If frequency is already loaded, update the selection
+          if (this.frequencies && this.frequencies.length > 0) {
+            this.updateSelectedFrequency();
           }
+        } else {
+          this.hasActiveSubscription = false;
+          this.userSubscription = null;
         }
       },
       error: (error) => {
-        console.error('Failed to load user subscription:', error);
+        console.error('Error loading subscription:', error);
+        this.hasActiveSubscription = false;
       }
     });
+  }
+  
+  private updateSelectedFrequency() {
+    if (this.userSubscription && this.frequencies) {
+      const subscriptionFrequencyDays = this.getFrequencyDaysForSubscription(this.userSubscription.subscriptionName);
+      const matchingFrequency = this.frequencies.find(f => f.frequencyDays === subscriptionFrequencyDays);
+      
+      if (matchingFrequency) {
+        this.selectedFrequency = matchingFrequency;
+      }
+    }
   }
 
   // Helper method to map subscription name to frequency days

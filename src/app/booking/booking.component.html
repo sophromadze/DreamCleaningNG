@@ -484,7 +484,7 @@
             </div>
 
             <!-- Show next order discount for subscription -->
-            <div class="next-order-info" *ngIf="selectedFrequency && (selectedFrequency.frequencyDays || 0) > 0 && (!hasActiveSubscription || (userSubscription?.orderCount || 0) === 0)">
+            <div class="next-order-info" *ngIf="selectedFrequency && (selectedFrequency.frequencyDays || 0) > 0 && !hasActiveSubscription">
               <div class="divider"></div>
               <div class="next-order-title">Next Order with {{ selectedFrequency.name }} Subscription:</div>
               <div class="price-item">
