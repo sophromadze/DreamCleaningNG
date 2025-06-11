@@ -835,6 +835,38 @@ export class AdminComponent implements OnInit {
     }
   }
 
+  deactivateSubscription(subscription: Subscription) {
+    if (!this.canDeactivate) {
+      this.errorMessage = 'You do not have permission to deactivate subscriptions';
+      return;
+    }
+    this.adminService.deactivateSubscription(subscription.id).subscribe({
+      next: () => {
+        this.successMessage = 'Subscription deactivated successfully';
+        this.loadSubscriptions();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to deactivate subscription';
+      }
+    });
+  }
+  
+  activateSubscription(subscription: Subscription) {
+    if (!this.canActivate) {
+      this.errorMessage = 'You do not have permission to activate subscriptions';
+      return;
+    }
+    this.adminService.activateSubscription(subscription.id).subscribe({
+      next: () => {
+        this.successMessage = 'Subscription activated successfully';
+        this.loadSubscriptions();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to activate subscription';
+      }
+    });
+  }
+
   // Promo Code Methods
   loadPromoCodes() {
     this.adminService.getPromoCodes().subscribe({
@@ -1025,6 +1057,38 @@ export class AdminComponent implements OnInit {
         }
       });
     }
+  }
+
+  deactivatePromoCode(promoCode: PromoCode) {
+    if (!this.canDeactivate) {
+      this.errorMessage = 'You do not have permission to deactivate promo codes';
+      return;
+    }
+    this.adminService.deactivatePromoCode(promoCode.id).subscribe({
+      next: () => {
+        this.successMessage = 'Promo code deactivated successfully';
+        this.loadPromoCodes();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to deactivate promo code';
+      }
+    });
+  }
+  
+  activatePromoCode(promoCode: PromoCode) {
+    if (!this.canActivate) {
+      this.errorMessage = 'You do not have permission to activate promo codes';
+      return;
+    }
+    this.adminService.activatePromoCode(promoCode.id).subscribe({
+      next: () => {
+        this.successMessage = 'Promo code activated successfully';
+        this.loadPromoCodes();
+      },
+      error: () => {
+        this.errorMessage = 'Failed to activate promo code';
+      }
+    });
   }
 
   // User Methods

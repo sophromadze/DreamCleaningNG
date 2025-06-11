@@ -53,6 +53,7 @@ export interface Subscription {
   description?: string;
   discountPercentage: number;
   subscriptionDays: number;
+  isActive: boolean;
 }
 
 export interface PromoCodeValidation {

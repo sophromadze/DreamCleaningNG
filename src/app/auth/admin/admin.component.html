@@ -279,7 +279,7 @@
                     </td>
                     
                     <!-- Edit mode -->
-                    <td colspan="8" *ngIf="editingServiceId === service.id">
+                    <td class="edit-mode-td" colspan="8" *ngIf="editingServiceId === service.id">
                       <div class="inline-edit-form">
                         <div class="form-row">
                           <div class="form-group">
@@ -467,7 +467,7 @@
                     </td>
                     
                     <!-- Edit mode -->
-                    <td colspan="8" *ngIf="editingExtraServiceId === extra.id">
+                    <td class="edit-mode-td" colspan="8" *ngIf="editingExtraServiceId === extra.id">
                       <div class="inline-edit-form">
                         <div class="form-row">
                           <div class="form-group">
@@ -584,6 +584,7 @@
                 <th>Description</th>
                 <th>Discount</th>
                 <th>Days</th>
+                <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -595,12 +596,19 @@
                 <td *ngIf="editingSubscriptionId !== subscription.id">{{ subscription.discountPercentage }}%</td>
                 <td *ngIf="editingSubscriptionId !== subscription.id">{{ subscription.subscriptionDays === 0 ? 'One Time' : subscription.subscriptionDays }}</td>
                 <td *ngIf="editingSubscriptionId !== subscription.id">
+                  <span class="status-badge" [class.active]="subscription.isActive" [class.inactive]="!subscription.isActive">
+                    {{ subscription.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td *ngIf="editingSubscriptionId !== subscription.id">
                   <button class="action-btn edit" *ngIf="canUpdate" (click)="editSubscription(subscription)">Edit</button>
+                  <button class="action-btn activate" *ngIf="canActivate && !subscription.isActive" (click)="activateSubscription(subscription)">Activate</button>
+                  <button class="action-btn deactivate" *ngIf="canDeactivate && subscription.isActive" (click)="deactivateSubscription(subscription)">Deactivate</button>
                   <button class="action-btn delete" *ngIf="canDelete" (click)="deleteSubscription(subscription)">Delete</button>
                 </td>
                 
                 <!-- Edit mode -->
-                <td colspan="6" *ngIf="editingSubscriptionId === subscription.id">
+                <td class="edit-mode-td" colspan="7" *ngIf="editingSubscriptionId === subscription.id">
                   <div class="inline-edit-form">
                     <div class="form-row">
                       <div class="form-group">
@@ -756,11 +764,13 @@
                 </td>
                 <td *ngIf="editingPromoCodeId !== promo.id">
                   <button class="action-btn edit" *ngIf="canUpdate" (click)="editPromoCode(promo)">Edit</button>
+                  <button class="action-btn activate" *ngIf="canActivate && !promo.isActive" (click)="activatePromoCode(promo)">Activate</button>
+                  <button class="action-btn deactivate" *ngIf="canDeactivate && promo.isActive" (click)="deactivatePromoCode(promo)">Deactivate</button>
                   <button class="action-btn delete" *ngIf="canDelete" (click)="deletePromoCode(promo)">Delete</button>
                 </td>
                 
                 <!-- Edit mode -->
-                <td colspan="9" *ngIf="editingPromoCodeId === promo.id">
+                <td class="edit-mode-td" colspan="9" *ngIf="editingPromoCodeId === promo.id">
                   <div class="inline-edit-form expanded">
                     <div class="form-row">
                       <div class="form-group">

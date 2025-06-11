@@ -293,6 +293,14 @@ export class AdminService {
     return this.http.delete(`${this.apiUrl}/subscriptions/${id}`);
   }
 
+  deactivateSubscription(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/subscriptions/${id}/deactivate`, {});
+  }
+
+  activateSubscription(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/subscriptions/${id}/activate`, {});
+  }
+
   // Promo Codes
   getPromoCodes(): Observable<PromoCode[]> {
     return this.http.get<PromoCode[]>(`${this.apiUrl}/promo-codes`);
@@ -329,6 +337,14 @@ export class AdminService {
 
   deletePromoCode(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/promo-codes/${id}`);
+  }
+
+  deactivatePromoCode(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/promo-codes/${id}/deactivate`, {});
+  }
+
+  activatePromoCode(id: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/promo-codes/${id}/activate`, {});
   }
 
   // Users
