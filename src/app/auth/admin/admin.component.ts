@@ -13,6 +13,8 @@ import { ServiceType, Service, ExtraService, Subscription } from '../../services
 })
 export class AdminComponent implements OnInit {
   activeTab: 'services' | 'users' = 'services';
+
+  
   
   // Service Types
   serviceTypes: ServiceType[] = [];
@@ -105,6 +107,16 @@ export class AdminComponent implements OnInit {
 
   currentUserRole: string = '';
 
+  userRole: string = '';  
+  userPermissions: any = { 
+    canView: false,
+    canCreate: false,
+    canUpdate: false,
+    canDelete: false,
+    canActivate: false,
+    canDeactivate: false
+  };
+
   // Permissions
   permissions: UserPermissions | null = null;
   canCreate = false;
@@ -137,14 +149,27 @@ export class AdminComponent implements OnInit {
     this.adminService.getUserPermissions().subscribe({
       next: (permissions) => {
         this.permissions = permissions;
+        
+        this.userRole = permissions.role;  
+        this.userPermissions = permissions.permissions;  
+        
         this.canCreate = permissions.permissions.canCreate;
         this.canUpdate = permissions.permissions.canUpdate;
         this.canDelete = permissions.permissions.canDelete;
         this.canActivate = permissions.permissions.canActivate;
         this.canDeactivate = permissions.permissions.canDeactivate;
+        
+        // ADD THESE DEBUG LOGS (optional, for testing):
+        console.log('User role:', this.userRole);
+        console.log('User permissions:', this.userPermissions);
       },
       error: (error) => {
         console.error('Failed to load permissions', error);
+        
+        // ADD THIS LINE:
+        this.userRole = '';  // Reset userRole on error
+        
+        // Keep your existing code:
         this.canCreate = false;
         this.canUpdate = false;
         this.canDelete = false;
@@ -165,6 +190,14 @@ export class AdminComponent implements OnInit {
     this.adminService.getServiceTypes().subscribe({
       next: (types) => {
         this.serviceTypes = types;
+        
+        // If a service type is currently selected, update it with the fresh data
+        if (this.selectedServiceType) {
+          const updatedServiceType = this.serviceTypes.find(st => st.id === this.selectedServiceType!.id);
+          if (updatedServiceType) {
+            this.selectedServiceType = updatedServiceType;
+          }
+        }
       },
       error: (error) => {
         this.errorMessage = 'Failed to load service types';

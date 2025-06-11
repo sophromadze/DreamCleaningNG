@@ -2,36 +2,43 @@
     <h1>Admin Panel</h1>
     
     <!-- Permissions Info Card -->
-    <div class="permissions-card" *ngIf="permissions">
+    <div class="permissions-card" *ngIf="userRole">
       <div class="permissions-header">
-        <h6>Your Role: <span class="role-badge" [class.superadmin]="permissions.role === 'SuperAdmin'" 
-                             [class.admin]="permissions.role === 'Admin'" 
-                             [class.moderator]="permissions.role === 'Moderator'">{{ permissions.role }}</span></h6>
+        <h6>Your Role: 
+          <span class="role-badge" 
+                [ngClass]="{
+                  'superadmin': userRole === 'SuperAdmin',
+                  'admin': userRole === 'Admin',
+                  'moderator': userRole === 'Moderator'
+                }">
+            {{ userRole }}
+          </span>
+        </h6>
       </div>
       <div class="permissions-grid">
-        <div class="permission-item">
-          <i class="fas fa-eye" [class.active]="permissions.permissions.canView"></i>
-          <span>View</span>
+        <div class="permission-item" [class.active]="userPermissions?.canView">
+          <span class="icon">👁️</span>
+          <span class="label">View</span>
         </div>
-        <div class="permission-item">
-          <i class="fas fa-plus" [class.active]="permissions.permissions.canCreate"></i>
-          <span>Create</span>
+        <div class="permission-item" [class.active]="userPermissions?.canCreate">
+          <span class="icon">➕</span>
+          <span class="label">Create</span>
         </div>
-        <div class="permission-item">
-          <i class="fas fa-edit" [class.active]="permissions.permissions.canUpdate"></i>
-          <span>Update</span>
+        <div class="permission-item" [class.active]="userPermissions?.canUpdate">
+          <span class="icon">✏️</span>
+          <span class="label">Update</span>
         </div>
-        <div class="permission-item">
-          <i class="fas fa-trash" [class.active]="permissions.permissions.canDelete"></i>
-          <span>Delete</span>
+        <div class="permission-item" [class.active]="userPermissions?.canDelete">
+          <span class="icon">🗑️</span>
+          <span class="label">Delete</span>
         </div>
-        <div class="permission-item">
-          <i class="fas fa-check-circle" [class.active]="permissions.permissions.canActivate"></i>
-          <span>Activate</span>
+        <div class="permission-item" [class.active]="userPermissions?.canActivate">
+          <span class="icon">✅</span>
+          <span class="label">Activate</span>
         </div>
-        <div class="permission-item">
-          <i class="fas fa-ban" [class.active]="permissions.permissions.canDeactivate"></i>
-          <span>Deactivate</span>
+        <div class="permission-item" [class.active]="userPermissions?.canDeactivate">
+          <span class="icon">🚫</span>
+          <span class="label">Deactivate</span>
         </div>
       </div>
     </div>
@@ -861,13 +868,25 @@
                     </span>
                   </td>
                   <td>
+                    <!-- Status Actions -->
+                    <button class="action-btn deactivate" 
+                            *ngIf="canDeactivate && user.isActive" 
+                            (click)="updateUserStatus(user, false)">
+                      Deactivate
+                    </button>
+                    <button class="action-btn activate" 
+                            *ngIf="canActivate && !user.isActive" 
+                            (click)="updateUserStatus(user, true)">
+                      Activate
+                    </button>
+
                     <!-- Role Change Dropdown -->
                     <div class="role-dropdown" *ngIf="canUpdate">
                       <button class="dropdown-toggle" 
                               [disabled]="currentUserRole === 'Admin' && user.role === 'SuperAdmin'"
                               (click)="toggleRoleDropdown(user.id)">
                         Change Role
-                        <i class="fas fa-chevron-down"></i>
+                        <span class="chevron">▼</span>
                       </button>
                       <div class="dropdown-menu" *ngIf="roleDropdownUserId === user.id">
                         <a class="dropdown-item" 
@@ -893,24 +912,6 @@
                         </a>
                       </div>
                     </div>
-
-                    <!-- Status Actions -->
-                    <button class="action-btn deactivate" 
-                            *ngIf="canDeactivate && user.isActive" 
-                            (click)="updateUserStatus(user, false)">
-                      Deactivate
-                    </button>
-                    <button class="action-btn activate" 
-                            *ngIf="canActivate && !user.isActive" 
-                            (click)="updateUserStatus(user, true)">
-                      Activate
-                    </button>
-
-                    <!-- Help text for Admin users viewing SuperAdmin -->
-                    <small class="text-muted d-block" 
-                           *ngIf="currentUserRole === 'Admin' && user.role === 'SuperAdmin'">
-                      <i class="fas fa-info-circle"></i> Cannot modify SuperAdmin users
-                    </small>
                   </td>
                 </tr>
               </tbody>
