@@ -103,7 +103,7 @@
                   <th>Base Price</th>
                   <th>Description</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  <th *ngIf="userRole !== 'Moderator'">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -117,7 +117,7 @@
                       {{ type.isActive ? 'Active' : 'Inactive' }}
                     </span>
                   </td>
-                  <td>
+                  <td *ngIf="userRole !== 'Moderator'">
                     <button class="action-btn edit" *ngIf="canUpdate" (click)="selectServiceType(type); editServiceType(); $event.stopPropagation()">Edit</button>
                     <button class="action-btn activate" *ngIf="canActivate && !type.isActive" (click)="activateServiceType(type); $event.stopPropagation()">Activate</button>
                     <button class="action-btn deactivate" *ngIf="canDeactivate && type.isActive" (click)="deactivateServiceType(type); $event.stopPropagation()">Deactivate</button>
@@ -255,7 +255,7 @@
                     <th>Duration</th>
                     <th>Type</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th *ngIf="userRole !== 'Moderator'">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -271,7 +271,7 @@
                         {{ service.isActive ? 'Active' : 'Inactive' }}
                       </span>
                     </td>
-                    <td *ngIf="editingServiceId !== service.id">
+                    <td *ngIf="editingServiceId !== service.id && userRole !== 'Moderator'">
                       <button class="action-btn edit" *ngIf="canUpdate" (click)="editService(service); $event.stopPropagation()">Edit</button>
                       <button class="action-btn activate" *ngIf="canActivate && !service.isActive" (click)="activateService(service); $event.stopPropagation()">Activate</button>
                       <button class="action-btn deactivate" *ngIf="canDeactivate && service.isActive" (click)="deactivateService(service); $event.stopPropagation()">Deactivate</button>
@@ -440,7 +440,7 @@
                     <th>Duration</th>
                     <th>Type</th>
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th *ngIf="userRole !== 'Moderator'">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -459,7 +459,7 @@
                         {{ extra.isActive ? 'Active' : 'Inactive' }}
                       </span>
                     </td>
-                    <td *ngIf="editingExtraServiceId !== extra.id">
+                    <td *ngIf="editingExtraServiceId !== extra.id && userRole !== 'Moderator'">
                       <button class="action-btn edit" *ngIf="canUpdate" (click)="editExtraService(extra); $event.stopPropagation()">Edit</button>
                       <button class="action-btn activate" *ngIf="canActivate && !extra.isActive" (click)="activateExtraService(extra); $event.stopPropagation()">Activate</button>
                       <button class="action-btn deactivate" *ngIf="canDeactivate && extra.isActive" (click)="deactivateExtraService(extra); $event.stopPropagation()">Deactivate</button>
@@ -585,7 +585,7 @@
                 <th>Discount</th>
                 <th>Days</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th *ngIf="userRole !== 'Moderator'">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -600,7 +600,7 @@
                     {{ subscription.isActive ? 'Active' : 'Inactive' }}
                   </span>
                 </td>
-                <td *ngIf="editingSubscriptionId !== subscription.id">
+                <td *ngIf="editingSubscriptionId !== subscription.id && userRole !== 'Moderator'">
                   <button class="action-btn edit" *ngIf="canUpdate" (click)="editSubscription(subscription)">Edit</button>
                   <button class="action-btn activate" *ngIf="canActivate && !subscription.isActive" (click)="activateSubscription(subscription)">Activate</button>
                   <button class="action-btn deactivate" *ngIf="canDeactivate && subscription.isActive" (click)="deactivateSubscription(subscription)">Deactivate</button>
@@ -741,7 +741,7 @@
                 <th>Valid From</th>
                 <th>Valid To</th>
                 <th>Status</th>
-                <th>Actions</th>
+                <th *ngIf="userRole !== 'Moderator'">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -762,7 +762,7 @@
                     {{ promo.isActive ? 'Active' : 'Inactive' }}
                   </span>
                 </td>
-                <td *ngIf="editingPromoCodeId !== promo.id">
+                <td *ngIf="editingPromoCodeId !== promo.id && userRole !== 'Moderator'">
                   <button class="action-btn edit" *ngIf="canUpdate" (click)="editPromoCode(promo)">Edit</button>
                   <button class="action-btn activate" *ngIf="canActivate && !promo.isActive" (click)="activatePromoCode(promo)">Activate</button>
                   <button class="action-btn deactivate" *ngIf="canDeactivate && promo.isActive" (click)="deactivatePromoCode(promo)">Deactivate</button>
@@ -861,7 +861,7 @@
                   <th>Subscription</th>
                   <th>First Time</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  <th *ngIf="userRole !== 'Moderator'">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -893,7 +893,7 @@
                       {{ user.isActive ? 'Active' : 'Inactive' }}
                     </span>
                   </td>
-                  <td>
+                  <td *ngIf="userRole !== 'Moderator'">
                     <!-- Status Actions -->
                     <button class="action-btn deactivate" 
                             *ngIf="canDeactivate && user.isActive" 
