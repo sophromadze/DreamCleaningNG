@@ -4,6 +4,23 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ServiceType, Service, ExtraService, Subscription } from './booking.service';
 
+export interface UserPermissions {
+  role: string;
+  permissions: {
+    canView: boolean;
+    canCreate: boolean;
+    canUpdate: boolean;
+    canDelete: boolean;
+    canActivate: boolean;
+    canDeactivate: boolean;
+  };
+}
+
+export interface UsersResponse {
+  users: UserAdmin[];
+  currentUserRole: string;
+}
+
 // DTOs
 export interface PromoCode {
   id: number;
@@ -172,6 +189,10 @@ export class AdminService {
 
   constructor(private http: HttpClient) { }
 
+  getUserPermissions(): Observable<UserPermissions> {
+    return this.http.get<UserPermissions>(`${this.apiUrl}/permissions`);
+  }
+
   // Service Types
   getServiceTypes(): Observable<ServiceType[]> {
     return this.http.get<ServiceType[]>(`${this.apiUrl}/service-types`);
@@ -311,8 +332,8 @@ export class AdminService {
   }
 
   // Users
-  getUsers(): Observable<UserAdmin[]> {
-    return this.http.get<UserAdmin[]>(`${this.apiUrl}/users`);
+  getUsers(): Observable<UsersResponse | UserAdmin[]> {
+    return this.http.get<UsersResponse | UserAdmin[]>(`${this.apiUrl}/users`);
   }
 
   updateUserRole(userId: number, role: string): Observable<any> {

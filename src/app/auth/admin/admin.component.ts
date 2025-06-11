@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminService, PromoCode, CreatePromoCode, UpdatePromoCode, UserAdmin, CreateService, CreateExtraService, CreateSubscription } from '../../services/admin.service';
+import { AdminService, PromoCode, CreatePromoCode, UpdatePromoCode, UserAdmin, CreateService, CreateExtraService, CreateSubscription, UserPermissions } from '../../services/admin.service';
 import { ServiceType, Service, ExtraService, Subscription } from '../../services/booking.service';
 
 @Component({
@@ -102,6 +102,19 @@ export class AdminComponent implements OnInit {
   
   // Users
   users: UserAdmin[] = [];
+
+  currentUserRole: string = '';
+
+  // Permissions
+  permissions: UserPermissions | null = null;
+  canCreate = false;
+  canUpdate = false;
+  canDelete = false;
+  canActivate = false;
+  canDeactivate = false;
+
+  // Role dropdown management
+  roleDropdownUserId: number | null = null;
   
   // UI State
   isLoading = false;
@@ -111,12 +124,34 @@ export class AdminComponent implements OnInit {
   constructor(private adminService: AdminService) {}
 
   ngOnInit() {
+    this.loadUserPermissions();
     this.loadServiceTypes();
     this.loadAllServices();
     this.loadAllExtraServices();
     this.loadSubscriptions();
     this.loadPromoCodes();
     this.loadUsers();
+  }
+
+  loadUserPermissions() {
+    this.adminService.getUserPermissions().subscribe({
+      next: (permissions) => {
+        this.permissions = permissions;
+        this.canCreate = permissions.permissions.canCreate;
+        this.canUpdate = permissions.permissions.canUpdate;
+        this.canDelete = permissions.permissions.canDelete;
+        this.canActivate = permissions.permissions.canActivate;
+        this.canDeactivate = permissions.permissions.canDeactivate;
+      },
+      error: (error) => {
+        console.error('Failed to load permissions', error);
+        this.canCreate = false;
+        this.canUpdate = false;
+        this.canDelete = false;
+        this.canActivate = false;
+        this.canDeactivate = false;
+      }
+    });
   }
 
   switchTab(tab: 'services' | 'users') {
@@ -172,6 +207,10 @@ export class AdminComponent implements OnInit {
   }
 
   startAddingServiceType() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to create service types';
+      return;
+    }
     this.isAddingServiceType = true;
     this.newServiceType = {
       name: '',
@@ -186,6 +225,10 @@ export class AdminComponent implements OnInit {
   }
 
   addServiceType() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to create service types';
+      return;
+    }
     this.adminService.createServiceType(this.newServiceType).subscribe({
       next: () => {
         this.successMessage = 'Service type created successfully';
@@ -199,10 +242,18 @@ export class AdminComponent implements OnInit {
   }
 
   editServiceType() {
+    if (!this.canUpdate) {
+      this.errorMessage = 'You do not have permission to edit service types';
+      return;
+    }
     this.isEditingServiceType = true;
   }
 
   cancelEditServiceType() {
+    if (!this.canUpdate) {
+      this.errorMessage = 'You do not have permission to edit service types';
+      return;
+    }
     this.isEditingServiceType = false;
     this.loadServiceTypes();
   }
@@ -228,6 +279,10 @@ export class AdminComponent implements OnInit {
   }
 
   deleteServiceType(type: ServiceType) {
+    if (!this.canDelete) {
+      this.errorMessage = 'You do not have permission to delete service types';
+      return;
+    }
     if (confirm(`Are you sure you want to permanently delete "${type.name}"? This cannot be undone.`)) {
       this.adminService.deleteServiceType(type.id).subscribe({
         next: () => {
@@ -249,6 +304,10 @@ export class AdminComponent implements OnInit {
   }
 
   deactivateServiceType(type: ServiceType) {
+    if (!this.canDeactivate) {
+      this.errorMessage = 'You do not have permission to deactivate service types';
+      return;
+    }
     this.adminService.deactivateServiceType(type.id).subscribe({
       next: () => {
         this.successMessage = 'Service type deactivated successfully';
@@ -261,6 +320,10 @@ export class AdminComponent implements OnInit {
   }
 
   activateServiceType(type: ServiceType) {
+    if (!this.canActivate) {
+      this.errorMessage = 'You do not have permission to activate service types';
+      return;
+    }
     this.adminService.activateServiceType(type.id).subscribe({
       next: () => {
         this.successMessage = 'Service type activated successfully';
@@ -274,6 +337,10 @@ export class AdminComponent implements OnInit {
 
   // Services Methods
   startAddingService() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to create services';
+      return;
+    }
     if (!this.selectedServiceType) return;
     
     this.isAddingService = true;
@@ -300,6 +367,10 @@ export class AdminComponent implements OnInit {
   }
 
   copyExistingService() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to copy services';
+      return;
+    }
     if (!this.selectedExistingServiceId || !this.selectedServiceType) return;
     
     this.adminService.copyService({
@@ -326,6 +397,10 @@ export class AdminComponent implements OnInit {
   }
 
   addService() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to create services';
+      return;
+    }
     this.adminService.createService(this.newService).subscribe({
       next: () => {
         this.successMessage = 'Service created successfully';
@@ -340,6 +415,10 @@ export class AdminComponent implements OnInit {
   }
 
   editService(service: Service) {
+    if (!this.canUpdate) {
+      this.errorMessage = 'You do not have permission to edit service';
+      return;
+    }
     this.editingServiceId = service.id;
   }
 
@@ -377,6 +456,10 @@ export class AdminComponent implements OnInit {
   }
 
   deleteService(service: Service) {
+    if (!this.canDelete) {
+      this.errorMessage = 'You do not have permission to delete services';
+      return;
+    }
     if (confirm(`Are you sure you want to permanently delete "${service.name}"? This cannot be undone.`)) {
       this.adminService.deleteService(service.id).subscribe({
         next: () => {
@@ -396,6 +479,10 @@ export class AdminComponent implements OnInit {
   }
 
   deactivateService(service: Service) {
+    if (!this.canDeactivate) {
+      this.errorMessage = 'You do not have permission to deactivate services';
+      return;
+    }
     this.adminService.deactivateService(service.id).subscribe({
       next: () => {
         this.successMessage = 'Service deactivated successfully';
@@ -409,6 +496,10 @@ export class AdminComponent implements OnInit {
   }
 
   activateService(service: Service) {
+    if (!this.canActivate) {
+      this.errorMessage = 'You do not have permission to activate services';
+      return;
+    }
     this.adminService.activateService(service.id).subscribe({
       next: () => {
         this.successMessage = 'Service activated successfully';
@@ -423,6 +514,10 @@ export class AdminComponent implements OnInit {
 
   // Extra Services Methods
   startAddingExtraService() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to create extra services';
+      return;
+    }
     if (!this.selectedServiceType) return;
     
     this.isAddingExtraService = true;
@@ -451,6 +546,10 @@ export class AdminComponent implements OnInit {
   }
 
   copyExistingExtraService() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to copy extra services';
+      return;
+    }
     if (!this.selectedExistingExtraServiceId || !this.selectedServiceType) return;
     
     this.adminService.copyExtraService({
@@ -476,6 +575,10 @@ export class AdminComponent implements OnInit {
   }
 
   addExtraService() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to create extra services';
+      return;
+    }
     // If IsAvailableForAll is true, set serviceTypeId to null
     if (this.newExtraService.isAvailableForAll) {
       this.newExtraService.serviceTypeId = undefined;
@@ -495,6 +598,10 @@ export class AdminComponent implements OnInit {
   }
 
   editExtraService(extraService: ExtraService) {
+    if (!this.canUpdate) {
+      this.errorMessage = 'You do not have permission to edit extra services';
+      return;
+    }
     this.editingExtraServiceId = extraService.id;
   }
 
@@ -533,6 +640,10 @@ export class AdminComponent implements OnInit {
   }
 
   deleteExtraService(extraService: ExtraService) {
+    if (!this.canDelete) {
+      this.errorMessage = 'You do not have permission to delete extra services';
+      return;
+    }
     if (confirm(`Are you sure you want to permanently delete "${extraService.name}"? This cannot be undone.`)) {
       this.adminService.deleteExtraService(extraService.id).subscribe({
         next: () => {
@@ -552,6 +663,10 @@ export class AdminComponent implements OnInit {
   }
 
   deactivateExtraService(extraService: ExtraService) {
+    if (!this.canDeactivate) {
+      this.errorMessage = 'You do not have permission to deactivate extra services';
+      return;
+    }
     this.adminService.deactivateExtraService(extraService.id).subscribe({
       next: () => {
         this.successMessage = 'Extra service deactivated successfully';
@@ -565,6 +680,10 @@ export class AdminComponent implements OnInit {
   }
 
   activateExtraService(extraService: ExtraService) {
+    if (!this.canActivate) {
+      this.errorMessage = 'You do not have permission to activate extra services';
+      return;
+    }
     this.adminService.activateExtraService(extraService.id).subscribe({
       next: () => {
         this.successMessage = 'Extra service activated successfully';
@@ -590,6 +709,10 @@ export class AdminComponent implements OnInit {
   }
 
   startAddingSubscription() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to create subscriptions';
+      return;
+    }
     this.isAddingSubscription = true;
     this.newSubscription = {
       name: '',
@@ -605,6 +728,10 @@ export class AdminComponent implements OnInit {
   }
 
   addSubscription() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to create subscriptions';
+      return;
+    }
     this.adminService.createSubscription(this.newSubscription).subscribe({
       next: () => {
         this.successMessage = 'Subscription created successfully';
@@ -618,6 +745,10 @@ export class AdminComponent implements OnInit {
   }
 
   editSubscription(subscription: Subscription) {
+    if (!this.canUpdate) {
+      this.errorMessage = 'You do not have permission to edit subscriptions';
+      return;
+    }
     this.editingSubscriptionId = subscription.id;
   }
 
@@ -646,6 +777,10 @@ export class AdminComponent implements OnInit {
   }
 
   deleteSubscription(subscription: Subscription) {
+    if (!this.canDelete) {
+      this.errorMessage = 'You do not have permission to delete subscriptions';
+      return;
+    }
     if (confirm(`Are you sure you want to delete "${subscription.name}"?`)) {
       this.adminService.deleteSubscription(subscription.id).subscribe({
         next: () => {
@@ -672,6 +807,10 @@ export class AdminComponent implements OnInit {
   }
 
   startAddingPromoCode() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to create promo codes';
+      return;
+    }
     this.isAddingPromoCode = true;
     this.newPromoCode = {
       code: '',
@@ -691,6 +830,10 @@ export class AdminComponent implements OnInit {
   }
 
   addPromoCode() {
+    if (!this.canCreate) {
+      this.errorMessage = 'You do not have permission to create promo codes';
+      return;
+    }
     // Validate before sending
     if (!this.newPromoCode.code || this.newPromoCode.discountValue <= 0) {
       this.errorMessage = 'Please fill in all required fields';
@@ -743,6 +886,10 @@ export class AdminComponent implements OnInit {
   }
 
   editPromoCode(promoCode: PromoCode) {
+    if (!this.canUpdate) {
+      this.errorMessage = 'You do not have permission to edit promo codes';
+      return;
+    }
     this.editingPromoCodeId = promoCode.id;
     // Format dates for HTML date input if they exist
     if (promoCode.validFrom) {
@@ -821,6 +968,10 @@ export class AdminComponent implements OnInit {
   }
 
   deletePromoCode(promoCode: PromoCode) {
+    if (!this.canDelete) {
+      this.errorMessage = 'You do not have permission to delete promo codes';
+      return;
+    }
     if (confirm(`Are you sure you want to delete promo code "${promoCode.code}"?`)) {
       this.adminService.deletePromoCode(promoCode.id).subscribe({
         next: () => {
@@ -837,23 +988,16 @@ export class AdminComponent implements OnInit {
   // User Methods
   loadUsers() {
     this.adminService.getUsers().subscribe({
-      next: (users) => {
-        this.users = users;
-      },
-      error: (error) => {
-        this.errorMessage = 'Failed to load users';
-      }
-    });
-  }
-
-  updateUserRole(user: UserAdmin, newRole: string) {
-    this.adminService.updateUserRole(user.id, newRole).subscribe({
-      next: () => {
-        this.successMessage = 'User role updated successfully';
-        this.loadUsers();
+      next: (response: any) => {
+        if (response.users) {
+          this.users = response.users;
+          this.currentUserRole = response.currentUserRole;
+        } else {
+          this.users = response as UserAdmin[];
+        }
       },
       error: () => {
-        this.errorMessage = 'Failed to update user role';
+        this.errorMessage = 'Failed to load users';
       }
     });
   }
@@ -868,5 +1012,93 @@ export class AdminComponent implements OnInit {
         this.errorMessage = 'Failed to update user status';
       }
     });
+  }
+
+  toggleRoleDropdown(userId: number) {
+    if (this.roleDropdownUserId === userId) {
+      this.roleDropdownUserId = null;
+    } else {
+      this.roleDropdownUserId = userId;
+    }
+  }
+  
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.role-dropdown')) {
+      this.roleDropdownUserId = null;
+    }
+  }
+  
+  canChangeUserRole(user: UserAdmin, newRole: string): boolean {
+    if (!this.currentUserRole) return false;
+    if (this.currentUserRole === 'Moderator') return false;
+    if (this.currentUserRole === 'Admin' && newRole === 'SuperAdmin') return false;
+    if (this.currentUserRole === 'Admin' && user.role === 'SuperAdmin') return false;
+    return true;
+  }
+  
+  updateUserRole(user: UserAdmin, newRole: string) {
+    if (!this.canUpdate) {
+      this.errorMessage = 'You do not have permission to update user roles';
+      return;
+    }
+  
+    if (!this.canChangeUserRole(user, newRole)) {
+      this.errorMessage = this.getRoleChangeErrorMessage(user, newRole);
+      return;
+    }
+  
+    const message = `Are you sure you want to change ${user.firstName} ${user.lastName}'s role from ${user.role} to ${newRole}?`;
+    if (!confirm(message)) return;
+  
+    this.adminService.updateUserRole(user.id, newRole).subscribe({
+      next: () => {
+        this.successMessage = 'User role updated successfully';
+        this.loadUsers();
+      },
+      error: (error) => {
+        if (error.error?.message) {
+          this.errorMessage = error.error.message;
+        } else {
+          this.errorMessage = 'Failed to update user role';
+        }
+      }
+    });
+  }
+
+  updateUserStatus(user: UserAdmin, isActive: boolean) {
+    if (!this.canDeactivate && !isActive) {
+      this.errorMessage = 'You do not have permission to deactivate users';
+      return;
+    }
+    
+    if (!this.canActivate && isActive) {
+      this.errorMessage = 'You do not have permission to activate users';
+      return;
+    }
+  
+    const action = isActive ? 'activate' : 'deactivate';
+    if (confirm(`Are you sure you want to ${action} ${user.firstName} ${user.lastName}?`)) {
+      this.adminService.updateUserStatus(user.id, isActive).subscribe({
+        next: () => {
+          this.successMessage = `User ${action}d successfully`;
+          this.loadUsers();
+        },
+        error: () => {
+          this.errorMessage = `Failed to ${action} user`;
+        }
+      });
+    }
+  }
+  
+  private getRoleChangeErrorMessage(user: UserAdmin, newRole: string): string {
+    if (this.currentUserRole === 'Admin' && newRole === 'SuperAdmin') {
+      return 'You cannot assign SuperAdmin role as an Admin';
+    }
+    if (this.currentUserRole === 'Admin' && user.role === 'SuperAdmin') {
+      return 'You cannot modify SuperAdmin users as an Admin';
+    }
+    return 'You do not have permission to change this user\'s role';
   }
 }

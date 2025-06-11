@@ -8,7 +8,11 @@ export const adminGuard: CanActivateFn = (route, state) => {
   
   const currentUser = authService.currentUserValue;
   
-  if (currentUser && currentUser.role === 'Admin') {
+  // Allow access for SuperAdmin, Admin, and Moderator
+  if (currentUser && 
+      (currentUser.role === 'SuperAdmin' || 
+       currentUser.role === 'Admin' || 
+       currentUser.role === 'Moderator')) {
     return true;
   }
   
