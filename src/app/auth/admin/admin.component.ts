@@ -189,7 +189,14 @@ export class AdminComponent implements OnInit {
   loadServiceTypes() {
     this.adminService.getServiceTypes().subscribe({
       next: (types) => {
-        this.serviceTypes = types;
+        // Sort service types by ID
+        this.serviceTypes = types.sort((a, b) => a.id - b.id);
+        
+        // Sort services and extra services by ID within each service type
+        this.serviceTypes.forEach(type => {
+          type.services = type.services.sort((a, b) => a.id - b.id);
+          type.extraServices = type.extraServices.sort((a, b) => a.id - b.id);
+        });
         
         // If a service type is currently selected, update it with the fresh data
         if (this.selectedServiceType) {
@@ -733,9 +740,10 @@ export class AdminComponent implements OnInit {
   loadSubscriptions() {
     this.adminService.getSubscriptions().subscribe({
       next: (subscriptions) => {
-        this.subscriptions = subscriptions;
+        // Sort subscriptions by ID
+        this.subscriptions = subscriptions.sort((a, b) => a.id - b.id);
       },
-      error: () => {
+      error: (error) => {
         this.errorMessage = 'Failed to load subscriptions';
       }
     });
@@ -831,7 +839,8 @@ export class AdminComponent implements OnInit {
   loadPromoCodes() {
     this.adminService.getPromoCodes().subscribe({
       next: (codes) => {
-        this.promoCodes = codes;
+        // Sort promo codes by ID
+        this.promoCodes = codes.sort((a, b) => a.id - b.id);
       },
       error: (error) => {
         this.errorMessage = 'Failed to load promo codes';
@@ -1023,13 +1032,12 @@ export class AdminComponent implements OnInit {
     this.adminService.getUsers().subscribe({
       next: (response: any) => {
         if (response.users) {
-          this.users = response.users;
+          // Sort users by ID
+          this.users = response.users.sort((a: any, b: any) => a.id - b.id);
           this.currentUserRole = response.currentUserRole;
-        } else {
-          this.users = response as UserAdmin[];
         }
       },
-      error: () => {
+      error: (error) => {
         this.errorMessage = 'Failed to load users';
       }
     });
