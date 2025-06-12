@@ -1,0 +1,100 @@
+<div class="user-management-section">
+  <h2>User Management</h2>
+  <div class="users-list">
+    <div class="data-table">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>Provider</th>
+            <th>Subscription</th>
+            <th>First Time</th>
+            <th>Status</th>
+            <th *ngIf="userRole !== 'Moderator'">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>{{ user.id }}</td>
+            <td>{{ user.firstName }} {{ user.lastName }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.phone || 'N/A' }}</td>
+            <td>
+              <span class="role-badge" 
+                    [class.superadmin]="user.role === 'SuperAdmin'"
+                    [class.admin]="user.role === 'Admin'"
+                    [class.moderator]="user.role === 'Moderator'"
+                    [class.customer]="user.role === 'Customer'">
+                {{ user.role }}
+              </span>
+            </td>
+            <td>{{ user.authProvider || 'Local' }}</td>
+            <td>{{ user.subscriptionName || 'None' }}</td>
+            <td>
+              <span class="badge" [class.bg-success]="user.firstTimeOrder" [class.bg-secondary]="!user.firstTimeOrder">
+                {{ user.firstTimeOrder ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" 
+                    [class.active]="user.isActive" 
+                    [class.inactive]="!user.isActive">
+                {{ user.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+            <td *ngIf="userRole !== 'Moderator'">
+              <!-- Status Actions -->
+              <button class="action-btn deactivate" 
+                      *ngIf="canDeactivate && user.isActive" 
+                      (click)="updateUserStatus(user, false)">
+                Ban
+              </button>
+              <button class="action-btn activate" 
+                      *ngIf="canActivate && !user.isActive" 
+                      (click)="updateUserStatus(user, true)">
+                Unban
+              </button>
+
+              <!-- Role Change Dropdown -->
+              <div class="role-dropdown" *ngIf="canUpdate">
+                <button class="dropdown-toggle" 
+                        [disabled]="currentUserRole === 'Admin' && user.role === 'SuperAdmin'"
+                        (click)="toggleRoleDropdown(user.id)">
+                  Role
+                  <span class="chevron">▼</span>
+                </button>
+                <div class="dropdown-menu" *ngIf="roleDropdownUserId === user.id">
+                  <a class="dropdown-item" 
+                     [class.disabled]="!canChangeUserRole(user, 'Customer')"
+                     (click)="canChangeUserRole(user, 'Customer') && updateUserRole(user, 'Customer')">
+                    Customer
+                  </a>
+                  <a class="dropdown-item" 
+                     [class.disabled]="!canChangeUserRole(user, 'Moderator')"
+                     (click)="canChangeUserRole(user, 'Moderator') && updateUserRole(user, 'Moderator')">
+                    Moderator
+                  </a>
+                  <a class="dropdown-item" 
+                     [class.disabled]="!canChangeUserRole(user, 'Admin')"
+                     (click)="canChangeUserRole(user, 'Admin') && updateUserRole(user, 'Admin')">
+                    Admin
+                  </a>
+                  <a class="dropdown-item" 
+                     *ngIf="currentUserRole === 'SuperAdmin'"
+                     [class.disabled]="!canChangeUserRole(user, 'SuperAdmin')"
+                     (click)="canChangeUserRole(user, 'SuperAdmin') && updateUserRole(user, 'SuperAdmin')">
+                    SuperAdmin
+                  </a>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div> 
