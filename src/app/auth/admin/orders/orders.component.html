@@ -51,7 +51,7 @@
         </thead>
         <tbody>
           <ng-container *ngFor="let order of filteredOrders">
-            <tr [class.expanded]="viewingOrderId === order.id">
+            <tr [class.expanded]="viewingOrderId === order.id" (click)="viewOrderDetails(order.id)" style="cursor: pointer;">
               <td>{{order.id}}</td>
               <td>{{getCustomerEmail(order.id)}}</td>
               <td>{{formatDateTime(order.serviceDate, order.serviceTime)}}</td>
@@ -63,26 +63,21 @@
                 </span>
               </td>
               <td class="actions">
-                <button class="action-btn view" 
-                        (click)="viewOrderDetails(order.id)"
-                        title="View Details">
-                  <i class="fas fa-eye"></i> View
-                </button>
-                <button *ngIf="userPermissions.permissions.canUpdate && order.status.toLowerCase() !== 'cancelled' && order.status.toLowerCase() !== 'done'" 
-                        class="action-btn cancel" 
-                        (click)="cancelOrder(order)"
-                        title="Cancel Order">
-                  <i class="fas fa-times"></i> Cancel
-                </button>
                 <button *ngIf="userPermissions.permissions.canUpdate && order.status.toLowerCase() === 'active'" 
                         class="action-btn complete" 
-                        (click)="markOrderAsDone(order)"
+                        (click)="markOrderAsDone(order); $event.stopPropagation()"
                         title="Mark as Done">
                   <i class="fas fa-check-double"></i> Done
                 </button>
+                <button *ngIf="userPermissions.permissions.canUpdate && order.status.toLowerCase() !== 'cancelled' && order.status.toLowerCase() !== 'done'" 
+                        class="action-btn cancel" 
+                        (click)="cancelOrder(order); $event.stopPropagation()"
+                        title="Cancel Order">
+                  <i class="fas fa-times"></i> Cancel
+                </button>                
                 <button *ngIf="userPermissions.permissions.canUpdate && (order.status.toLowerCase() === 'done' || order.status.toLowerCase() === 'cancelled')" 
                         class="action-btn reactivate" 
-                        (click)="reactivateOrder(order)"
+                        (click)="reactivateOrder(order); $event.stopPropagation()"
                         title="Reactivate Order">
                   <i class="fas fa-undo"></i> Reactivate
                 </button>
