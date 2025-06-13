@@ -1,7 +1,9 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminService, UserAdmin, UserPermissions } from '../../../services/admin.service';
+import { AdminService, UserAdmin, UserPermissions, DetailedUser } from '../../../services/admin.service';
+import { OrderService, OrderList } from '../../../services/order.service';
+import { Apartment } from '../../../services/profile.service';
 
 @Component({
   selector: 'app-user-management',
@@ -31,7 +33,15 @@ export class UserManagementComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
 
-  constructor(private adminService: AdminService) {}
+  // NEW: User details functionality
+  selectedUser: DetailedUser | null = null;
+  viewingUserId: number | null = null;
+  loadingUserDetails = false;
+
+  constructor(
+    private adminService: AdminService,
+    private orderService: OrderService
+  ) {}
 
   ngOnInit() {
     this.loadUserPermissions();
@@ -74,6 +84,83 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
+  // NEW: View user details functionality
+  viewUserDetails(userId: number) {
+    // Toggle behavior: if clicking the same user, close the details
+    if (this.viewingUserId === userId) {
+      this.viewingUserId = null;
+      this.selectedUser = null;
+      return;
+    }
+    
+    this.viewingUserId = userId;
+    this.loadingUserDetails = true;
+    this.selectedUser = null;
+    
+    // Find the basic user info from the current users list
+    const basicUser = this.users.find(u => u.id === userId);
+    if (!basicUser) {
+      this.errorMessage = 'User not found';
+      this.loadingUserDetails = false;
+      return;
+    }
+
+    // Create detailed user object starting with basic info
+    this.selectedUser = { ...basicUser };
+    
+    // Load additional user details concurrently
+    this.loadUserOrders(userId);
+    this.loadUserApartments(userId);
+  }
+
+  private loadUserOrders(userId: number) {
+    this.adminService.getUserOrders(userId).subscribe({
+      next: (orders: OrderList[]) => {
+        if (this.selectedUser) {
+          this.selectedUser.orders = orders;
+          this.selectedUser.totalOrders = orders.length;
+          this.selectedUser.totalSpent = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+          this.selectedUser.registrationDate = new Date(this.selectedUser.createdAt);
+          
+          // Find the most recent order date
+          if (orders.length > 0) {
+            const sortedOrders = orders.sort((a, b) => 
+              new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
+            );
+            this.selectedUser.lastOrderDate = new Date(sortedOrders[0].orderDate);
+          }
+        }
+        this.loadingUserDetails = false;
+      },
+      error: (error) => {
+        console.error('Failed to load user orders', error);
+        if (this.selectedUser) {
+          this.selectedUser.orders = [];
+          this.selectedUser.totalOrders = 0;
+          this.selectedUser.totalSpent = 0;
+        }
+        this.loadingUserDetails = false;
+      }
+    });
+  }
+
+  private loadUserApartments(userId: number) {
+    this.adminService.getUserApartments(userId).subscribe({
+      next: (apartments: Apartment[]) => {
+        if (this.selectedUser) {
+          this.selectedUser.apartments = apartments;
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load user apartments', error);
+        if (this.selectedUser) {
+          this.selectedUser.apartments = [];
+        }
+      }
+    });
+  }
+
+  // ORIGINAL: Your existing methods preserved exactly as they were
   toggleRoleDropdown(userId: number) {
     this.roleDropdownUserId = this.roleDropdownUserId === userId ? null : userId;
   }
@@ -166,19 +253,6 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
-  // Add this method to show online status
-  getUserOnlineStatus(userId: number): void {
-    this.adminService.getUserOnlineStatus(userId).subscribe({
-      next: (response) => {
-        console.log(`User ${userId} online status:`, response.isOnline);
-        // You can update the UI to show online/offline status
-      },
-      error: (error) => {
-        console.error('Failed to get user online status:', error);
-      }
-    });
-  }
-
   updateUserStatus(user: UserAdmin, isActive: boolean) {
     // Clear previous messages
     this.errorMessage = '';
@@ -218,6 +292,57 @@ export class UserManagementComponent implements OnInit {
         setTimeout(() => {
           this.errorMessage = '';
         }, 5000);
+      }
+    });
+  }
+
+  canModifyUserStatus(user: any): boolean {
+    // Admins cannot modify SuperAdmin status
+    if (this.currentUserRole === 'Admin' && user.role === 'SuperAdmin') {
+      return false;
+    }
+    return true;
+  }
+
+  canBanUser(user: any): boolean {
+    // Don't allow banning yourself
+    const currentUserId = this.getCurrentUserId();
+    if (user.id === currentUserId) {
+      return false;
+    }
+    
+    return this.canDeactivate && user.isActive && this.canModifyUserStatus(user);
+  }
+  
+  canUnbanUser(user: any): boolean {
+    // Don't allow unbanning yourself (though this might be allowed)
+    return this.canActivate && !user.isActive && this.canModifyUserStatus(user);
+  }
+
+  private getCurrentUserId(): number {
+    // You might get this from your auth service or JWT token
+    // This is just an example - implement based on your auth system
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return parseInt(payload.UserId || payload.sub);
+      } catch (e) {
+        return 0;
+      }
+    }
+    return 0;
+  }
+
+  // Add this method to show online status
+  getUserOnlineStatus(userId: number): void {
+    this.adminService.getUserOnlineStatus(userId).subscribe({
+      next: (response) => {
+        console.log(`User ${userId} online status:`, response.isOnline);
+        // You can update the UI to show online/offline status
+      },
+      error: (error) => {
+        console.error('Failed to get user online status:', error);
       }
     });
   }
@@ -267,41 +392,22 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-  canModifyUserStatus(user: any): boolean {
-    // Admins cannot modify SuperAdmin status
-    if (this.currentUserRole === 'Admin' && user.role === 'SuperAdmin') {
-      return false;
-    }
-    return true;
+  // NEW: Helper methods for user details
+  formatDate(date: any): string {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString();
   }
 
-  canBanUser(user: any): boolean {
-    // Don't allow banning yourself
-    const currentUserId = this.getCurrentUserId(); // You'll need to implement this
-    if (user.id === currentUserId) {
-      return false;
-    }
-    
-    return this.canDeactivate && user.isActive && this.canModifyUserStatus(user);
-  }
-  
-  canUnbanUser(user: any): boolean {
-    // Don't allow unbanning yourself (though this might be allowed)
-    return this.canActivate && !user.isActive && this.canModifyUserStatus(user);
+  formatCurrency(amount: number): string {
+    return `$${amount.toFixed(2)}`;
   }
 
-  private getCurrentUserId(): number {
-    // You might get this from your auth service or JWT token
-    // This is just an example - implement based on your auth system
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        return parseInt(payload.UserId || payload.sub);
-      } catch (e) {
-        return 0;
-      }
+  getStatusClass(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'active': return 'status-active';
+      case 'done': return 'status-done';
+      case 'cancelled': return 'status-cancelled';
+      default: return 'status-pending';
     }
-    return 0;
   }
-} 
+}

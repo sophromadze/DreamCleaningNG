@@ -1,5 +1,14 @@
 <div class="user-management-section">
-  <h2>User Management</h2>
+  <div class="section-header">
+    <div class="header-left">
+      <h2>User Management</h2>
+    </div>
+    <div class="header-right">
+      <button class="action-btn refresh" (click)="loadUsers()">
+        <i class="fas fa-sync-alt"></i> Refresh
+      </button>
+    </div>
+  </div>
   <div class="messages">
     <div class="error-message" *ngIf="errorMessage">
       {{ errorMessage }}
@@ -48,92 +57,190 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of filteredUsers">
-            <td>{{ user.id }}</td>
-            <td>{{ user.firstName }} {{ user.lastName }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.phone || 'N/A' }}</td>
-            <td>
-              <span class="role-badge" 
-                    [class.superadmin]="user.role === 'SuperAdmin'"
-                    [class.admin]="user.role === 'Admin'"
-                    [class.moderator]="user.role === 'Moderator'"
-                    [class.customer]="user.role === 'Customer'">
-                {{ user.role }}
-              </span>
-            </td>
-            <td>{{ user.authProvider || 'Local' }}</td>
-            <td>{{ user.subscriptionName || 'None' }}</td>
-            <td>
-              <span class="badge" [class.bg-success]="user.firstTimeOrder" [class.bg-secondary]="!user.firstTimeOrder">
-                {{ user.firstTimeOrder ? 'Yes' : 'No' }}
-              </span>
-            </td>
-            <td>
-              <span class="status-badge" 
-                    [class.active]="user.isActive" 
-                    [class.inactive]="!user.isActive">
-                {{ user.isActive ? 'Active' : 'Inactive' }}
-              </span>
-            </td>
-            <td *ngIf="userRole !== 'Moderator'">
-              <!-- Status Actions -->
-              <button class="action-btn deactivate" 
-                      *ngIf="canBanUser(user)" 
-                      (click)="updateUserStatus(user, false)">
-                Block
-              </button>
-              <button class="action-btn activate" 
-                      *ngIf="canUnbanUser(user)" 
-                      (click)="updateUserStatus(user, true)">
-                Unblock
-              </button>
+          <ng-container *ngFor="let user of filteredUsers">
+            <!-- ORIGINAL: Main User Row - Made clickable but preserving all original content -->
+            <tr [class.expanded]="viewingUserId === user.id" 
+                (click)="viewUserDetails(user.id)" 
+                style="cursor: pointer;"
+                [attr.title]="'Click to view detailed information'">
+              <td>{{ user.id }}</td>
+              <td>{{ user.firstName }} {{ user.lastName }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.phone || 'N/A' }}</td>
+              <td>
+                <span class="role-badge" 
+                      [class.superadmin]="user.role === 'SuperAdmin'"
+                      [class.admin]="user.role === 'Admin'"
+                      [class.moderator]="user.role === 'Moderator'"
+                      [class.customer]="user.role === 'Customer'">
+                  {{ user.role }}
+                </span>
+              </td>
+              <td>{{ user.authProvider || 'Local' }}</td>
+              <td>{{ user.subscriptionName || 'None' }}</td>
+              <td>
+                <span class="badge" [class.bg-success]="user.firstTimeOrder" [class.bg-secondary]="!user.firstTimeOrder">
+                  {{ user.firstTimeOrder ? 'Yes' : 'No' }}
+                </span>
+              </td>
+              <td>
+                <span class="status-badge" 
+                      [class.active]="user.isActive" 
+                      [class.inactive]="!user.isActive">
+                  {{ user.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <!-- ORIGINAL: Your exact actions column with stop propagation -->
+              <td *ngIf="userRole !== 'Moderator'" (click)="$event.stopPropagation()" class="actions">
+                <!-- Status Actions -->
+                <button class="action-btn deactivate" 
+                        *ngIf="canBanUser(user)" 
+                        (click)="updateUserStatus(user, false)">
+                  Block
+                </button>
+                <button class="action-btn activate" 
+                        *ngIf="canUnbanUser(user)" 
+                        (click)="updateUserStatus(user, true)">
+                  Unblock
+                </button>
 
-              <!-- Role Change Dropdown -->
-             <div class="role-dropdown" *ngIf="canModifyUserRole(user)">
-               <button class="dropdown-toggle" 
-                       (click)="toggleRoleDropdown(user.id)"
-                       [attr.title]="getRoleButtonTooltip(user)">
-                 Role
-                 <span class="chevron">▼</span>
-               </button>
-               <div class="dropdown-menu" *ngIf="roleDropdownUserId === user.id">
-                 <a class="dropdown-item" 
-                    [class.disabled]="!canChangeUserRole(user, 'Customer')"
-                    (click)="canChangeUserRole(user, 'Customer') && updateUserRole(user, 'Customer')">
-                   Customer
-                 </a>
-                 <a class="dropdown-item" 
-                    [class.disabled]="!canChangeUserRole(user, 'Moderator')"
-                    (click)="canChangeUserRole(user, 'Moderator') && updateUserRole(user, 'Moderator')">
-                   Moderator
-                 </a>
-                 <a class="dropdown-item" 
-                    [class.disabled]="!canChangeUserRole(user, 'Admin')"
-                    (click)="canChangeUserRole(user, 'Admin') && updateUserRole(user, 'Admin')">
-                   Admin
-                 </a>
-                 <a class="dropdown-item" 
-                    *ngIf="currentUserRole === 'SuperAdmin'"
-                    [class.disabled]="!canChangeUserRole(user, 'SuperAdmin')"
-                    (click)="canChangeUserRole(user, 'SuperAdmin') && updateUserRole(user, 'SuperAdmin')">
-                   SuperAdmin
-                 </a>
+                <!-- Role Change Dropdown -->
+               <div class="role-dropdown" *ngIf="canModifyUserRole(user)">
+                 <button class="dropdown-toggle" 
+                         (click)="toggleRoleDropdown(user.id)"
+                         [attr.title]="getRoleButtonTooltip(user)">
+                   Role
+                   <span class="chevron">▼</span>
+                 </button>
+                 <div class="dropdown-menu" *ngIf="roleDropdownUserId === user.id">
+                   <a class="dropdown-item" 
+                      [class.disabled]="!canChangeUserRole(user, 'Customer')"
+                      (click)="canChangeUserRole(user, 'Customer') && updateUserRole(user, 'Customer')">
+                     Customer
+                   </a>
+                   <a class="dropdown-item" 
+                      [class.disabled]="!canChangeUserRole(user, 'Moderator')"
+                      (click)="canChangeUserRole(user, 'Moderator') && updateUserRole(user, 'Moderator')">
+                     Moderator
+                   </a>
+                   <a class="dropdown-item" 
+                      [class.disabled]="!canChangeUserRole(user, 'Admin')"
+                      (click)="canChangeUserRole(user, 'Admin') && updateUserRole(user, 'Admin')">
+                     Admin
+                   </a>
+                   <a class="dropdown-item" 
+                      *ngIf="currentUserRole === 'SuperAdmin'"
+                      [class.disabled]="!canChangeUserRole(user, 'SuperAdmin')"
+                      (click)="canChangeUserRole(user, 'SuperAdmin') && updateUserRole(user, 'SuperAdmin')">
+                     SuperAdmin
+                   </a>
+                 </div>
                </div>
-             </div>
-             
-             <!-- Show a message when role dropdown is not available -->
-             <span class="role-locked" 
-                   *ngIf="!canModifyUserRole(user) && canUpdate" 
-                   [attr.title]="getRoleButtonTooltip(user)">
-               🔒Locked
-             </span>
-            </td>
-          </tr>
+               
+               <!-- Show a message when role dropdown is not available -->
+               <span class="role-locked" 
+                     *ngIf="!canModifyUserRole(user) && canUpdate" 
+                     [attr.title]="getRoleButtonTooltip(user)">
+                 🔒Locked
+               </span>
+              </td>
+            </tr>
+
+            <!-- NEW: User Details Row (Similar to order details in orders component) -->
+            <tr *ngIf="viewingUserId === user.id" class="user-details-row">
+              <td colspan="10">
+                <div class="user-details-content">
+                  <div *ngIf="loadingUserDetails" class="loading-details">
+                    <p>Loading user details...</p>
+                  </div>
+                  
+                  <div *ngIf="!loadingUserDetails && selectedUser" class="user-details">
+                    <h4>Detailed Information for {{ selectedUser.firstName }} {{ selectedUser.lastName }}</h4>
+                    
+                    <div class="details-grid">
+                      <!-- Personal Information Section -->
+                      <div class="detail-section">
+                        <h5>Personal Information</h5>
+                        <p><strong>User ID:</strong> {{ selectedUser.id }}</p>
+                        <p><strong>Full Name:</strong> {{ selectedUser.firstName }} {{ selectedUser.lastName }}</p>
+                        <p><strong>Email:</strong> {{ selectedUser.email }}</p>
+                        <p><strong>Phone:</strong> {{ selectedUser.phone || 'Not provided' }}</p>
+                        <p><strong>Role:</strong> 
+                          <span class="role-badge" 
+                                [class.superadmin]="selectedUser.role === 'SuperAdmin'"
+                                [class.admin]="selectedUser.role === 'Admin'"
+                                [class.moderator]="selectedUser.role === 'Moderator'"
+                                [class.customer]="selectedUser.role === 'Customer'">{{ selectedUser.role }}
+                          </span>
+                        </p>
+                        <p><strong>Auth Provider:</strong> {{ selectedUser.authProvider || 'Local' }}</p>
+                        <p><strong>Account Status:</strong> 
+                          <span class="status-badge" [class.active]="selectedUser.isActive" [class.inactive]="!selectedUser.isActive">{{ selectedUser.isActive ? 'Active' : 'Inactive' }}
+                          </span>
+                        </p>
+                        <p><strong>First Time Customer:</strong> {{ selectedUser.firstTimeOrder ? 'Yes' : 'No' }}</p>
+                        <p><strong>Subscription:</strong> {{ selectedUser.subscriptionName || 'None' }}</p>
+                        <p><strong>Registration Date:</strong> {{ formatDate(selectedUser.registrationDate) }}</p>
+                      </div>
+
+                      <!-- Order Statistics Section -->
+                      <div class="detail-section">
+                        <h5>Order Statistics</h5>
+                        <p><strong>Total Orders:</strong> {{ selectedUser.totalOrders || 0 }}</p>
+                        <p><strong>Total Spent:</strong> 
+                          <span class="total-amount">{{ formatCurrency(selectedUser.totalSpent || 0) }}</span>
+                        </p>
+                        <p><strong>Last Order:</strong> {{ formatDate(selectedUser.lastOrderDate) }}</p>
+                      </div>
+
+                      <!-- Recent Orders Section -->
+                      <div class="detail-section" *ngIf="selectedUser.orders && selectedUser.orders.length > 0">
+                        <h5>Recent Orders</h5>
+                        <div class="orders-list-mini">
+                          <div *ngFor="let order of selectedUser.orders" class="order-item-mini">
+                            <div class="order-info-mini">
+                              <span class="order-id">#{{ order.id }}</span>
+                              <span class="service-type">{{ order.serviceTypeName }}</span>
+                              <span class="order-date">{{ formatDate(order.serviceDate) }}</span>
+                              <span class="order-amount">{{ formatCurrency(order.total) }}</span>
+                              <span class="order-status" [ngClass]="getStatusClass(order.status)">{{ order.status }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Saved Addresses Section -->
+                      <div class="detail-section" *ngIf="selectedUser.apartments && selectedUser.apartments.length > 0">
+                        <h5>Saved Addresses ({{ selectedUser.apartments.length }})</h5>
+                        <div class="apartments-list-mini">
+                          <div *ngFor="let apartment of selectedUser.apartments" class="apartment-item-mini">
+                            <h6>{{ apartment.name }}</h6>
+                            <p>{{ apartment.address }}</p>
+                            <p *ngIf="apartment.aptSuite">Apt/Suite: {{ apartment.aptSuite }}</p>
+                            <p>{{ apartment.city }}, {{ apartment.state }} {{ apartment.postalCode }}</p>
+                            <p *ngIf="apartment.specialInstructions" class="special-instructions">
+                              <em>{{ apartment.specialInstructions }}</em>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Action Buttons in Details View -->
+                    <div class="detail-actions">
+                      <button class="action-btn primary" (click)="viewUserDetails(selectedUser.id)">
+                        Close Details
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
         </tbody>
       </table>
     </div>
-    <!-- Pagination -->
+    <!-- ORIGINAL: Pagination -->
     <div class="pagination" *ngIf="totalPages > 1">
       <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">Previous</button>
       <ng-container *ngFor="let page of [].constructor(totalPages); let i = index">
@@ -142,4 +249,4 @@
       <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
     </div>
   </div>
-</div> 
+</div>

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ServiceType, Service, ExtraService, Subscription } from './booking.service';
 import { Order, OrderList } from './order.service';
+import { Apartment } from './profile.service';
 
 export interface AdminOrderList {
   id: number;
@@ -195,6 +196,35 @@ export interface CopyService {
 export interface CopyExtraService {
   sourceExtraServiceId: number;
   targetServiceTypeId: number;
+}
+
+export interface DetailedUser extends UserAdmin {
+  orders?: OrderList[];
+  apartments?: Apartment[];
+  totalOrders?: number;
+  totalSpent?: number;
+  lastOrderDate?: Date;
+  registrationDate?: Date;
+}
+
+export interface UserProfile {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  role: string;
+  authProvider?: string;
+  isActive: boolean;
+  firstTimeOrder: boolean;
+  subscriptionId?: number;
+  subscriptionName?: string;
+  subscriptionExpiryDate?: Date;
+  createdAt: Date;
+  apartments: Apartment[];
+  totalOrders: number;
+  totalSpent: number;
+  lastOrderDate?: Date;
 }
 
 @Injectable({
@@ -396,5 +426,25 @@ export class AdminService {
 
   getUserOnlineStatus(userId: number): Observable<{ userId: number, isOnline: boolean }> {
     return this.http.get<{ userId: number, isOnline: boolean }>(`${this.apiUrl}/admin/users/${userId}/online-status`);
+  }
+
+  // Get user's orders (admin endpoint)
+  getUserOrders(userId: number): Observable<OrderList[]> {
+    return this.http.get<OrderList[]>(`${this.apiUrl}/users/${userId}/orders`);
+  }
+
+  // Get user's apartments (admin endpoint)
+  getUserApartments(userId: number): Observable<Apartment[]> {
+    return this.http.get<Apartment[]>(`${this.apiUrl}/users/${userId}/apartments`);
+  }
+
+  // Get detailed user information (optional - combines profile, orders, and apartments)
+  getUserDetails(userId: number): Observable<DetailedUser> {
+    return this.http.get<DetailedUser>(`${this.apiUrl}/users/${userId}/details`);
+  }
+
+  // Alternative: Get user profile information
+  getUserProfile(userId: number): Observable<UserProfile> {
+    return this.http.get<UserProfile>(`${this.apiUrl}/users/${userId}/profile`);
   }
 }

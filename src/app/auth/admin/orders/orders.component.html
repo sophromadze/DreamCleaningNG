@@ -171,6 +171,13 @@
                   <h5>Special Instructions</h5>
                   <p>{{selectedOrder.specialInstructions}}</p>
                 </div>
+
+                <!-- Action Buttons in Details View -->
+                <div class="detail-actions">
+                  <button class="action-btn primary" (click)="viewOrderDetails(selectedOrder.id)">
+                    Close Details
+                  </button>
+                </div>
               </div>
             </td>
           </tr>
