@@ -1,5 +1,35 @@
 <div class="user-management-section">
   <h2>User Management</h2>
+  <div class="messages">
+    <div class="error-message" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+    <div class="success-message" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+  </div>
+  <div class="filters-section">
+    <div class="search-box">
+      <input type="text"
+             [(ngModel)]="searchTerm"
+             placeholder="Search by ID or email..."
+             class="search-input">
+    </div>
+    <div class="filter-controls">
+      <select [(ngModel)]="statusFilter" class="filter-select">
+        <option value="all">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+      <select [(ngModel)]="roleFilter" class="filter-select">
+        <option value="all">All Roles</option>
+        <option value="SuperAdmin">SuperAdmin</option>
+        <option value="Admin">Admin</option>
+        <option value="Moderator">Moderator</option>
+        <option value="Customer">Customer</option>
+      </select>
+    </div>
+  </div>
   <div class="users-list">
     <div class="data-table">
       <table>
@@ -18,7 +48,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let user of users">
+          <tr *ngFor="let user of filteredUsers">
             <td>{{ user.id }}</td>
             <td>{{ user.firstName }} {{ user.lastName }}</td>
             <td>{{ user.email }}</td>
@@ -49,52 +79,67 @@
             <td *ngIf="userRole !== 'Moderator'">
               <!-- Status Actions -->
               <button class="action-btn deactivate" 
-                      *ngIf="canDeactivate && user.isActive" 
+                      *ngIf="canBanUser(user)" 
                       (click)="updateUserStatus(user, false)">
-                Ban
+                Block
               </button>
               <button class="action-btn activate" 
-                      *ngIf="canActivate && !user.isActive" 
+                      *ngIf="canUnbanUser(user)" 
                       (click)="updateUserStatus(user, true)">
-                Unban
+                Unblock
               </button>
 
               <!-- Role Change Dropdown -->
-              <div class="role-dropdown" *ngIf="canUpdate">
-                <button class="dropdown-toggle" 
-                        [disabled]="currentUserRole === 'Admin' && user.role === 'SuperAdmin'"
-                        (click)="toggleRoleDropdown(user.id)">
-                  Role
-                  <span class="chevron">▼</span>
-                </button>
-                <div class="dropdown-menu" *ngIf="roleDropdownUserId === user.id">
-                  <a class="dropdown-item" 
-                     [class.disabled]="!canChangeUserRole(user, 'Customer')"
-                     (click)="canChangeUserRole(user, 'Customer') && updateUserRole(user, 'Customer')">
-                    Customer
-                  </a>
-                  <a class="dropdown-item" 
-                     [class.disabled]="!canChangeUserRole(user, 'Moderator')"
-                     (click)="canChangeUserRole(user, 'Moderator') && updateUserRole(user, 'Moderator')">
-                    Moderator
-                  </a>
-                  <a class="dropdown-item" 
-                     [class.disabled]="!canChangeUserRole(user, 'Admin')"
-                     (click)="canChangeUserRole(user, 'Admin') && updateUserRole(user, 'Admin')">
-                    Admin
-                  </a>
-                  <a class="dropdown-item" 
-                     *ngIf="currentUserRole === 'SuperAdmin'"
-                     [class.disabled]="!canChangeUserRole(user, 'SuperAdmin')"
-                     (click)="canChangeUserRole(user, 'SuperAdmin') && updateUserRole(user, 'SuperAdmin')">
-                    SuperAdmin
-                  </a>
-                </div>
-              </div>
+             <div class="role-dropdown" *ngIf="canModifyUserRole(user)">
+               <button class="dropdown-toggle" 
+                       (click)="toggleRoleDropdown(user.id)"
+                       [attr.title]="getRoleButtonTooltip(user)">
+                 Role
+                 <span class="chevron">▼</span>
+               </button>
+               <div class="dropdown-menu" *ngIf="roleDropdownUserId === user.id">
+                 <a class="dropdown-item" 
+                    [class.disabled]="!canChangeUserRole(user, 'Customer')"
+                    (click)="canChangeUserRole(user, 'Customer') && updateUserRole(user, 'Customer')">
+                   Customer
+                 </a>
+                 <a class="dropdown-item" 
+                    [class.disabled]="!canChangeUserRole(user, 'Moderator')"
+                    (click)="canChangeUserRole(user, 'Moderator') && updateUserRole(user, 'Moderator')">
+                   Moderator
+                 </a>
+                 <a class="dropdown-item" 
+                    [class.disabled]="!canChangeUserRole(user, 'Admin')"
+                    (click)="canChangeUserRole(user, 'Admin') && updateUserRole(user, 'Admin')">
+                   Admin
+                 </a>
+                 <a class="dropdown-item" 
+                    *ngIf="currentUserRole === 'SuperAdmin'"
+                    [class.disabled]="!canChangeUserRole(user, 'SuperAdmin')"
+                    (click)="canChangeUserRole(user, 'SuperAdmin') && updateUserRole(user, 'SuperAdmin')">
+                   SuperAdmin
+                 </a>
+               </div>
+             </div>
+             
+             <!-- Show a message when role dropdown is not available -->
+             <span class="role-locked" 
+                   *ngIf="!canModifyUserRole(user) && canUpdate" 
+                   [attr.title]="getRoleButtonTooltip(user)">
+               🔒Locked
+             </span>
             </td>
           </tr>
         </tbody>
       </table>
+    </div>
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">Previous</button>
+      <ng-container *ngFor="let page of [].constructor(totalPages); let i = index">
+        <button class="page-btn" [class.active]="currentPage === (i+1)" (click)="goToPage(i+1)" [disabled]="currentPage === (i+1)">{{i+1}}</button>
+      </ng-container>
+      <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
     </div>
   </div>
 </div> 

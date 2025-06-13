@@ -21,6 +21,15 @@ export class UserManagementComponent implements OnInit {
   canDelete = false;
   canActivate = false;
   canDeactivate = false;
+  searchTerm: string = '';
+  statusFilter: string = 'all';
+  roleFilter: string = 'all';
+  currentPage = 1;
+  itemsPerPage = 20;
+  totalPages = 1;
+
+  errorMessage = '';
+  successMessage = '';
 
   constructor(private adminService: AdminService) {}
 
@@ -78,9 +87,41 @@ export class UserManagementComponent implements OnInit {
   }
 
   canChangeUserRole(user: UserAdmin, newRole: string): boolean {
+    // Don't allow changing your own role
+    const currentUserId = this.getCurrentUserId();
+    if (user.id === currentUserId) {
+      return false;
+    }
+  
+    // Existing logic
     if (this.currentUserRole === 'SuperAdmin') return true;
     if (this.currentUserRole === 'Admin' && user.role !== 'SuperAdmin') return true;
     return false;
+  }
+
+  canModifyUserRole(user: any): boolean {
+    const currentUserId = this.getCurrentUserId();
+    if (user.id === currentUserId) {
+      return false; // Can't modify your own role
+    }
+    
+    // Admins cannot modify SuperAdmin roles
+    if (this.currentUserRole === 'Admin' && user.role === 'SuperAdmin') {
+      return false;
+    }
+    
+    return this.canUpdate;
+  }
+
+  getRoleButtonTooltip(user: any): string {
+    const currentUserId = this.getCurrentUserId();
+    if (user.id === currentUserId) {
+      return "You cannot change your own role";
+    }
+    if (this.currentUserRole === 'Admin' && user.role === 'SuperAdmin') {
+      return "Admins cannot modify SuperAdmin roles";
+    }
+    return "";
   }
 
   updateUserRole(user: UserAdmin, newRole: string) {
@@ -88,25 +129,149 @@ export class UserManagementComponent implements OnInit {
       return;
     }
 
+    // Clear previous messages
+    this.errorMessage = '';
+    this.successMessage = '';
+
     this.adminService.updateUserRole(user.id, newRole).subscribe({
       next: () => {
         user.role = newRole;
         this.roleDropdownUserId = null;
+        this.successMessage = `User ${user.firstName} ${user.lastName}'s role has been updated to ${newRole}.`;
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 3000);
       },
       error: (error) => {
-        console.error('Failed to update user role', error);
+        // Show user-friendly error message
+        if (error.error?.message) {
+          this.errorMessage = error.error.message;
+        } else {
+          this.errorMessage = 'Failed to update user role. Please try again.';
+        }
+        
+        // Clear error message after 5 seconds
+        setTimeout(() => {
+          this.errorMessage = '';
+        }, 5000);
       }
     });
   }
 
   updateUserStatus(user: UserAdmin, isActive: boolean) {
+    // Clear previous messages
+    this.errorMessage = '';
+    this.successMessage = '';
+
     this.adminService.updateUserStatus(user.id, isActive).subscribe({
       next: () => {
         user.isActive = isActive;
+        const action = isActive ? 'unblocked' : 'blocked';
+        this.successMessage = `User ${user.firstName} ${user.lastName} has been ${action} successfully.`;
+        
+        // Clear success message after 3 seconds
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 3000);
       },
       error: (error) => {
-        console.error('Failed to update user status', error);
+        // Show user-friendly error message
+        if (error.error?.message) {
+          this.errorMessage = error.error.message;
+        } else {
+          this.errorMessage = 'Failed to update user status. Please try again.';
+        }
+        
+        // Clear error message after 5 seconds
+        setTimeout(() => {
+          this.errorMessage = '';
+        }, 5000);
       }
     });
+  }
+
+  get filteredUsers(): UserAdmin[] {
+    let filtered = this.users;
+    // Search filter (by id or email)
+    if (this.searchTerm) {
+      const search = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(user =>
+        user.id.toString().includes(search) ||
+        (user.email && user.email.toLowerCase().includes(search))
+      );
+    }
+    // Status filter
+    if (this.statusFilter !== 'all') {
+      filtered = filtered.filter(user =>
+        (this.statusFilter === 'active' && user.isActive) ||
+        (this.statusFilter === 'inactive' && !user.isActive)
+      );
+    }
+    // Role filter
+    if (this.roleFilter !== 'all') {
+      filtered = filtered.filter(user => user.role && user.role.toLowerCase() === this.roleFilter.toLowerCase());
+    }
+    // Pagination
+    this.totalPages = Math.ceil(filtered.length / this.itemsPerPage);
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    return filtered.slice(start, start + this.itemsPerPage);
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  canModifyUserStatus(user: any): boolean {
+    // Admins cannot modify SuperAdmin status
+    if (this.currentUserRole === 'Admin' && user.role === 'SuperAdmin') {
+      return false;
+    }
+    return true;
+  }
+
+  canBanUser(user: any): boolean {
+    // Don't allow banning yourself
+    const currentUserId = this.getCurrentUserId(); // You'll need to implement this
+    if (user.id === currentUserId) {
+      return false;
+    }
+    
+    return this.canDeactivate && user.isActive && this.canModifyUserStatus(user);
+  }
+  
+  canUnbanUser(user: any): boolean {
+    // Don't allow unbanning yourself (though this might be allowed)
+    return this.canActivate && !user.isActive && this.canModifyUserStatus(user);
+  }
+
+  private getCurrentUserId(): number {
+    // You might get this from your auth service or JWT token
+    // This is just an example - implement based on your auth system
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return parseInt(payload.UserId || payload.sub);
+      } catch (e) {
+        return 0;
+      }
+    }
+    return 0;
   }
 } 

@@ -3,6 +3,22 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { ServiceType, Service, ExtraService, Subscription } from './booking.service';
+import { Order, OrderList } from './order.service';
+
+export interface AdminOrderList {
+  id: number;
+  userId: number;
+  contactEmail: string;
+  contactFirstName: string;
+  contactLastName: string;
+  serviceTypeName: string;
+  serviceDate: Date;
+  serviceTime: string;
+  status: string;
+  total: number;
+  serviceAddress: string;
+  orderDate: Date;
+}
 
 export interface UserPermissions {
   role: string;
@@ -358,5 +374,23 @@ export class AdminService {
 
   updateUserStatus(userId: number, isActive: boolean): Observable<any> {
     return this.http.put(`${this.apiUrl}/users/${userId}/status`, { isActive });
+  }
+
+  // Orders Management
+  getAllOrders(): Observable<AdminOrderList[]> {
+    // Note: Just use /orders, not /admin/orders because apiUrl already includes /admin
+    return this.http.get<AdminOrderList[]>(`${this.apiUrl}/orders`);
+  }
+
+  getOrderDetails(orderId: number): Observable<Order> {
+    return this.http.get<Order>(`${this.apiUrl}/orders/${orderId}`);
+  }
+
+  updateOrderStatus(orderId: number, status: string): Observable<any> {
+    return this.http.put(`${this.apiUrl}/orders/${orderId}/status`, { status });
+  }
+
+  cancelOrder(orderId: number, reason: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/orders/${orderId}/cancel`, { reason });
   }
 }

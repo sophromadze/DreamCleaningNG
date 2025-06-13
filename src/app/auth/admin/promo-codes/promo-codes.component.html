@@ -78,7 +78,7 @@
           <th>Usage Limits</th>
           <th>Validity</th>
           <th>Status</th>
-          <th>Actions</th>
+          <th *ngIf="userRole !== 'Moderator'">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -124,7 +124,7 @@
               {{code.isActive ? 'Active' : 'Inactive'}}
             </span>
           </td>
-          <td class="actions">
+          <td class="actions" *ngIf="userRole !== 'Moderator'">
             <ng-container *ngIf="editingPromoCodeId !== code.id">
               <button *ngIf="userPermissions.permissions.canUpdate" 
                       class="action-btn edit" 

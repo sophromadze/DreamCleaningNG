@@ -46,16 +46,16 @@
     <!-- Tab Navigation -->
     <div class="admin-tabs">
       <button class="tab-btn" 
-              [class.active]="activeTab === 'booking-services'"
-              (click)="setActiveTab('booking-services')"
-              *ngIf="userPermissions?.permissions?.canView">
-        Booking Services
-      </button>
-      <button class="tab-btn" 
               [class.active]="activeTab === 'orders'"
               (click)="setActiveTab('orders')"
               *ngIf="userPermissions?.permissions?.canView">
         Orders
+      </button>
+      <button class="tab-btn" 
+              [class.active]="activeTab === 'users'"
+              (click)="setActiveTab('users')"
+              *ngIf="userPermissions?.permissions?.canView">
+        Users
       </button>
       <button class="tab-btn" 
               [class.active]="activeTab === 'promo-codes'"
@@ -64,16 +64,16 @@
         Promo Codes
       </button>
       <button class="tab-btn" 
+              [class.active]="activeTab === 'booking-services'"
+              (click)="setActiveTab('booking-services')"
+              *ngIf="userPermissions?.permissions?.canView">
+        Booking Services
+      </button>
+      <button class="tab-btn" 
               [class.active]="activeTab === 'subscriptions'"
               (click)="setActiveTab('subscriptions')"
               *ngIf="userPermissions?.permissions?.canView">
         Subscriptions
-      </button>
-      <button class="tab-btn" 
-              [class.active]="activeTab === 'users'"
-              (click)="setActiveTab('users')"
-              *ngIf="userPermissions?.permissions?.canView">
-        Users
       </button>
     </div>
   
@@ -88,11 +88,11 @@
     <!-- Tab Content -->
     <div class="tab-content">
       <ng-container [ngSwitch]="activeTab">
-        <app-booking-services *ngSwitchCase="'booking-services'"></app-booking-services>
         <app-orders *ngSwitchCase="'orders'"></app-orders>
-        <app-promo-codes *ngSwitchCase="'promo-codes'"></app-promo-codes>
-        <app-subscriptions *ngSwitchCase="'subscriptions'"></app-subscriptions>
         <app-user-management *ngSwitchCase="'users'"></app-user-management>
+        <app-promo-codes *ngSwitchCase="'promo-codes'"></app-promo-codes>
+        <app-booking-services *ngSwitchCase="'booking-services'"></app-booking-services>
+        <app-subscriptions *ngSwitchCase="'subscriptions'"></app-subscriptions>
       </ng-container>
     </div>
   </div>

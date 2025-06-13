@@ -54,7 +54,7 @@
           <th>Discount</th>
           <th>Duration</th>
           <th>Status</th>
-          <th>Actions</th>
+          <th *ngIf="userRole !== 'Moderator'">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -80,7 +80,7 @@
               {{subscription.isActive ? 'Active' : 'Inactive'}}
             </span>
           </td>
-          <td class="actions">
+          <td class="actions" *ngIf="userRole !== 'Moderator'">
             <ng-container *ngIf="editingSubscriptionId !== subscription.id">
               <button *ngIf="userPermissions.permissions.canUpdate" 
                       class="action-btn edit" 

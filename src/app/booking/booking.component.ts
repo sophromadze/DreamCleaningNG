@@ -971,6 +971,7 @@ export class BookingComponent implements OnInit {
     
     const bookingData = {
       serviceTypeId: this.selectedServiceType.id,
+      orderDate: new Date(), 
       services: this.selectedServices.map(s => ({
         serviceId: s.service.id,
         quantity: s.quantity

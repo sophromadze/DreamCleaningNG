@@ -62,7 +62,7 @@
             <th>Base Price</th>
             <th>Description</th>
             <th>Status</th>
-            <th>Actions</th>
+            <th *ngIf="userRole !== 'Moderator'">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -98,7 +98,7 @@
                 {{type.isActive ? 'Active' : 'Inactive'}}
               </span>
             </td>
-            <td class="actions">
+            <td class="actions" *ngIf="userRole !== 'Moderator'">
               <ng-container *ngIf="!isEditingServiceType || selectedServiceType?.id !== type.id">
                 <button *ngIf="userPermissions.permissions.canUpdate" 
                         class="action-btn edit" 

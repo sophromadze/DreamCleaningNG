@@ -37,13 +37,18 @@ export class AdminComponent implements OnInit {
   };
 
   // UI State
-  activeTab: string = 'booking-services';
+  activeTab: string = 'orders';
   errorMessage = '';
   successMessage = '';
 
   constructor(private adminService: AdminService) {}
 
   ngOnInit() {
+    // Restore last active tab from sessionStorage if available
+    const savedTab = sessionStorage.getItem('adminActiveTab');
+    if (savedTab) {
+      this.activeTab = savedTab;
+    }
     this.loadUserPermissions();
   }
 
@@ -62,5 +67,6 @@ export class AdminComponent implements OnInit {
 
   setActiveTab(tab: string) {
     this.activeTab = tab;
+    sessionStorage.setItem('adminActiveTab', tab);
   }
 }
