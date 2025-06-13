@@ -46,7 +46,7 @@
             <th>Order Date</th>
             <th>Total</th>
             <th>Status</th>
-            <th>Actions</th>
+            <th *ngIf="userPermissions.permissions.canUpdate">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -62,7 +62,7 @@
                   {{order.status}}
                 </span>
               </td>
-              <td class="actions">
+              <td class="actions" *ngIf="userPermissions.permissions.canUpdate">
                 <button *ngIf="userPermissions.permissions.canUpdate && order.status.toLowerCase() === 'active'" 
                         class="action-btn complete" 
                         (click)="markOrderAsDone(order); $event.stopPropagation()"

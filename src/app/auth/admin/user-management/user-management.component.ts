@@ -133,18 +133,24 @@ export class UserManagementComponent implements OnInit {
     this.errorMessage = '';
     this.successMessage = '';
 
+    // Show loading state (optional)
+    const originalRole = user.role;
+    user.role = newRole; // Optimistic update
+
     this.adminService.updateUserRole(user.id, newRole).subscribe({
       next: () => {
-        user.role = newRole;
         this.roleDropdownUserId = null;
-        this.successMessage = `User ${user.firstName} ${user.lastName}'s role has been updated to ${newRole}.`;
+        this.successMessage = `User ${user.firstName} ${user.lastName}'s role has been updated to ${newRole}. The user has been notified and their interface will update automatically.`;
         
-        // Clear success message after 3 seconds
+        // Clear success message after 5 seconds
         setTimeout(() => {
           this.successMessage = '';
-        }, 3000);
+        }, 5000);
       },
       error: (error) => {
+        // Revert optimistic update
+        user.role = originalRole;
+        
         // Show user-friendly error message
         if (error.error?.message) {
           this.errorMessage = error.error.message;
@@ -160,23 +166,47 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
+  // Add this method to show online status
+  getUserOnlineStatus(userId: number): void {
+    this.adminService.getUserOnlineStatus(userId).subscribe({
+      next: (response) => {
+        console.log(`User ${userId} online status:`, response.isOnline);
+        // You can update the UI to show online/offline status
+      },
+      error: (error) => {
+        console.error('Failed to get user online status:', error);
+      }
+    });
+  }
+
   updateUserStatus(user: UserAdmin, isActive: boolean) {
     // Clear previous messages
     this.errorMessage = '';
     this.successMessage = '';
 
+    // Show loading state (optional)
+    const originalStatus = user.isActive;
+    user.isActive = isActive; // Optimistic update
+
     this.adminService.updateUserStatus(user.id, isActive).subscribe({
       next: () => {
-        user.isActive = isActive;
         const action = isActive ? 'unblocked' : 'blocked';
         this.successMessage = `User ${user.firstName} ${user.lastName} has been ${action} successfully.`;
         
-        // Clear success message after 3 seconds
+        // If blocking, show additional info about real-time notification
+        if (!isActive) {
+          this.successMessage += ' The user has been notified and will be logged out automatically.';
+        }
+        
+        // Clear success message after 5 seconds
         setTimeout(() => {
           this.successMessage = '';
-        }, 3000);
+        }, 5000);
       },
       error: (error) => {
+        // Revert optimistic update
+        user.isActive = originalStatus;
+        
         // Show user-friendly error message
         if (error.error?.message) {
           this.errorMessage = error.error.message;

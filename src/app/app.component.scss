@@ -14,3 +14,41 @@
     padding-top: 80px; // Same as header height
   }
   
+  .connection-status {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+  }
+
+  .connection-status.connected {
+    background: rgba(39, 174, 96, 0.9);
+    color: white;
+  }
+
+  .connection-status.disconnected {
+    background: rgba(231, 76, 60, 0.9);
+    color: white;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+  }

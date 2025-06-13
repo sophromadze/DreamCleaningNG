@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, of } from 'rxjs';
-import { map, tap, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { map, tap, catchError, switchMap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../environments/environment';
@@ -194,5 +194,54 @@ export class AuthService {
         return of(null);
       })
     );
+  }
+
+  refreshUserDataAndToken(): Observable<any> {
+    const currentUser = this.currentUserValue;
+    if (!currentUser) {
+      return new Observable(observer => observer.error('No current user'));
+    }
+  
+    // Get fresh user data from the profile endpoint
+    return this.http.get<any>(`${this.apiUrl}/profile`).pipe(
+      switchMap(profile => {
+        // Update the current user with fresh data
+        const updatedUser: UserDto = {
+          ...currentUser,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          email: profile.email,
+          phone: profile.phone,
+          role: profile.role, // This is the key - get fresh role from server
+          firstTimeOrder: profile.firstTimeOrder
+        };
+  
+        // Update local storage and subject
+        if (this.isBrowser) {
+          localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+        }
+        this.currentUserSubject.next(updatedUser);
+  
+        return of(updatedUser);
+      }),
+      catchError(error => {
+        console.error('Failed to refresh user data:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+  refreshUserToken(): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh-user-token`, {})
+      .pipe(map(response => {
+        // Store new token and user details
+        if (this.isBrowser) {
+          localStorage.setItem('currentUser', JSON.stringify(response.user));
+          localStorage.setItem('token', response.token);
+          localStorage.setItem('refreshToken', response.refreshToken);
+        }
+        this.currentUserSubject.next(response.user);
+        return response;
+      }));
   }
 }

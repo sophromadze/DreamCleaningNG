@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -68,20 +69,34 @@ export class LoginComponent {
   onSubmit() {
     this.errorMessage = null;
     this.isLoading = true;
-
+  
     if (this.isLoginMode) {
       if (this.loginForm.valid) {
         this.authService.login(this.loginForm.value).subscribe({
           next: (response) => {
-            console.log('Login successful:', response);
+            // Only log success messages in development
+            if (!environment.production) {
+              console.log('Login successful:', response);
+            }
             this.isLoading = false;
             // Navigate to return URL or home
             this.router.navigateByUrl(this.returnUrl);
           },
           error: (error) => {
-            console.error('Login failed:', error);
+            // Don't log to console - only show user-friendly message
             this.isLoading = false;
-            this.errorMessage = error.error?.message || 'Login failed. Please try again.';
+            
+            // Handle specific error cases
+            if (error.status === 400 && error.error?.message) {
+              // Use the server's error message for user display
+              this.errorMessage = error.error.message;
+            } else if (error.status === 401) {
+              this.errorMessage = 'Invalid email or password.';
+            } else if (error.status === 0 || error.status >= 500) {
+              this.errorMessage = 'Unable to connect to server. Please check your connection and try again.';
+            } else {
+              this.errorMessage = 'Login failed. Please try again.';
+            }
           }
         });
       }
@@ -89,15 +104,29 @@ export class LoginComponent {
       if (this.registerForm.valid) {
         this.authService.register(this.registerForm.value).subscribe({
           next: (response) => {
-            console.log('Registration successful:', response);
+            // Only log success messages in development
+            if (!environment.production) {
+              console.log('Registration successful:', response);
+            }
             this.isLoading = false;
             // Navigate to return URL or home
             this.router.navigateByUrl(this.returnUrl);
           },
           error: (error) => {
-            console.error('Registration failed:', error);
+            // Don't log to console - only show user-friendly message
             this.isLoading = false;
-            this.errorMessage = error.error?.message || 'Registration failed. Please try again.';
+            
+            // Handle specific error cases
+            if (error.status === 400 && error.error?.message) {
+              // Use the server's error message for user display
+              this.errorMessage = error.error.message;
+            } else if (error.status === 409) {
+              this.errorMessage = 'An account with this email already exists.';
+            } else if (error.status === 0 || error.status >= 500) {
+              this.errorMessage = 'Unable to connect to server. Please check your connection and try again.';
+            } else {
+              this.errorMessage = 'Registration failed. Please try again.';
+            }
           }
         });
       }

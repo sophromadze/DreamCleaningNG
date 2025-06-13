@@ -393,4 +393,8 @@ export class AdminService {
   cancelOrder(orderId: number, reason: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/orders/${orderId}/cancel`, { reason });
   }
+
+  getUserOnlineStatus(userId: number): Observable<{ userId: number, isOnline: boolean }> {
+    return this.http.get<{ userId: number, isOnline: boolean }>(`${this.apiUrl}/admin/users/${userId}/online-status`);
+  }
 }
