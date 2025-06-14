@@ -70,4 +70,9 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./booking/booking-confirmation/booking-confirmation.component').then(m => m.BookingConfirmationComponent)
   },
+  {
+    path: 'gift-cards',
+    canActivate: [authGuard],
+    loadComponent: () => import('./gift-cards/gift-cards.component').then(m => m.GiftCardsComponent)
+  },
 ];

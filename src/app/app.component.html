@@ -9,9 +9,8 @@
 
 <!-- Connection status indicator (optional) -->
 <div class="connection-status" 
-     *ngIf="showConnectionStatus" 
-     [class.connected]="isConnected"
-     [class.disconnected]="!isConnected">
+     *ngIf="showConnectionStatus && isConnected" 
+     [class.connected]="isConnected">
   <span class="status-dot"></span>
-  {{ isConnected ? 'Connected' : 'Disconnected' }}
+  Connected
 </div>

@@ -58,15 +58,42 @@ export class AuthService {
     
     let storedUser = null;
     if (this.isBrowser) {
-      const userStr = localStorage.getItem('currentUser');
-      storedUser = userStr ? JSON.parse(userStr) : null;
+      try {
+        const userStr = localStorage.getItem('currentUser');
+        storedUser = userStr ? JSON.parse(userStr) : null;
+      } catch (error) {
+        console.warn('Error parsing stored user:', error);
+        // Clear corrupted data
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        storedUser = null;
+      }
     }
     
     this.currentUserSubject = new BehaviorSubject<UserDto | null>(storedUser);
     this.currentUser = this.currentUserSubject.asObservable();
     
-    // Mark as initialized after loading from storage
-    setTimeout(() => this.isInitializedSubject.next(true), 0);
+    // Mark as initialized immediately
+    this.isInitializedSubject.next(true);
+  }
+
+  ngOnInit() {
+    // This method will be called when the service is hydrated in the browser
+    if (this.isBrowser && !this.isInitializedSubject.value) {      
+      try {
+        const userStr = localStorage.getItem('currentUser');
+        const storedUser = userStr ? JSON.parse(userStr) : null;
+        
+        if (storedUser) {
+          this.currentUserSubject.next(storedUser);
+        }
+      } catch (error) {
+        console.warn('🔧 Error during hydration:', error);
+      }
+      
+      this.isInitializedSubject.next(true);
+    }
   }
 
   public get currentUserValue(): UserDto | null {

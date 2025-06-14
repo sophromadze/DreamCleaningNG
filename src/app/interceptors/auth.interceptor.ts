@@ -16,7 +16,13 @@ export class AuthInterceptor implements HttpInterceptor {
     let token: string | null = null;
     
     if (this.isBrowser) {
-      token = localStorage.getItem('token');
+      try {
+        token = localStorage.getItem('token');
+      } catch (error) {
+        // Handle any localStorage access errors
+        console.warn('Error accessing localStorage:', error);
+        token = null;
+      }
     }
 
     // Clone the request and add the authorization header

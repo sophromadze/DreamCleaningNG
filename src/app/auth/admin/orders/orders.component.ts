@@ -86,10 +86,8 @@ export class OrdersComponent implements OnInit {
     // Use AdminService to get all orders for admin users
     if (this.userRole && this.userRole !== 'Customer') {
       // For admin roles, get ALL orders
-      console.log('Loading ALL orders as admin user, role:', this.userRole);
       this.adminService.getAllOrders().subscribe({
         next: (orders) => {
-          console.log('Received orders from admin endpoint:', orders.length);
           this.orders = orders as AdminOrderList[];
         },
         error: (error) => {
@@ -99,7 +97,6 @@ export class OrdersComponent implements OnInit {
       });
     } else {
       // For customers, get only their orders
-      console.log('Loading user orders as customer');
       this.orderService.getUserOrders().subscribe({
         next: (orders) => {
           this.orders = orders as AdminOrderList[];

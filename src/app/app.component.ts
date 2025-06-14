@@ -6,6 +6,7 @@ import { FooterComponent } from './footer/footer.component';
 import { NotificationModalComponent } from './notification-modal/notification-modal.component';
 import { SignalRService } from './services/signalr.service';
 import { AuthService } from './services/auth.service';
+import { combineLatest } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -20,11 +21,11 @@ import { AuthService } from './services/auth.service';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-
 export class AppComponent implements OnInit {
   title = 'DreamCleaning';
   isConnected = false;
   showConnectionStatus = false;
+  isAuthInitialized = false;
 
   constructor(
     private signalRService: SignalRService,
@@ -32,15 +33,19 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    // Monitor connection status
-    this.signalRService.getConnectionState().subscribe(connected => {
+    // Wait for auth to be initialized before showing connection status
+    combineLatest([
+      this.authService.isInitialized$,
+      this.authService.currentUser,
+      this.signalRService.getConnectionState()
+    ]).subscribe(([isAuthInitialized, user, connected]) => {
+      this.isAuthInitialized = isAuthInitialized;
       this.isConnected = connected;
-      this.showConnectionStatus = this.authService.isLoggedIn();
-    });
-
-    // Show/hide connection status based on login status
-    this.authService.currentUser.subscribe(user => {
-      this.showConnectionStatus = !!user;
+      
+      // Only show connection status if:
+      // 1. Auth is initialized
+      // 2. User is logged in
+      this.showConnectionStatus = isAuthInitialized && !!user;
     });
   }
 }

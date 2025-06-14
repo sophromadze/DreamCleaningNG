@@ -74,6 +74,12 @@ export class BookingComponent implements OnInit {
   nextOrderTotal = 0;
   subscriptionDiscountAmount = 0;
   promoOrFirstTimeDiscountAmount = 0;
+
+  // Gift card specific properties
+  giftCardApplied = false;
+  giftCardBalance = 0;
+  giftCardAmountToUse = 0;
+  isGiftCard = false;
   
   // Constants
   salesTaxRate = 0.088; // 8.8%
@@ -134,11 +140,9 @@ export class BookingComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Always load fresh subscription data
-    this.loadUserSubscription();
     // Set minimum date to tomorrow
     this.minDate = new Date();
-    this.minDate.setDate(this.minDate.getDate() + 2); // Add one day to make it tomorrow
+    this.minDate.setDate(this.minDate.getDate() + 2);
     this.minDate.setHours(0, 0, 0, 0);
     
     // Set default date to tomorrow
@@ -153,39 +157,51 @@ export class BookingComponent implements OnInit {
     this.serviceDate.setValue(formattedDate);
     this.serviceTime.setValue('08:00');
     
-    // Only refresh user profile if logged in
-    if (this.authService.isLoggedIn()) {
-      // Refresh user data to ensure we have the latest firstTimeOrder status
-      this.authService.refreshUserProfile().subscribe({
-        next: () => {
-          this.loadInitialData();
-          this.setupFormListeners();
-        },
-        error: () => {
-          // Even if refresh fails, continue with cached data
+    // Wait for auth service to be initialized before proceeding
+    this.authService.isInitialized$.subscribe(isInitialized => {
+      if (isInitialized) {
+        // Only refresh user profile if logged in
+        if (this.authService.isLoggedIn()) {
+          // Refresh user data to ensure we have the latest firstTimeOrder status
+          this.authService.refreshUserProfile().subscribe({
+            next: () => {
+              this.loadInitialData();
+              this.setupFormListeners();
+            },
+            error: () => {
+              // Even if refresh fails, continue with cached data
+              this.loadInitialData();
+              this.setupFormListeners();
+            }
+          });
+        } else {
+          // Not logged in, skip refresh and just load initial data
           this.loadInitialData();
           this.setupFormListeners();
         }
-      });
-    } else {
-      // Not logged in, skip refresh and just load initial data
-      this.loadInitialData();
-      this.setupFormListeners();
-    }
+      }
+    });
   }
 
   private loadInitialData() {
+    // Clear any existing error messages
+    this.errorMessage = '';
+    
     // Load service types
     this.bookingService.getServiceTypes().subscribe({
       next: (serviceTypes) => {
         this.serviceTypes = serviceTypes;
+        // Clear error message on success
+        if (this.errorMessage === 'Failed to load service types') {
+          this.errorMessage = '';
+        }
       },
       error: (error) => {
         console.error('Failed to load service types:', error);
         this.errorMessage = 'Failed to load service types';
       }
     });
-
+  
     // Load location data
     this.locationService.getStates().subscribe({
       next: (states) => {
@@ -196,30 +212,32 @@ export class BookingComponent implements OnInit {
         }
       }
     });
-
+  
     // Load subscriptions
     this.bookingService.getSubscriptions().subscribe({
       next: (subscriptions) => {
         this.subscriptions = subscriptions;
-
-        // Only set default if user doesn't have an active subscription
-        // OR if we haven't loaded the user subscription data yet
+        // Clear error message on success
+        if (this.errorMessage === 'Failed to load subscriptions') {
+          this.errorMessage = '';
+        }
+  
+        // Set default subscription logic...
         if (!this.hasActiveSubscription) {
-          // Set "One Time" as default selected subscription
           if (subscriptions.length > 0) {
             const oneTimeSubscription = subscriptions.find(s => s.name === 'One Time') || subscriptions[0];
             this.selectedSubscription = oneTimeSubscription;
           }
         } else if (this.userSubscription) {
-          // If we already have user subscription data, update the selection now
           this.updateSelectedSubscription();
         }
       },
       error: (error) => {
+        console.error('Failed to load subscriptions:', error);
         this.errorMessage = 'Failed to load subscriptions';
       }
     });
-
+  
     // Load current user data
     this.authService.currentUser.subscribe(user => {
       this.currentUser = user;
@@ -236,7 +254,7 @@ export class BookingComponent implements OnInit {
         this.profileService.getApartments().subscribe({
           next: (apartments) => {
             this.userApartments = apartments;
-
+  
             // Auto-fill with first apartment if available
             if (apartments.length > 0) {
               const firstApartment = apartments[0];
@@ -247,7 +265,7 @@ export class BookingComponent implements OnInit {
             }
           }
         });
-
+  
         // Load user subscription after loading user data
         this.loadUserSubscription();
       }
@@ -463,9 +481,21 @@ export class BookingComponent implements OnInit {
     this.bookingService.validatePromoCode(code).subscribe({
       next: (validation) => {
         if (validation.isValid) {
-          this.promoCodeApplied = true;
-          this.promoDiscount = validation.discountValue;
-          this.promoIsPercentage = validation.isPercentage;
+          if (validation.isGiftCard) {
+            // Handle gift card
+            this.isGiftCard = true;
+            this.giftCardApplied = true;
+            this.giftCardBalance = validation.availableBalance || 0;
+            this.promoCodeApplied = false; // Gift cards don't use promo system
+          } else {
+            // Your existing promo code logic stays exactly the same
+            this.isGiftCard = false;
+            this.giftCardApplied = false;
+            this.promoCodeApplied = true;
+            this.promoDiscount = validation.discountValue;
+            this.promoIsPercentage = validation.isPercentage;
+          }
+          
           this.calculateTotal();
         } else {
           this.errorMessage = validation.message || 'Invalid promo code';
@@ -681,19 +711,8 @@ export class BookingComponent implements OnInit {
     this.getSubscriptionDaysForSubscription(this.userSubscription.subscriptionName) === this.selectedSubscription.subscriptionDays;
       
     if (this.hasActiveSubscription && this.userSubscription && this.userSubscription.discountPercentage > 0) {
-    console.log('Applying subscription discount:', {
-      hasActiveSubscription: this.hasActiveSubscription,
-      subscriptionName: this.userSubscription.subscriptionName,
-      discountPercentage: this.userSubscription.discountPercentage
-    });
     this.subscriptionDiscountAmount = Math.round(subTotal * (this.userSubscription.discountPercentage / 100) * 100) / 100;
     } else {
-    console.log('NOT applying subscription discount:', {
-      hasActiveSubscription: this.hasActiveSubscription,
-      reason: !this.hasActiveSubscription ? 'No active subscription' : 
-              !this.userSubscription ? 'No subscription data' :
-              'Not using subscription subscription'
-    });
     this.subscriptionDiscountAmount = 0;
     }
 
@@ -723,6 +742,13 @@ export class BookingComponent implements OnInit {
     // Calculate total
     const total = discountedSubTotal + tax + tips;
 
+    // Apply gift card if applicable - ADD THIS BLOCK
+    let finalTotal = total;
+    if (this.giftCardApplied && this.isGiftCard) {
+      this.giftCardAmountToUse = Math.min(this.giftCardBalance, total);
+      finalTotal = Math.max(0, total - this.giftCardAmountToUse);
+    }
+
     // For display, when using explicit hours, show the hours directly
     if (useExplicitHours && hoursService) {
       displayDuration = hoursService.quantity * 60;
@@ -733,7 +759,7 @@ export class BookingComponent implements OnInit {
       tax,
       discountAmount: totalDiscountAmount,
       tips,
-      total: Math.round(total * 100) / 100,
+      total: Math.round(finalTotal * 100) / 100, // Change 'total' to 'finalTotal'
       totalDuration: displayDuration
     };
 
@@ -912,12 +938,6 @@ export class BookingComponent implements OnInit {
     // Get form values, including disabled fields
     const formValue = this.bookingForm.getRawValue();
     
-    // Debug log to check apartment ID
-    // console.log('Form values:', formValue);
-    console.log('Use Apartment Address:', formValue.useApartmentAddress);
-    console.log('Selected apartment ID:', formValue.selectedApartmentId);
-    console.log('Apartment ID being sent:', formValue.apartmentId);
-    
     // Check if serviceDate exists
     if (!formValue.serviceDate) {
       this.errorMessage = 'Please select a service date';
@@ -1010,9 +1030,6 @@ export class BookingComponent implements OnInit {
       userSubscriptionId: this.userSubscription?.subscriptionId
     };
 
-    // Debug log the booking data
-    console.log('Booking data being stored temporarily:', bookingData);
-
     // Store booking data in service instead of creating order immediately
     this.bookingDataService.setBookingData(bookingData);
     this.isLoading = false;
@@ -1049,7 +1066,21 @@ export class BookingComponent implements OnInit {
     this.promoDiscount = 0;
     this.promoCode.setValue('');
     this.errorMessage = ''; // Clear any error messages
+    this.giftCardApplied = false;
+    this.isGiftCard = false;
+    this.giftCardBalance = 0;
+    this.giftCardAmountToUse = 0;
     this.calculateTotal();
+  }
+
+  getGiftCardDisplayInfo(): { amountToUse: number; remainingBalance: number } {
+    if (!this.giftCardApplied) {
+      return { amountToUse: 0, remainingBalance: 0 };
+    }
+    return { 
+      amountToUse: this.giftCardAmountToUse, 
+      remainingBalance: this.giftCardBalance - this.giftCardAmountToUse 
+    };
   }
   
   removeFirstTimeDiscount() {
@@ -1081,6 +1112,13 @@ export class BookingComponent implements OnInit {
   get tips() { return this.bookingForm.get('tips') as FormControl; }
 
   private loadUserSubscription() {
+    // Only call getUserSubscription if user is logged in
+    if (!this.authService.isLoggedIn()) {
+      this.hasActiveSubscription = false;
+      this.userSubscription = null;
+      return;
+    }
+  
     this.bookingService.getUserSubscription().subscribe({
       next: (data) => {
         if (data.hasSubscription) {
@@ -1097,7 +1135,10 @@ export class BookingComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error loading subscription:', error);
+        // Only log error if it's not a 401 (which is expected for logged out users)
+        if (error.status !== 401) {
+          console.error('Error loading subscription:', error);
+        }
         this.hasActiveSubscription = false;
       }
     });

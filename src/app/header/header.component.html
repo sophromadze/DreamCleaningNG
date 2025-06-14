@@ -8,37 +8,38 @@
         <a routerLink="/service-page" routerLinkActive="active">Services</a>
         <a routerLink="/booking" routerLinkActive="active">Booking</a>
         <a routerLink="/contact" routerLinkActive="active">Contact</a>
-        <ng-container *ngIf="!currentUser; else userMenu">
+        <ng-container *ngIf="shouldShowLogin(); else userMenu">
           <a routerLink="/login" routerLinkActive="active" class="login-btn">Login</a>
         </ng-container>
         <ng-template #userMenu>
-          <div class="user-menu" (click)="toggleUserMenu()">
+          <div class="user-menu" (click)="toggleUserMenu()" *ngIf="shouldShowUserMenu()">
             <div class="user-avatar">
               {{ userInitials }}
             </div>
             <i class="fas fa-chevron-down"></i>
             <div class="dropdown-menu" *ngIf="isUserMenuOpen">
               <div class="user-info">
-                {{ currentUser.firstName }} {{ currentUser.lastName }}
-                <small class="user-role" 
-                       [class.role-superadmin]="currentUser.role === 'SuperAdmin'"
-                       [class.role-admin]="currentUser.role === 'Admin'"
-                       [class.role-moderator]="currentUser.role === 'Moderator'">
-                  {{ currentUser.role }}
+                {{ currentUser?.firstName }} {{ currentUser?.lastName }}
+                <small class="user-role"
+                        [class.role-superadmin]="currentUser?.role === 'SuperAdmin'"
+                       [class.role-admin]="currentUser?.role === 'Admin'"
+                       [class.role-moderator]="currentUser?.role === 'Moderator'">
+                  {{ currentUser?.role }}
                 </small>
               </div>
               <a routerLink="/profile">Profile</a>
               <a routerLink="/profile/orders">My Orders</a>
+              <a routerLink="/gift-cards">Gift Cards</a>
               <a routerLink="/change-password">Change Password</a>
               <!-- Show Admin Panel for SuperAdmin, Admin, and Moderator -->
-              <a routerLink="/admin" 
-                 *ngIf="currentUser.role === 'SuperAdmin' || currentUser.role === 'Admin' || currentUser.role === 'Moderator'">
+              <a routerLink="/admin"
+                  *ngIf="currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin' || currentUser?.role === 'Moderator'">
                 Admin Panel
               </a>
               <a (click)="logout()">Logout</a>
             </div>
           </div>
-        </ng-template>
+        </ng-template>        
       </div>
       <button class="mobile-menu-btn" (click)="toggleMenu()">
         <span></span>

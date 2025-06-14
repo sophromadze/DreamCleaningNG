@@ -3,7 +3,8 @@ import { provideRouter, withDebugTracing, withInMemoryScrolling } from '@angular
 import { provideHttpClient, withFetch, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
 
 import { routes } from './app.routes';
-import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
+// COMMENTED OUT SSR - This was causing the logout/login issue
+// import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -13,7 +14,8 @@ export const appConfig: ApplicationConfig = {
       withInterceptorsFromDi() // Enable legacy interceptor support
     ),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideClientHydration(withEventReplay()),
+    // COMMENTED OUT - This was causing the multiple SSR instances
+    // provideClientHydration(withEventReplay()),
     provideRouter(
       routes,
       withInMemoryScrolling({

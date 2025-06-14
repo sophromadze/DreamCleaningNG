@@ -338,7 +338,6 @@ export class UserManagementComponent implements OnInit {
   getUserOnlineStatus(userId: number): void {
     this.adminService.getUserOnlineStatus(userId).subscribe({
       next: (response) => {
-        console.log(`User ${userId} online status:`, response.isOnline);
         // You can update the UI to show online/offline status
       },
       error: (error) => {

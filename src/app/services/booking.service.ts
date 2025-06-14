@@ -56,11 +56,13 @@ export interface Subscription {
   isActive: boolean;
 }
 
-export interface PromoCodeValidation {
+export interface PromoCodeValidationDto {
   isValid: boolean;
   discountValue: number;
   isPercentage: boolean;
   message?: string;
+  isGiftCard?: boolean;
+  availableBalance?: number;
 }
 
 export interface BookingData {
@@ -115,9 +117,16 @@ export class BookingService {
   getSubscriptions(): Observable<Subscription[]> {
     return this.http.get<Subscription[]>(`${this.apiUrl}/booking/subscriptions`);
   }
+  
+  validatePromoCode(code: string): Observable<PromoCodeValidationDto> {
+    return this.http.post<PromoCodeValidationDto>(`${this.apiUrl}/booking/validate-promo`, { code });
+  }
 
-  validatePromoCode(code: string): Observable<PromoCodeValidation> {
-    return this.http.post<PromoCodeValidation>(`${this.apiUrl}/booking/validate-promo`, { code });
+  // Method to apply gift card during booking
+  applyGiftCardToBooking(giftCardCode: string, orderAmount: number, orderId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/booking/apply-gift-card`, 
+      { code: giftCardCode, orderAmount, orderId }
+    );
   }
 
   calculateBooking(bookingData: Partial<BookingData>): Observable<BookingCalculation> {

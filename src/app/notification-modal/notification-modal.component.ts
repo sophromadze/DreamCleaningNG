@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { SignalRService, UserNotification } from '../services/signalr.service';
@@ -14,16 +14,22 @@ export class NotificationModalComponent implements OnInit, OnDestroy {
   showModal = false;
   currentNotification: UserNotification | null = null;
   private subscription?: Subscription;
+  private signalRService: SignalRService;
 
-  constructor(private signalRService: SignalRService) {}
+  constructor() {
+    // Get the already created instance instead of creating a new one
+    this.signalRService = (globalThis as any).signalRServiceInstance;
+  }
 
   ngOnInit() {
-    this.subscription = this.signalRService.notifications$.subscribe(notification => {
-      if (notification) {
-        this.currentNotification = notification;
-        this.showModal = true;
-      }
-    });
+    if (this.signalRService) {
+      this.subscription = this.signalRService.notifications$.subscribe(notification => {
+        if (notification) {
+          this.currentNotification = notification;
+          this.showModal = true;
+        }
+      });
+    }
   }
 
   ngOnDestroy() {

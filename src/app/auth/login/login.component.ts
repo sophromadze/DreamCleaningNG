@@ -74,10 +74,6 @@ export class LoginComponent {
       if (this.loginForm.valid) {
         this.authService.login(this.loginForm.value).subscribe({
           next: (response) => {
-            // Only log success messages in development
-            if (!environment.production) {
-              console.log('Login successful:', response);
-            }
             this.isLoading = false;
             // Navigate to return URL or home
             this.router.navigateByUrl(this.returnUrl);
@@ -104,10 +100,6 @@ export class LoginComponent {
       if (this.registerForm.valid) {
         this.authService.register(this.registerForm.value).subscribe({
           next: (response) => {
-            // Only log success messages in development
-            if (!environment.production) {
-              console.log('Registration successful:', response);
-            }
             this.isLoading = false;
             // Navigate to return URL or home
             this.router.navigateByUrl(this.returnUrl);
