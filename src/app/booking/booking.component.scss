@@ -387,6 +387,58 @@
       }
     }
   
+    // Gift Card Applied Styling
+    .gift-card-applied {
+      margin: 1rem 0;
+      
+      .gift-card-info {
+        background-color: #e8f5e9;
+        border: 1px solid #c8e6c9;
+        border-radius: 8px;
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .gift-card-icon {
+          font-size: 1.5rem;
+          background-color: #4caf50;
+          color: white;
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .gift-card-details {
+          flex: 1;
+
+          .gift-card-title {
+            color: #2e7d32;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+          }
+
+          .gift-card-amounts {
+            display: flex;
+            gap: 1rem;
+            color: #388e3c;
+            font-size: 0.9rem;
+
+            .amount-using {
+              font-weight: 600;
+            }
+
+            .remaining-balance {
+              color: #666;
+            }
+          }
+        }
+      }
+    }
+  
     .promo-code {
       label {
         display: block;
