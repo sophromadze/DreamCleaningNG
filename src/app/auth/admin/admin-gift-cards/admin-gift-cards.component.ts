@@ -53,6 +53,12 @@ export class AdminGiftCardsComponent implements OnInit {
   filterStatus = 'all'; // all, active, inactive, fullyUsed, partiallyUsed
   filterPaidStatus = 'all'; // all, paid, unpaid
   
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 20;
+  totalPages = 1;
+  paginatedGiftCards: GiftCardAdmin[] = [];
+  
   // Stats
   totalGiftCards = 0;
   totalAmountSold = 0;
@@ -61,11 +67,45 @@ export class AdminGiftCardsComponent implements OnInit {
   
   loading = false;
   errorMessage = '';
+  isSuperAdmin = false;
+  userPermissions: any = {
+    permissions: {
+      canActivate: false,
+      canDeactivate: false
+    }
+  };
 
   constructor(private adminService: AdminService) {}
 
   ngOnInit() {
+    this.checkUserRole();
     this.loadGiftCards();
+  }
+
+  checkUserRole() {
+    this.adminService.getUserPermissions().subscribe({
+      next: (permissions) => {
+        this.isSuperAdmin = permissions.role === 'SuperAdmin';
+        this.userPermissions = permissions;
+      },
+      error: (error) => {
+        console.error('Error checking user role:', error);
+        this.isSuperAdmin = false;
+      }
+    });
+  }
+
+  canToggleGiftCardStatus(giftCard: GiftCardAdmin): boolean {
+    if (this.isSuperAdmin) return true;
+    if (!this.userPermissions.permissions) return false;
+    
+    return giftCard.isActive 
+      ? this.userPermissions.permissions.canDeactivate 
+      : this.userPermissions.permissions.canActivate;
+  }
+
+  maskGiftCardCode(code: string): string {
+    return this.isSuperAdmin ? code : '*'.repeat(code.length);
   }
 
   loadGiftCards() {
@@ -105,11 +145,8 @@ export class AdminGiftCardsComponent implements OnInit {
     if (this.searchTerm) {
       const term = this.searchTerm.toLowerCase();
       filtered = filtered.filter(g =>
-        g.code.toLowerCase().includes(term) ||
-        g.recipientEmail.toLowerCase().includes(term) ||
-        g.senderEmail.toLowerCase().includes(term) ||
-        g.recipientName.toLowerCase().includes(term) ||
-        g.senderName.toLowerCase().includes(term)
+        g.id.toString().includes(term) ||
+        g.senderEmail.toLowerCase().includes(term)
       );
     }
 
@@ -140,10 +177,59 @@ export class AdminGiftCardsComponent implements OnInit {
     }
 
     this.filteredGiftCards = filtered;
+    this.updatePagination();
+  }
+
+  updatePagination() {
+    this.totalPages = Math.ceil(this.filteredGiftCards.length / this.itemsPerPage);
+    this.currentPage = Math.min(this.currentPage, this.totalPages);
+    this.currentPage = Math.max(1, this.currentPage);
+    
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    this.paginatedGiftCards = this.filteredGiftCards.slice(
+      startIndex,
+      startIndex + this.itemsPerPage
+    );
+  }
+
+  changePage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 5;
+    
+    if (this.totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= this.totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let start = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+      let end = start + maxVisiblePages - 1;
+      
+      if (end > this.totalPages) {
+        end = this.totalPages;
+        start = Math.max(1, end - maxVisiblePages + 1);
+      }
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+    
+    return pages;
   }
 
   viewDetails(giftCard: GiftCardAdmin) {
-    this.selectedGiftCard = giftCard;
+    if (this.selectedGiftCard?.id === giftCard.id) {
+      this.selectedGiftCard = null;
+    } else {
+      this.selectedGiftCard = giftCard;
+    }
   }
 
   closeDetails() {

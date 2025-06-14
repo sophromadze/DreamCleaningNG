@@ -36,7 +36,7 @@ export class GiftCardsComponent implements OnInit {
       recipientName: ['', [Validators.required, Validators.maxLength(15)]],
       recipientEmail: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
       senderName: ['', [Validators.required, Validators.maxLength(100)]],
-      senderEmail: ['', [Validators.required, Validators.email, Validators.maxLength(255)]],
+      senderEmail: [{value: '', disabled: true}, [Validators.required, Validators.email, Validators.maxLength(255)]],
       message: ['', [Validators.required, Validators.maxLength(70)]]
     });
 
