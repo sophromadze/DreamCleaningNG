@@ -447,4 +447,17 @@ export class AdminService {
   getUserProfile(userId: number): Observable<UserProfile> {
     return this.http.get<UserProfile>(`${this.apiUrl}/users/${userId}/profile`);
   }
+
+  // Gift Card methods - FIX THE URLS (remove extra /admin)
+  getAllGiftCards(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/gift-cards`); // NOT /admin/admin/gift-cards
+  }
+
+  getGiftCardDetails(id: number): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/gift-cards/${id}`);
+  }
+
+  toggleGiftCardStatus(id: number, action: 'activate' | 'deactivate'): Observable<any> {
+    return this.http.post(`${this.apiUrl}/gift-cards/${id}/${action}`, {});
+  }
 }

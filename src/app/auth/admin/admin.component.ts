@@ -6,6 +6,7 @@ import { PromoCodesComponent } from './promo-codes/promo-codes.component';
 import { SubscriptionsComponent } from './subscriptions/subscriptions.component';
 import { UserManagementComponent } from './user-management/user-management.component';
 import { BookingServicesComponent } from './booking-services/booking-services.component';
+import { AdminGiftCardsComponent } from './admin-gift-cards/admin-gift-cards.component';
 
 @Component({
   selector: 'app-admin',
@@ -16,7 +17,8 @@ import { BookingServicesComponent } from './booking-services/booking-services.co
     PromoCodesComponent,
     SubscriptionsComponent,
     UserManagementComponent,
-    BookingServicesComponent
+    BookingServicesComponent,
+    AdminGiftCardsComponent
   ],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss']

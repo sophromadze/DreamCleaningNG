@@ -1019,7 +1019,8 @@ export class BookingComponent implements OnInit {
       zipCode: formValue.zipCode,
       apartmentId: apartmentId,
       apartmentName: apartmentName,
-      promoCode: this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode,
+      promoCode: this.giftCardApplied && this.isGiftCard ? null : 
+             (this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode),
       tips: formValue.tips,
       maidsCount: this.calculatedMaidsCount,
       discountAmount: this.promoOrFirstTimeDiscountAmount,
@@ -1027,7 +1028,9 @@ export class BookingComponent implements OnInit {
       subTotal: this.calculation.subTotal,
       totalDuration: this.actualTotalDuration,
       hasActiveSubscription: this.hasActiveSubscription,
-      userSubscriptionId: this.userSubscription?.subscriptionId
+      userSubscriptionId: this.userSubscription?.subscriptionId,
+      giftCardCode: this.giftCardApplied && this.isGiftCard ? this.promoCode.value : null,
+      giftCardAmountToUse: this.giftCardApplied ? this.giftCardAmountToUse : 0
     };
 
     // Store booking data in service instead of creating order immediately

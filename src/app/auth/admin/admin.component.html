@@ -75,6 +75,12 @@
               *ngIf="userPermissions?.permissions?.canView">
         Subscriptions
       </button>
+      <button class="tab-btn" 
+              [class.active]="activeTab === 'gift-cards'"
+              (click)="setActiveTab('gift-cards')"
+              *ngIf="userPermissions?.permissions?.canView">
+        Gift Cards
+      </button>
     </div>
   
     <!-- Messages -->
@@ -93,6 +99,7 @@
         <app-promo-codes *ngSwitchCase="'promo-codes'"></app-promo-codes>
         <app-booking-services *ngSwitchCase="'booking-services'"></app-booking-services>
         <app-subscriptions *ngSwitchCase="'subscriptions'"></app-subscriptions>
+        <app-admin-gift-cards *ngSwitchCase="'gift-cards'"></app-admin-gift-cards>
       </ng-container>
     </div>
   </div>
