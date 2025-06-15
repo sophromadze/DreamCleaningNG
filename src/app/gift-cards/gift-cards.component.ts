@@ -103,7 +103,7 @@ export class GiftCardsComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    const giftCardData: CreateGiftCard = this.giftCardForm.value;
+    const giftCardData: CreateGiftCard = this.giftCardForm.getRawValue();
 
     this.giftCardService.createGiftCard(giftCardData).subscribe({
       next: (response) => {

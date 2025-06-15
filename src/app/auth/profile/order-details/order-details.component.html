@@ -155,6 +155,12 @@
             </span>
             <span class="discount">-${{ order.discountAmount.toFixed(2) }}</span>
           </div>
+
+          <!-- Gift Card Discount -->
+          <div class="price-row" *ngIf="order.giftCardCode && (order.giftCardAmountUsed || 0) > 0">
+            <span>Gift Card Applied ({{ order.giftCardCode }}):</span>
+            <span class="discount">-${{ (order.giftCardAmountUsed || 0).toFixed(2) }}</span>
+          </div>
           
           <div class="price-row">
             <span>Tax (8.8%):</span>

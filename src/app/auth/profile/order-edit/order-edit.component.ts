@@ -70,6 +70,14 @@ export class OrderEditComponent implements OnInit {
   newTax = 0;
   totalDuration: number = 0;
   actualTotalDuration: number = 0;
+
+  // Gift card specific properties
+  giftCardApplied = false;
+  giftCardBalance = 0;
+  giftCardAmountToUse = 0;
+  isGiftCard = false;
+  originalGiftCardCode: string | null = null;
+  originalGiftCardAmountUsed = 0;
   
   // Constants
   salesTaxRate = 0.088; // 8.8%
@@ -215,6 +223,26 @@ export class OrderEditComponent implements OnInit {
     if (order.state) {
       this.loadCities(order.state);
     }
+
+    // Initialize gift card data if present
+  if (order.giftCardCode) {
+    this.originalGiftCardCode = order.giftCardCode;
+    this.originalGiftCardAmountUsed = order.giftCardAmountUsed || 0;
+    
+    // Validate the gift card to get current balance
+    this.bookingService.validatePromoCode(order.giftCardCode).subscribe({
+      next: (validation) => {
+        if (validation.isValid && validation.isGiftCard) {
+          this.isGiftCard = true;
+          this.giftCardApplied = true;
+          this.giftCardBalance = validation.availableBalance || 0;
+          // Add back the originally used amount to get total available
+          this.giftCardBalance += this.originalGiftCardAmountUsed;
+          this.calculateNewTotal();
+        }
+      }
+    });
+  }
   }
 
   loadServiceType(serviceTypeId: number) {
@@ -633,6 +661,18 @@ export class OrderEditComponent implements OnInit {
   
     // Calculate new total
     this.newTotal = this.newSubTotal + this.newTax + tips;
+
+    // Apply gift card if applicable
+    let finalTotal = this.newTotal;
+    if (this.giftCardApplied && this.isGiftCard) {
+      // Calculate how much of the gift card to use
+      const maxGiftCardUse = Math.min(this.giftCardBalance, this.newTotal);
+      this.giftCardAmountToUse = maxGiftCardUse;
+      finalTotal = Math.max(0, this.newTotal - this.giftCardAmountToUse);
+    }
+
+    // Update the new total with gift card applied
+    this.newTotal = Math.round(finalTotal * 100) / 100;
   
     // Calculate the additional amount needed
     this.additionalAmount = this.newTotal - this.originalTotal;
@@ -702,7 +742,6 @@ export class OrderEditComponent implements OnInit {
         hours: s.hours
       })),
       tips: formValue.tips || 0,
-      // Add these two fields that were missing:
       totalDuration: this.actualTotalDuration,
       maidsCount: this.calculatedMaidsCount,
       calculatedSubTotal: this.newSubTotal + this.originalDiscountAmount + this.originalSubscriptionDiscountAmount,

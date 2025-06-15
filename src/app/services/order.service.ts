@@ -30,6 +30,8 @@ export interface Order {
   discountAmount: number;
   subscriptionDiscountAmount?: number;
   promoCode?: string;
+  giftCardCode?: string;
+  giftCardAmountUsed?: number;
   subscriptionId: number;
   subscriptionName: string;
   entryMethod?: string;

@@ -280,6 +280,22 @@
             <input type="number" formControlName="tips" min="0" step="1">
           </div>
         </div>
+
+        <!-- Gift Card Applied -->
+        <div class="section gift-card-section" *ngIf="giftCardApplied">
+          <h2>Gift Card Applied</h2>
+          <div class="gift-card-info">
+            <div class="gift-card-row">
+              <span class="label">Amount Spent:</span>
+              <span class="amount">${{ originalGiftCardAmountUsed.toFixed(2) }}</span>
+            </div>
+            <div class="gift-card-row">
+              <span class="label">Current Balance:</span>
+              <span class="amount">${{ (giftCardBalance - originalGiftCardAmountUsed).toFixed(2) }}</span>
+            </div>
+            <p class="info-note">The gift card will be automatically applied to the updated total.</p>
+          </div>
+        </div>
   
          <!-- Additional Amount Info -->
           <div class="additional-amount-info" *ngIf="additionalAmount > 0">
@@ -342,6 +358,18 @@
           <div class="price-row" *ngIf="originalDiscountAmount > 0">
             <span>Discount:</span>
             <span class="amount discount">-${{ originalDiscountAmount.toFixed(2) }}</span>
+          </div>
+
+          <!-- Gift Card Discount -->
+          <div class="price-row gift-card-discount" *ngIf="giftCardApplied && originalGiftCardCode">
+            <span>Gift Card:</span>
+            <span class="amount discount">-${{ giftCardAmountToUse.toFixed(2) }}</span>
+          </div>
+
+          <!-- Gift Card Remaining Balance -->
+          <div class="price-row gift-card-remaining" *ngIf="giftCardApplied && (giftCardBalance - giftCardAmountToUse) > 0">
+            <span>Remaining balance:</span>
+            <span class="amount">${{ (giftCardBalance - giftCardAmountToUse).toFixed(2) }}</span>
           </div>
           
           <div class="price-row">
