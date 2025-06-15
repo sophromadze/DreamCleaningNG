@@ -370,4 +370,32 @@ export class OrdersComponent implements OnInit {
   hasCleanersService(): boolean {
     return this.selectedOrder?.services?.some(s => s.serviceName && s.serviceName.toLowerCase().includes('cleaner')) ?? false;
   }
+
+  getVisiblePages(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 3; // Number of pages to show in the middle
+
+    if (this.totalPages <= 5) {
+      // If total pages is 5 or less, show all pages
+      for (let i = 2; i < this.totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Calculate the range of pages to show
+      let start = Math.max(2, this.currentPage - 1);
+      let end = Math.min(this.totalPages - 1, start + maxVisiblePages - 1);
+
+      // Adjust start if we're near the end
+      if (end === this.totalPages - 1) {
+        start = Math.max(2, end - maxVisiblePages + 1);
+      }
+
+      // Add pages to the array
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  }
 }

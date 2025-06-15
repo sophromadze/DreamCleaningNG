@@ -131,74 +131,87 @@ export class SignalRService {
 
   private setupEventHandlers(): void {
     if (!SignalRService.hubConnection) return;
-
-    // Handle user blocked notification - FIXED CASE SENSITIVITY
+  
+    // Handle user blocked notification
     SignalRService.hubConnection.on('UserBlocked', (data: any) => {
+      console.log('UserBlocked event received:', data);
+      
+      // Show the notification modal
       SignalRService.globalNotifications.next({
-        message: data.message,
-        timestamp: new Date(data.timestamp),
+        message: data.message || 'Your account has been blocked by an administrator.',
+        timestamp: new Date(data.timestamp || new Date()),
         type: 'blocked',
         data: data
       });
-
-      if (data.shouldLogout) {
-        // Force logout after a short delay to show the modal
+  
+      // Wait for user to see the message before logging out
+      if (data.shouldLogout !== false) {
         setTimeout(() => {
           this.authService.logout();
         }, 3000);
       }
     });
-
-    // Handle user unblocked notification - FIXED CASE SENSITIVITY
+  
+    // Handle user unblocked notification
     SignalRService.hubConnection.on('UserUnblocked', (data: any) => {
+      console.log('UserUnblocked event received:', data);
+      
       SignalRService.globalNotifications.next({
-        message: data.message,
-        timestamp: new Date(data.timestamp),
+        message: data.message || 'Your account has been unblocked.',
+        timestamp: new Date(data.timestamp || new Date()),
         type: 'unblocked',
         data: data
       });
     });
-
-    // Handle role changed notification - SIMPLIFIED WITH PAGE REFRESH
-    SignalRService.hubConnection.on('RoleChanged', (data: any) => {     
-      // Show notification message
+  
+    // Handle role changed notification
+    SignalRService.hubConnection.on('RoleChanged', (data: any) => {
+      console.log('RoleChanged event received:', data);
+      
+      // Show notification with the new role
       SignalRService.globalNotifications.next({
-        message: `Your role has been updated to ${data.newRole}. Please log out and log in again.`,
+        message: `Your role has been updated to ${data.newRole}. Please log in again to access your new permissions.`,
         timestamp: new Date(),
-        type: 'forceLogout',
+        type: 'roleChanged',
         data: data
       });
       
+      // Wait for modal to be shown, then logout
       setTimeout(() => {
         this.authService.logout();
-      }, 3000);
+      }, 4000);
     });
-
-    // Handle force logout - FIXED CASE SENSITIVITY
+  
+    // Handle force logout
     SignalRService.hubConnection.on('ForceLogout', (data: any) => {
+      console.log('ForceLogout event received:', data);
+      
       SignalRService.globalNotifications.next({
-        message: data.reason,
-        timestamp: new Date(data.timestamp),
+        message: data.reason || 'Your session has been terminated.',
+        timestamp: new Date(data.timestamp || new Date()),
         type: 'forceLogout',
         data: data
       });
-
-      // Force logout immediately
+  
+      // Force logout after short delay
       setTimeout(() => {
         this.authService.logout();
-      }, 1000);
+      }, 2000);
     });
-
-    // Handle reconnection
+  
+    // Connection event handlers
     SignalRService.hubConnection.onreconnected(() => {
+      console.log('SignalR reconnected');
       SignalRService.globalConnectionState.next(true);
     });
-
+  
     SignalRService.hubConnection.onreconnecting(() => {
+      console.log('SignalR reconnecting...');
       SignalRService.globalConnectionState.next(false);
     });
-
+  
     SignalRService.hubConnection.onclose(() => {
+      console.log('SignalR connection closed');
       SignalRService.globalConnectionState.next(false);
     });
   }

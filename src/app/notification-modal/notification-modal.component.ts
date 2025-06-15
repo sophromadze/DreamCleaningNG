@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { SignalRService, UserNotification } from '../services/signalr.service';
@@ -14,22 +14,18 @@ export class NotificationModalComponent implements OnInit, OnDestroy {
   showModal = false;
   currentNotification: UserNotification | null = null;
   private subscription?: Subscription;
-  private signalRService: SignalRService;
 
-  constructor() {
-    // Get the already created instance instead of creating a new one
-    this.signalRService = (globalThis as any).signalRServiceInstance;
-  }
+  constructor(private signalRService: SignalRService) {}
 
   ngOnInit() {
-    if (this.signalRService) {
-      this.subscription = this.signalRService.notifications$.subscribe(notification => {
-        if (notification) {
-          this.currentNotification = notification;
-          this.showModal = true;
-        }
-      });
-    }
+    // Subscribe to notifications
+    this.subscription = this.signalRService.notifications$.subscribe(notification => {
+      console.log('Notification received in modal:', notification);
+      if (notification) {
+        this.currentNotification = notification;
+        this.showModal = true;
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -48,15 +44,7 @@ export class NotificationModalComponent implements OnInit, OnDestroy {
       case 'unblocked':
         return 'Account Unblocked';
       case 'roleChanged':
-        if (this.currentNotification?.data?.updating) {
-          return 'Updating Role...';
-        } else if (this.currentNotification?.data?.redirecting) {
-          return 'Access Removed';
-        } else if (this.currentNotification?.data?.success) {
-          return 'Role Updated Successfully';
-        } else {
-          return 'Role Updated';
-        }
+        return 'Role Updated';
       case 'forceLogout':
         return 'Session Terminated';
       default:
@@ -65,7 +53,14 @@ export class NotificationModalComponent implements OnInit, OnDestroy {
   }
 
   getHeaderClass(): string {
-    return this.currentNotification?.type || '';
+    // Map type to CSS class
+    const typeMap: { [key: string]: string } = {
+      'blocked': 'blocked',
+      'unblocked': 'unblocked',
+      'roleChanged': 'role-changed',
+      'forceLogout': 'force-logout'
+    };
+    return typeMap[this.currentNotification?.type || ''] || '';
   }
 
   getIconClass(): string {

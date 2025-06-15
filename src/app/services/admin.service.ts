@@ -21,6 +21,19 @@ export interface AdminOrderList {
   orderDate: Date;
 }
 
+export interface AuditLog {
+  id: number;
+  entityType?: string;
+  entityId?: number;
+  action: string;
+  createdAt: Date;
+  changedBy?: string;
+  changedByEmail?: string;
+  oldValues?: any;
+  newValues?: any;
+  changedFields?: string[] | null;
+}
+
 export interface UserPermissions {
   role: string;
   permissions: {
@@ -459,5 +472,19 @@ export class AdminService {
 
   toggleGiftCardStatus(id: number, action: 'activate' | 'deactivate'): Observable<any> {
     return this.http.post(`${this.apiUrl}/gift-cards/${id}/${action}`, {});
+  }
+
+  getEntityAuditHistory(entityType: string, entityId: number): Observable<AuditLog[]> {
+    return this.http.get<AuditLog[]>(`${this.apiUrl}/audit-logs/${entityType}/${entityId}`);
+  }
+  
+  // Get recent audit logs
+  getRecentAuditLogs(days: number = 7): Observable<AuditLog[]> {
+    return this.http.get<AuditLog[]>(`${this.apiUrl}/audit-logs?days=${days}`);
+  }
+  
+  // Get user's complete update history
+  getUserCompleteHistory(userId: number): Observable<AuditLog[]> {
+    return this.http.get<AuditLog[]>(`${this.apiUrl}/users/${userId}/history`);
   }
 }

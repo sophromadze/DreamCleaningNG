@@ -1,0 +1,169 @@
+<div class="audit-history-section">
+  <div class="section-header">
+    <h2>Audit History</h2>
+    <div class="header-actions">
+      <button class="action-btn refresh" (click)="loadRecentLogs()">
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section">
+    <div class="search-box">
+      <input type="text" 
+             [(ngModel)]="searchTerm" 
+             placeholder="Search by user or ID..."
+             class="search-input">
+    </div>
+    
+    <div class="filter-controls">
+      <select [(ngModel)]="selectedEntityType" class="filter-select">
+        <option *ngFor="let type of entityTypes" [value]="type.value">
+          {{ type.label }}
+        </option>
+      </select>
+      
+      <select [(ngModel)]="selectedDays" class="filter-select">
+        <option [value]="1">Last 24 hours</option>
+        <option [value]="7">Last 7 days</option>
+        <option [value]="30">Last 30 days</option>
+        <option [value]="90">Last 90 days</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="error-message" *ngIf="errorMessage">
+    {{ errorMessage }}
+    <button class="close-btn" (click)="clearMessages()">×</button>
+  </div>
+
+  <div class="audit-logs" *ngIf="filteredLogs.length > 0">
+    <div class="data-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>Entity Type</th>
+            <th>Entity ID</th>
+            <th>Changed By</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let log of filteredLogs">
+            <tr [class.expanded]="viewingLogId === log.id" (click)="viewLogDetails(log.id)" style="cursor: pointer;">
+              <td>
+                <span class="action-badge" [ngClass]="getActionClass(log.action)">
+                  {{ log.action }}
+                </span>
+              </td>
+              <td>{{ getEntityTypeDisplayName(log.entityType) }}</td>
+              <td>{{ log.entityId }}</td>
+              <td>
+                <span class="email">{{ log.changedByEmail }}</span>
+              </td>
+              <td>{{ formatDate(log.createdAt) }}</td>
+            </tr>
+            
+            <!-- Log Details Row -->
+            <tr *ngIf="viewingLogId === log.id" class="log-details-row">
+              <td colspan="5">
+                <div class="log-details-content">
+                  <div class="details-grid">
+                    <!-- Changed fields section -->
+                    <div class="detail-section" *ngIf="showChangedFields(log)">
+                      <h5>Changed Fields</h5>
+                      <div class="field-changes">
+                        <div class="field-change" *ngFor="let field of log.changedFields">
+                          <ng-container *ngIf="shouldShowField(field)">
+                            <span class="field-name">{{ getFieldDisplayName(field) }}:</span>
+                            <span class="old-value">{{ getFieldDisplayValue(log.oldValues?.[field], field) }}</span>
+                            <i class="fas fa-arrow-right"></i>
+                            <span class="new-value">{{ getFieldDisplayValue(log.newValues?.[field], field) }}</span>
+                          </ng-container>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- For Delete actions -->
+                    <div class="detail-section" *ngIf="log.action === 'Delete' && log.oldValues">
+                      <h5>Deleted {{ log.entityType }} Details</h5>
+                      <div class="field-changes">
+                        <div class="field-change" *ngFor="let field of getObjectKeys(log.oldValues)">
+                          <ng-container *ngIf="shouldShowField(field) && log.oldValues[field] !== null">
+                            <span class="field-name">{{ getFieldDisplayName(field) }}:</span>
+                            <span class="old-value deleted">{{ getFieldDisplayValue(log.oldValues[field], field) }}</span>
+                          </ng-container>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- For Create actions -->
+                    <div class="detail-section" *ngIf="log.action === 'Create' && log.newValues">
+                      <h5>Created with Values</h5>
+                      <div class="field-changes">
+                        <div class="field-change" *ngFor="let field of getObjectKeys(log.newValues)">
+                          <ng-container *ngIf="shouldShowField(field) && log.newValues[field] !== null && log.newValues[field] !== '' && log.newValues[field] !== 0">
+                            <span class="field-name">{{ getFieldDisplayName(field) }}:</span>
+                            <span class="new-value created">{{ getFieldDisplayValue(log.newValues[field], field) }}</span>
+                          </ng-container>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Action Buttons in Details View -->
+                  <div class="detail-actions">
+                    <button class="action-btn primary" (click)="viewLogDetails(log.id)">
+                      Close Details
+                    </button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">Previous</button>
+      
+      <!-- First page -->
+      <button class="page-btn" [class.active]="currentPage === 1" (click)="goToPage(1)">1</button>
+      
+      <!-- Left ellipsis -->
+      <div class="page-ellipsis" *ngIf="currentPage > 3">...</div>
+      
+      <!-- Middle pages -->
+      <ng-container *ngFor="let page of getVisiblePages()">
+        <button class="page-btn" 
+                [class.active]="currentPage === page" 
+                (click)="goToPage(page)"
+                [disabled]="currentPage === page">
+          {{page}}
+        </button>
+      </ng-container>
+      
+      <!-- Right ellipsis -->
+      <div class="page-ellipsis" *ngIf="currentPage < totalPages - 2">...</div>
+      
+      <!-- Last page -->
+      <button class="page-btn" 
+              [class.active]="currentPage === totalPages" 
+              (click)="goToPage(totalPages)"
+              [disabled]="currentPage === totalPages"
+              *ngIf="totalPages > 1">
+        {{totalPages}}
+      </button>
+      
+      <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
+    </div>
+  </div>
+
+  <div class="no-logs" *ngIf="filteredLogs.length === 0">
+    No audit logs found for the selected criteria.
+  </div>
+</div>

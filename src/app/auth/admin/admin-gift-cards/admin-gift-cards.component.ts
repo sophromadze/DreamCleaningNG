@@ -199,29 +199,50 @@ export class AdminGiftCardsComponent implements OnInit {
     }
   }
 
-  getPageNumbers(): number[] {
+  getVisiblePages(): number[] {
     const pages: number[] = [];
-    const maxVisiblePages = 5;
-    
-    if (this.totalPages <= maxVisiblePages) {
-      for (let i = 1; i <= this.totalPages; i++) {
+    const maxVisiblePages = 3; // Number of pages to show in the middle
+
+    if (this.totalPages <= 5) {
+      // If total pages is 5 or less, show all pages
+      for (let i = 2; i < this.totalPages; i++) {
         pages.push(i);
       }
     } else {
-      let start = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
-      let end = start + maxVisiblePages - 1;
-      
-      if (end > this.totalPages) {
-        end = this.totalPages;
-        start = Math.max(1, end - maxVisiblePages + 1);
+      // Calculate the range of pages to show
+      let start = Math.max(2, this.currentPage - 1);
+      let end = Math.min(this.totalPages - 1, start + maxVisiblePages - 1);
+
+      // Adjust start if we're near the end
+      if (end === this.totalPages - 1) {
+        start = Math.max(2, end - maxVisiblePages + 1);
       }
-      
+
+      // Add pages to the array
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
     }
-    
+
     return pages;
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.changePage(this.currentPage - 1);
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.changePage(this.currentPage + 1);
+    }
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.changePage(page);
+    }
   }
 
   viewDetails(giftCard: GiftCardAdmin) {

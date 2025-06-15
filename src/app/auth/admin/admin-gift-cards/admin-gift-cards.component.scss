@@ -5,12 +5,32 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
   .header {
-    margin-bottom: 24px;
+    position: relative;
+    margin-bottom: 2rem;
 
     h1 {
-      margin: 0 0 20px;
-      color: #495057;
-      font-size: 24px;
+      margin-bottom: 1rem;
+    }
+
+    .refresh-btn {
+      position: absolute;
+      top: 0;
+      right: 0;
+      padding: 0.5rem 1rem;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.875rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background: #5a6268;
+      }
     }
 
     .stats-cards {
@@ -427,6 +447,28 @@
         &:hover {
           background: #0056b3;
         }
+      }
+    }
+  }
+
+  .close-details-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+
+    .close-details-btn {
+      padding: 0.5rem 2rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+
+      &:hover {
+        background-color: #0056b3;
       }
     }
   }

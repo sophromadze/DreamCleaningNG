@@ -409,4 +409,46 @@ export class UserManagementComponent implements OnInit {
       default: return 'status-pending';
     }
   }
+
+  viewHistory(entityType: string, entityId: number) {
+    // Open a modal or navigate to a detail view
+    // For now, let's log it
+    this.adminService.getEntityAuditHistory(entityType, entityId).subscribe({
+      next: (history) => {
+        console.log(`History for ${entityType} ${entityId}:`, history);
+        // You can display this in a modal or separate view
+      },
+      error: (error) => {
+        console.error('Failed to load history', error);
+      }
+    });
+  }
+
+  getVisiblePages(): number[] {
+    const pages: number[] = [];
+    const maxVisiblePages = 3; // Number of pages to show in the middle
+
+    if (this.totalPages <= 5) {
+      // If total pages is 5 or less, show all pages
+      for (let i = 2; i < this.totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Calculate the range of pages to show
+      let start = Math.max(2, this.currentPage - 1);
+      let end = Math.min(this.totalPages - 1, start + maxVisiblePages - 1);
+
+      // Adjust start if we're near the end
+      if (end === this.totalPages - 1) {
+        start = Math.max(2, end - maxVisiblePages + 1);
+      }
+
+      // Add pages to the array
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  }
 }

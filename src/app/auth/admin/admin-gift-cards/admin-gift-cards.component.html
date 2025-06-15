@@ -2,6 +2,9 @@
 <div class="admin-gift-cards">
     <div class="header">
       <h1>Gift Card Management</h1>
+      <button class="refresh-btn" (click)="loadGiftCards()">
+        Refresh
+      </button>
       
       <div class="stats-cards">
         <div class="stat-card">
@@ -197,6 +200,12 @@
                       </tbody>
                     </table>
                   </div>
+                  
+                  <div class="close-details-container">
+                    <button class="close-details-btn" (click)="closeDetails()">
+                      Close Details
+                    </button>
+                  </div>
                 </div>
               </td>
             </tr>
@@ -206,27 +215,37 @@
 
       <!-- Pagination -->
       <div class="pagination" *ngIf="totalPages > 1">
-        <button 
-          class="page-btn" 
-          [disabled]="currentPage === 1"
-          (click)="changePage(currentPage - 1)">
-          Previous
+        <button class="page-btn" (click)="previousPage()" [disabled]="currentPage === 1">Previous</button>
+        
+        <!-- First page -->
+        <button class="page-btn" [class.active]="currentPage === 1" (click)="goToPage(1)">1</button>
+        
+        <!-- Left ellipsis -->
+        <div class="page-ellipsis" *ngIf="currentPage > 3">...</div>
+        
+        <!-- Middle pages -->
+        <ng-container *ngFor="let page of getVisiblePages()">
+          <button class="page-btn" 
+                  [class.active]="currentPage === page" 
+                  (click)="goToPage(page)"
+                  [disabled]="currentPage === page">
+            {{page}}
+          </button>
+        </ng-container>
+        
+        <!-- Right ellipsis -->
+        <div class="page-ellipsis" *ngIf="currentPage < totalPages - 2">...</div>
+        
+        <!-- Last page -->
+        <button class="page-btn" 
+                [class.active]="currentPage === totalPages" 
+                (click)="goToPage(totalPages)"
+                [disabled]="currentPage === totalPages"
+                *ngIf="totalPages > 1">
+          {{totalPages}}
         </button>
         
-        <button 
-          *ngFor="let page of getPageNumbers()"
-          class="page-btn"
-          [class.active]="page === currentPage"
-          (click)="changePage(page)">
-          {{ page }}
-        </button>
-        
-        <button 
-          class="page-btn"
-          [disabled]="currentPage === totalPages"
-          (click)="changePage(currentPage + 1)">
-          Next
-        </button>
+        <button class="page-btn" (click)="nextPage()" [disabled]="currentPage === totalPages">Next</button>
       </div>
     </div>
   
