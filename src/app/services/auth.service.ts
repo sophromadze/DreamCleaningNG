@@ -63,6 +63,16 @@ export class AuthService {
     private socialAuthService: SocialAuthService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
+
+    // Only initialize social auth in browser
+    if (this.isBrowser) {
+      // Listen to social auth state changes
+      this.socialAuthService.authState.subscribe((user) => {
+        if (user) {
+          console.log('Social user logged in:', user);
+        }
+      });
+    }
     
     let storedUser = null;
     if (this.isBrowser) {
@@ -86,30 +96,7 @@ export class AuthService {
     this.isInitializedSubject.next(true);
   }
 
-  ngOnInit() {
-    // This method will be called when the service is hydrated in the browser
-    if (this.isBrowser && !this.isInitializedSubject.value) {      
-      try {
-        const userStr = localStorage.getItem('currentUser');
-        const storedUser = userStr ? JSON.parse(userStr) : null;
-        
-        if (storedUser) {
-          this.currentUserSubject.next(storedUser);
-        }
-      } catch (error) {
-        console.warn('🔧 Error during hydration:', error);
-      }
-      
-      this.isInitializedSubject.next(true);
-
-      // Listen to social auth state changes
-      this.socialAuthService.authState.subscribe((user) => {
-        if (user) {
-          console.log('Social user logged in:', user);
-        }
-      });
-    }
-  }
+  
 
   public get currentUserValue(): UserDto | null {
     return this.currentUserSubject.value;
