@@ -75,4 +75,22 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./gift-cards/gift-cards.component').then(m => m.GiftCardsComponent)
   },
+  {
+    path: 'auth/verify-email',
+    loadComponent: () => import('./auth/verify-email/verify-email.component').then(m => m.VerifyEmailComponent)
+  },
+  {
+    path: 'auth/verify-email-notice',
+    loadComponent: () => import('./auth/verify-email-notice/verify-email-notice.component').then(m => m.VerifyEmailNoticeComponent)
+  },
+  {
+    path: 'auth/forgot-password',
+    canActivate: [noAuthGuard],
+    loadComponent: () => import('./auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'auth/reset-password',
+    canActivate: [noAuthGuard],
+    loadComponent: () => import('./auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  }
 ];

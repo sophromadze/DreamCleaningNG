@@ -126,6 +126,93 @@
     border: 1px solid #fcc;
     text-align: center;
   }
+
+  .social-login-section {
+    margin-top: 2rem;
+  
+    .divider {
+      position: relative;
+      text-align: center;
+      margin: 2rem 0;
+  
+      &::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: #e0e0e0;
+      }
+  
+      span {
+        background: white;
+        padding: 0 1rem;
+        position: relative;
+        color: #666;
+        font-size: 0.875rem;
+        font-weight: 500;
+      }
+    }
+  
+    .social-btn {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      margin-bottom: 1rem;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+  
+      .social-icon {
+        width: 20px;
+        height: 20px;
+      }
+  
+      &:hover:not(:disabled) {
+        background: #f8f9fa;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+  
+      &.google-btn:hover:not(:disabled) {
+        border-color: #4285f4;
+      }
+  
+      &.facebook-btn:hover:not(:disabled) {
+        border-color: #1877f2;
+      }
+  
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+  
+  .forgot-password {
+    text-align: center;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  
+    .text-link {
+      color: #2196F3;
+      text-decoration: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+  
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
   
   // Responsive adjustments
   @media (max-width: 480px) {

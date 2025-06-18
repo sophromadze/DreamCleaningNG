@@ -1,0 +1,38 @@
+<div class="notice-container">
+    <div class="notice-card">
+      <div class="email-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+          <polyline points="22,6 12,13 2,6"/>
+        </svg>
+      </div>
+      
+      <h1>Verify Your Email</h1>
+      <p>We've sent a verification email to your registered email address.</p>
+      <p>Please check your inbox and click the verification link to activate your account.</p>
+      
+      <div class="info-box">
+        <p><strong>Didn't receive the email?</strong></p>
+        <ul>
+          <li>Check your spam or junk folder</li>
+          <li>Make sure you entered the correct email address</li>
+          <li>Wait a few minutes for the email to arrive</li>
+        </ul>
+      </div>
+
+      <div class="actions">
+        <button (click)="resendEmail()" [disabled]="isResending" class="btn-primary">
+          {{ isResending ? 'Sending...' : 'Resend Verification Email' }}
+        </button>
+        <a routerLink="/login" class="btn-secondary">Back to Login</a>
+      </div>
+
+      <div *ngIf="successMessage" class="success-message">
+        {{ successMessage }}
+      </div>
+      
+      <div *ngIf="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+    </div>
+  </div>

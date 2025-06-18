@@ -61,6 +61,35 @@ export class LoginComponent {
     return null;
   }
 
+  // Social login methods
+  async onGoogleLogin() {
+    this.isLoading = true;
+    this.errorMessage = null;
+    
+    try {
+      await this.authService.googleLogin();
+    } catch (error: any) {
+      this.errorMessage = error?.error?.message || 'Google login failed. Please try again.';
+      this.isLoading = false;
+    }
+  }
+
+  async onFacebookLogin() {
+    this.isLoading = true;
+    this.errorMessage = null;
+    
+    try {
+      await this.authService.facebookLogin();
+    } catch (error: any) {
+      this.errorMessage = error?.error?.message || 'Facebook login failed. Please try again.';
+      this.isLoading = false;
+    }
+  }
+
+  onForgotPassword() {
+    this.router.navigate(['/auth/forgot-password']);
+  }
+
   toggleMode() {
     this.isLoginMode = !this.isLoginMode;
     this.errorMessage = null;

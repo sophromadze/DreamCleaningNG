@@ -5,6 +5,12 @@ import { map, tap, catchError, switchMap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../environments/environment';
+import { 
+  SocialAuthService, 
+  GoogleLoginProvider, 
+  FacebookLoginProvider,
+  SocialUser 
+} from '@abacritt/angularx-social-login';
 
 export interface UserDto {
   id: number;
@@ -22,6 +28,7 @@ interface AuthResponse {
   user: UserDto;
   token: string;
   refreshToken: string;
+  requiresEmailVerification?: boolean;
 }
 
 interface LoginData {
@@ -52,7 +59,8 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router,
-    @Inject(PLATFORM_ID) platformId: Object
+    @Inject(PLATFORM_ID) platformId: Object,
+    private socialAuthService: SocialAuthService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
     
@@ -93,6 +101,13 @@ export class AuthService {
       }
       
       this.isInitializedSubject.next(true);
+
+      // Listen to social auth state changes
+      this.socialAuthService.authState.subscribe((user) => {
+        if (user) {
+          console.log('Social user logged in:', user);
+        }
+      });
     }
   }
 
@@ -136,7 +151,99 @@ export class AuthService {
       }));
   }
 
+  // Email verification methods
+  verifyEmail(token: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/auth/verify-email`, { token });
+  }
+
+  resendVerification(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/auth/resend-verification`, {});
+  }
+
+  // Password recovery methods
+  forgotPassword(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/auth/forgot-password`, { email });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/api/auth/reset-password`, { token, newPassword });
+  }
+
+  // Google login
+  async googleLogin(): Promise<void> {
+    try {
+      const user = await this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
+      
+      // Send the ID token to your backend
+      this.http.post<AuthResponse>(`${this.apiUrl}/api/auth/google-login`, { 
+        idToken: user.idToken 
+      }).subscribe({
+        next: (response) => this.handleAuthResponse(response),
+        error: (error) => {
+          console.error('Google login failed:', error);
+          throw error;
+        }
+      });
+    } catch (error) {
+      console.error('Google sign-in failed:', error);
+      throw error;
+    }
+  }
+
+  // Facebook login
+  async facebookLogin(): Promise<void> {
+    try {
+      const user = await this.socialAuthService.signIn(FacebookLoginProvider.PROVIDER_ID);
+      
+      // Send the access token to your backend
+      this.http.post<AuthResponse>(`${this.apiUrl}/api/auth/facebook-login`, { 
+        accessToken: user.authToken 
+      }).subscribe({
+        next: (response) => this.handleAuthResponse(response),
+        error: (error) => {
+          console.error('Facebook login failed:', error);
+          throw error;
+        }
+      });
+    } catch (error) {
+      console.error('Facebook sign-in failed:', error);
+      throw error;
+    }
+  }
+
+  // Social logout
+  async socialSignOut(): Promise<void> {
+    try {
+      await this.socialAuthService.signOut();
+    } catch (error) {
+      console.error('Social sign out error:', error);
+    }
+  }
+
+  private handleAuthResponse(response: AuthResponse): void {
+    if (response.requiresEmailVerification) {
+      // Redirect to email verification notice
+      this.router.navigate(['/auth/verify-email-notice']);
+    } else {
+      // Normal login flow
+      if (this.isBrowser) {
+        localStorage.setItem('currentUser', JSON.stringify(response.user));
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('refreshToken', response.refreshToken);
+      }
+      this.currentUserSubject.next(response.user);
+      
+      // Navigate to dashboard or home
+      const returnUrl = this.isBrowser ? localStorage.getItem('returnUrl') || '/' : '/';
+      if (this.isBrowser) {
+        localStorage.removeItem('returnUrl');
+      }
+      this.router.navigateByUrl(returnUrl);
+    }
+  }
+
   logout(): void {
+    this.socialSignOut();
     // Remove user from local storage
     if (this.isBrowser) {
       localStorage.removeItem('currentUser');

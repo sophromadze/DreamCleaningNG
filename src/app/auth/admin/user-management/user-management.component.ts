@@ -410,20 +410,6 @@ export class UserManagementComponent implements OnInit {
     }
   }
 
-  viewHistory(entityType: string, entityId: number) {
-    // Open a modal or navigate to a detail view
-    // For now, let's log it
-    this.adminService.getEntityAuditHistory(entityType, entityId).subscribe({
-      next: (history) => {
-        console.log(`History for ${entityType} ${entityId}:`, history);
-        // You can display this in a modal or separate view
-      },
-      error: (error) => {
-        console.error('Failed to load history', error);
-      }
-    });
-  }
-
   getVisiblePages(): number[] {
     const pages: number[] = [];
     const maxVisiblePages = 3; // Number of pages to show in the middle
