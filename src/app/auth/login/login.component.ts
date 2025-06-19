@@ -20,6 +20,8 @@ export class LoginComponent {
   isLoading = false;
   errorMessage: string | null = null;
   returnUrl: string;
+  showResendOption = false;
+  resendEmail = '';
 
   constructor(
     private fb: FormBuilder,
@@ -95,6 +97,20 @@ export class LoginComponent {
     this.errorMessage = null;
   }
 
+  resendVerification() {
+    if (!this.resendEmail) return;
+    
+    this.authService.resendVerification(this.resendEmail).subscribe({
+      next: (response: any) => {
+        this.errorMessage = 'Verification email sent! Please check your inbox.';
+        this.showResendOption = false;
+      },
+      error: () => {
+        this.errorMessage = 'Failed to resend verification email.';
+      }
+    });
+  }
+
   onSubmit() {
     this.errorMessage = null;
     this.isLoading = true;
@@ -108,13 +124,17 @@ export class LoginComponent {
             this.router.navigateByUrl(this.returnUrl);
           },
           error: (error) => {
-            // Don't log to console - only show user-friendly message
             this.isLoading = false;
             
             // Handle specific error cases
             if (error.status === 400 && error.error?.message) {
-              // Use the server's error message for user display
               this.errorMessage = error.error.message;
+              
+              // Check if it's email verification error
+              if (error.error.message.includes('verify your email')) {
+                this.showResendOption = true;
+                this.resendEmail = this.loginForm.value.email; // Store the email they tried to login with
+              }
             } else if (error.status === 401) {
               this.errorMessage = 'Invalid email or password.';
             } else if (error.status === 0 || error.status >= 500) {
@@ -130,8 +150,17 @@ export class LoginComponent {
         this.authService.register(this.registerForm.value).subscribe({
           next: (response) => {
             this.isLoading = false;
-            // Navigate to return URL or home
-            this.router.navigateByUrl(this.returnUrl);
+            
+            // Check if email verification is required
+            if (response.requiresEmailVerification) {
+              // Navigate to verification notice page WITH EMAIL in state
+              this.router.navigate(['/auth/verify-email-notice'], {
+                state: { email: this.registerForm.value.email }
+              });
+            } else {
+              // This shouldn't happen with the new flow, but handle it
+              this.router.navigateByUrl(this.returnUrl);
+            }
           },
           error: (error) => {
             // Don't log to console - only show user-friendly message

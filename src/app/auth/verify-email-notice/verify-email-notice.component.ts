@@ -1,7 +1,6 @@
-// src/app/auth/verify-email-notice/verify-email-notice.component.ts
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -15,21 +14,37 @@ export class VerifyEmailNoticeComponent {
   isResending = false;
   successMessage = '';
   errorMessage = '';
+  userEmail: string = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router
+  ) {
+    // Get email from navigation state (passed from registration)
+    const navigation = this.router.getCurrentNavigation();
+    if (navigation?.extras?.state) {
+      this.userEmail = navigation.extras.state['email'] || '';
+    }
+  }
 
   resendEmail() {
+    if (!this.userEmail) {
+      this.errorMessage = 'Email address not found. Please try registering again.';
+      return;
+    }
+
     this.isResending = true;
     this.successMessage = '';
     this.errorMessage = '';
 
-    this.authService.resendVerification().subscribe({
-      next: () => {
-        this.successMessage = 'Verification email sent successfully!';
+    // Pass the email that was stored from registration
+    this.authService.resendVerification(this.userEmail).subscribe({
+      next: (response: any) => {
+        this.successMessage = response.message || 'Verification email sent!';
         this.isResending = false;
       },
       error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to send verification email.';
+        this.errorMessage = 'Failed to send verification email. Please try again.';
         this.isResending = false;
       }
     });

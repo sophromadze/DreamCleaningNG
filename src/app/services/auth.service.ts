@@ -127,33 +127,39 @@ export class AuthService {
     
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, dataToSend)
       .pipe(map(response => {
-        // Store user details and token in local storage
-        if (this.isBrowser) {
-          localStorage.setItem('currentUser', JSON.stringify(response.user));
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('refreshToken', response.refreshToken);
+        // Check if email verification is required
+        if (response.requiresEmailVerification) {
+          // Don't store anything in localStorage - user must verify email first
+          console.log('Registration successful - email verification required');
+        } else if (response.token && response.refreshToken) {
+          // This case shouldn't happen with our new flow, but handle it just in case
+          if (this.isBrowser) {
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('refreshToken', response.refreshToken);
+          }
+          this.currentUserSubject.next(response.user);
         }
-        this.currentUserSubject.next(response.user);
         return response;
       }));
   }
 
   // Email verification methods
   verifyEmail(token: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/auth/verify-email`, { token });
+    return this.http.post(`${this.apiUrl}/auth/verify-email`, { token });
   }
 
-  resendVerification(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/auth/resend-verification`, {});
+  resendVerification(email: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/resend-verification`, { email });
   }
 
   // Password recovery methods
   forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/auth/forgot-password`, { email });
+    return this.http.post(`${this.apiUrl}/auth/forgot-password`, { email });
   }
 
   resetPassword(token: string, newPassword: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/api/auth/reset-password`, { token, newPassword });
+    return this.http.post(`${this.apiUrl}/auth/reset-password`, { token, newPassword });
   }
 
   // Google login

@@ -7,6 +7,13 @@
 
       <div class="error-banner" *ngIf="errorMessage">
         {{ errorMessage }}
+        
+        <!-- Add resend verification option -->
+        <div *ngIf="showResendOption" class="resend-section">
+          <button type="button" (click)="resendVerification()" class="resend-link">
+            Resend verification email
+          </button>
+        </div>
       </div>
   
       <form [formGroup]="isLoginMode ? loginForm : registerForm" (ngSubmit)="onSubmit()" class="auth-form">
