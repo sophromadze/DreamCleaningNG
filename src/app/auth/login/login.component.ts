@@ -4,12 +4,12 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-import { environment } from '../../../environments/environment';
+import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, HttpClientModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, HttpClientModule, GoogleSigninButtonModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
@@ -63,28 +63,75 @@ export class LoginComponent {
     return null;
   }
 
-  // Social login methods
-  async onGoogleLogin() {
-    this.isLoading = true;
-    this.errorMessage = null;
-    
-    try {
-      await this.authService.googleLogin();
-    } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'Google login failed. Please try again.';
-      this.isLoading = false;
+  ngOnInit() {
+    // Listen for Google sign-in success
+    if (this.authService.socialAuthService) {
+      this.authService.socialAuthService.authState.subscribe((user) => {
+        if (user && user.provider === 'GOOGLE') {
+          this.handleGoogleSignIn(user);
+        }
+      });
     }
   }
 
-  async onFacebookLogin() {
+  private async handleGoogleSignIn(user: any) {
+    console.log('Google sign-in successful:', user);
     this.isLoading = true;
     this.errorMessage = null;
     
     try {
-      await this.authService.facebookLogin();
+      // Send the ID token to your backend
+      await this.authService.handleGoogleUser(user);
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || 'Facebook login failed. Please try again.';
       this.isLoading = false;
+      this.errorMessage = error?.error?.message || 'Google login failed. Please try again.';
+    }
+  }
+
+  // Social login methods
+  // async onGoogleLogin() {
+  //   console.log('Google login button clicked');
+  //   this.isLoading = true;
+  //   this.errorMessage = null;
+    
+  //   try {
+  //     console.log('Calling authService.googleLogin()');
+  //     await this.authService.googleLogin();
+  //     console.log('Google login successful');
+  //   } catch (error: any) {
+  //     console.error('Google login error:', error);
+  //     this.isLoading = false;
+      
+  //     if (error.message?.includes('popup_closed_by_user')) {
+  //       this.errorMessage = 'Login cancelled';
+  //     } else if (error.message?.includes('Social auth service not initialized')) {
+  //       this.errorMessage = 'Social login is initializing. Please try again in a moment.';
+  //     } else {
+  //       this.errorMessage = error?.error?.message || 'Google login failed. Please try again.';
+  //     }
+  //   }
+  // }
+  
+  async onFacebookLogin() {
+    console.log('Facebook login button clicked');
+    this.isLoading = true;
+    this.errorMessage = null;
+    
+    try {
+      console.log('Calling authService.facebookLogin()');
+      await this.authService.facebookLogin();
+      console.log('Facebook login successful');
+    } catch (error: any) {
+      console.error('Facebook login error:', error);
+      this.isLoading = false;
+      
+      if (error.message?.includes('User cancelled')) {
+        this.errorMessage = 'Login cancelled';
+      } else if (error.message?.includes('app not active')) {
+        this.errorMessage = 'Facebook login is temporarily unavailable. Please use email login or try again later.';
+      } else {
+        this.errorMessage = error?.error?.message || 'Facebook login failed. Please try again.';
+      }
     }
   }
 

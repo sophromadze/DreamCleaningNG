@@ -177,17 +177,13 @@
       }
   
       &:hover:not(:disabled) {
-        background: #f8f9fa;
+        background: rgba(66,133,244,.08);
         transform: translateY(-1px);
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
   
-      &.google-btn:hover:not(:disabled) {
-        border-color: #4285f4;
-      }
-  
       &.facebook-btn:hover:not(:disabled) {
-        border-color: #1877f2;
+        border-color: #4285f4;
       }
   
       &:disabled {
@@ -196,7 +192,71 @@
       }
     }
   }
-  
+
+  // Custom Google button styling to match component design
+  .google-button-wrapper {
+    width: 100%;
+    margin-bottom: 1rem;
+    
+    ::ng-deep asl-google-signin-button {
+      display: block;
+      width: 100%;
+      
+      .S9gUrf-YoZ4jf {
+        width: 100% !important;
+        
+        .nsm7Bb-HzV7m-LgbsSe {
+          width: 100% !important;
+          height: 48px !important;
+          border: 1px solid #e0e0e0 !important;
+          border-radius: 8px !important;
+          background: white !important;
+          box-shadow: none !important;
+          font-family: inherit !important;
+          font-size: 1rem !important;
+          font-weight: 500 !important;
+          color: #333 !important;
+          transition: all 0.2s ease !important;
+          
+          &:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+            border-color: #4285f4 !important;
+          }
+          
+          .nsm7Bb-HzV7m-LgbsSe-bN97Pc-sM5MNb {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0.75rem !important;
+            width: 100% !important;
+            height: 100% !important;
+            
+            .nsm7Bb-HzV7m-LgbsSe-Bz112c {
+              width: 20px !important;
+              height: 20px !important;
+              flex-shrink: 0 !important;
+              margin-right: 0 !important;
+            }
+            
+            .nsm7Bb-HzV7m-LgbsSe-BPrWId {
+              font-family: inherit !important;
+              font-size: 1rem !important;
+              font-weight: 500 !important;
+              color: #333 !important;
+              -webkit-flex-grow: 0 !important;
+              flex-grow: 0 !important;
+            }
+            
+            .L6cTce {
+              display: none !important;
+            }
+          }
+        }
+      }
+    }
+  }
+
   .forgot-password {
     text-align: center;
     margin-top: 1rem;

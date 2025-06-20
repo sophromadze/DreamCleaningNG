@@ -10,7 +10,8 @@ import {
   SocialLoginModule, 
   SocialAuthServiceConfig,
   GoogleLoginProvider,
-  FacebookLoginProvider 
+  FacebookLoginProvider,
+  GoogleSigninButtonModule 
 } from '@abacritt/angularx-social-login';
 import { environment } from '../environments/environment';
 
@@ -19,20 +20,25 @@ const getSocialAuthConfig = (platformId: Object): SocialAuthServiceConfig => {
   if (isPlatformBrowser(platformId)) {
     return {
       autoLogin: false,
+      lang: 'en',
       providers: [
         {
           id: GoogleLoginProvider.PROVIDER_ID,
           provider: new GoogleLoginProvider(
-            environment.googleClientId // Use environment variable
+            environment.googleClientId,
+            {
+              oneTapEnabled: false, // Disable One Tap to avoid FedCM issues for now
+              prompt: 'select_account'
+            }
           )
         },
         {
           id: FacebookLoginProvider.PROVIDER_ID,
-          provider: new FacebookLoginProvider(environment.facebookAppId) // Use environment variable
+          provider: new FacebookLoginProvider(environment.facebookAppId)
         }
       ],
       onError: (err) => {
-        console.error(err);
+        console.error('Social auth error:', err);
       }
     } as SocialAuthServiceConfig;
   }
@@ -83,6 +89,6 @@ export const appConfig: ApplicationConfig = {
       deps: [PLATFORM_ID]
     },
     
-    importProvidersFrom(SocialLoginModule)
+    importProvidersFrom(SocialLoginModule, GoogleSigninButtonModule)
   ],
 };

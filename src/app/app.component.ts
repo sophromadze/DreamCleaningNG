@@ -47,5 +47,20 @@ export class AppComponent implements OnInit {
       // 2. User is logged in
       this.showConnectionStatus = isAuthInitialized && !!user;
     });
+
+    console.log('App initialized');
+    
+    this.authService.isInitialized$.subscribe(isInit => {
+      console.log('Auth service initialized:', isInit);
+    });
+
+    // Check if social login libraries are loaded
+    setTimeout(() => {
+      console.log('=== Social Login Debug Info ===');
+      console.log('Google SDK:', typeof (window as any).google !== 'undefined');
+      console.log('Facebook SDK:', typeof (window as any).FB !== 'undefined');
+      console.log('Auth service:', this.authService);
+      console.log('==============================');
+    }, 1000);
   }
 }

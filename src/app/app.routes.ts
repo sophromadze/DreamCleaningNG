@@ -26,6 +26,10 @@ export const routes: Routes = [
     loadComponent: () => import('./contact/contact.component').then(m => m.ContactComponent)
   },
   {
+    path: 'privacy-policy',
+    loadComponent: () => import('./privacy-policy/privacy-policy.component').then(m => m.PrivacyPolicyComponent)
+  },
+  {
     path: 'login',
     canActivate: [noAuthGuard],
     loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)

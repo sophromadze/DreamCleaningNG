@@ -1,7 +1,7 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { map, tap, catchError, switchMap } from 'rxjs/operators';
+import { map, tap, catchError, switchMap, filter, take, first } from 'rxjs/operators'; 
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../environments/environment';
@@ -55,45 +55,62 @@ export class AuthService {
   private isBrowser: boolean;
   private isInitializedSubject = new BehaviorSubject<boolean>(false);
   public isInitialized$ = this.isInitializedSubject.asObservable();
+  private isSocialLogin = false;
 
   constructor(
     private http: HttpClient,
     private router: Router,
     @Inject(PLATFORM_ID) platformId: Object,
-    private socialAuthService: SocialAuthService
+    public socialAuthService: SocialAuthService
   ) {
     this.isBrowser = isPlatformBrowser(platformId);
 
-    // Only initialize social auth in browser
-    if (this.isBrowser) {
-      // Listen to social auth state changes
-      this.socialAuthService.authState.subscribe((user) => {
-        if (user) {
-          console.log('Social user logged in:', user);
-        }
-      });
-    }
-    
+    // Initialize stored user
     let storedUser = null;
     if (this.isBrowser) {
       try {
         const userStr = localStorage.getItem('currentUser');
         storedUser = userStr ? JSON.parse(userStr) : null;
-      } catch (error) {
-        console.warn('Error parsing stored user:', error);
-        // Clear corrupted data
-        localStorage.removeItem('currentUser');
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        storedUser = null;
+        // Check if it was a social login
+        this.isSocialLogin = localStorage.getItem('isSocialLogin') === 'true';
+      } catch (e) {
+        console.error('Error parsing stored user:', e);
       }
     }
-    
+
     this.currentUserSubject = new BehaviorSubject<UserDto | null>(storedUser);
     this.currentUser = this.currentUserSubject.asObservable();
-    
-    // Mark as initialized immediately
-    this.isInitializedSubject.next(true);
+
+    // Handle initialization based on platform
+    if (this.isBrowser) {
+      // For social auth, we need to wait for it to initialize
+      this.socialAuthService.initState.subscribe((isReady) => {
+        console.log('Social auth init state:', isReady);
+        if (isReady) {
+          this.isInitializedSubject.next(true);
+        }
+      });
+
+      // Also listen to auth state changes
+      this.socialAuthService.authState.subscribe((user) => {
+        console.log('Social auth state changed:', user);
+        if (user) {
+          console.log('Social user logged in:', user);
+        }
+      });
+
+      // Fallback: If social auth doesn't initialize within 2 seconds, 
+      // mark as initialized anyway (for non-social login functionality)
+      setTimeout(() => {
+        if (!this.isInitializedSubject.value) {
+          console.log('Social auth initialization timeout - marking as initialized');
+          this.isInitializedSubject.next(true);
+        }
+      }, 2000);
+    } else {
+      // On server-side, mark as initialized immediately
+      this.isInitializedSubject.next(true);
+    }
   }
 
   
@@ -162,54 +179,158 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/auth/reset-password`, { token, newPassword });
   }
 
-  // Google login
-  async googleLogin(): Promise<void> {
-    try {
-      const user = await this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
-      
-      // Send the ID token to your backend
-      this.http.post<AuthResponse>(`${this.apiUrl}/api/auth/google-login`, { 
+  async handleGoogleUser(user: SocialUser): Promise<void> {
+    console.log('Handling Google user:', user);
+    
+    if (!user || !user.idToken) {
+      throw new Error('No ID token received from Google');
+    }
+    
+    return new Promise((resolve, reject) => {
+      this.http.post<AuthResponse>(`${this.apiUrl}/auth/google-login`, { 
         idToken: user.idToken 
       }).subscribe({
-        next: (response) => this.handleAuthResponse(response),
+        next: (response) => {
+          console.log('Backend response received:', response);
+          this.isSocialLogin = true;
+          if (this.isBrowser) {
+            localStorage.setItem('isSocialLogin', 'true');
+          }
+          this.handleAuthResponse(response);
+          resolve();
+        },
         error: (error) => {
-          console.error('Google login failed:', error);
-          throw error;
+          console.error('Backend error:', error);
+          reject(error);
         }
       });
-    } catch (error) {
-      console.error('Google sign-in failed:', error);
-      throw error;
-    }
+    });
   }
 
-  // Facebook login
+  // Google login
+  // async googleLogin(): Promise<void> {
+  //   console.log('googleLogin called');
+    
+  //   if (!this.isBrowser) {
+  //     throw new Error('Social login is only available in browser');
+  //   }
+
+  //   try {
+  //     // Check if social auth service is available
+  //     if (!this.socialAuthService) {
+  //       throw new Error('Social auth service not available');
+  //     }
+
+  //     console.log('Calling socialAuthService.signIn for Google');
+  //     const user = await this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
+  //     console.log('Google user received:', user);
+      
+  //     if (!user || !user.idToken) {
+  //       throw new Error('No ID token received from Google');
+  //     }
+      
+  //     // Send the ID token to your backend
+  //     console.log('Sending token to backend');
+  //     return new Promise((resolve, reject) => {
+  //       this.http.post<AuthResponse>(`${this.apiUrl}/auth/google-login`, { 
+  //         idToken: user.idToken 
+  //       }).subscribe({
+  //         next: (response) => {
+  //           console.log('Backend response received:', response);
+  //           this.isSocialLogin = true;
+  //           if (this.isBrowser) {
+  //             localStorage.setItem('isSocialLogin', 'true');
+  //           }
+  //           this.handleAuthResponse(response);
+  //           resolve();
+  //         },
+  //         error: (error) => {
+  //           console.error('Backend error:', error);
+  //           reject(error);
+  //         }
+  //       });
+  //     });
+  //   } catch (error: any) {
+  //     console.error('Google sign-in failed:', error);
+  //     // Provide more specific error messages
+  //     if (error.error === 'popup_closed_by_user') {
+  //       throw new Error('Login cancelled by user');
+  //     } else if (error.error === 'access_denied') {
+  //       throw new Error('Access denied. Please try again.');
+  //     } else {
+  //       throw error;
+  //     }
+  //   }
+  // }
+
+  // Updated Facebook login with proper error handling
   async facebookLogin(): Promise<void> {
+    console.log('facebookLogin called');
+    
+    if (!this.isBrowser) {
+      throw new Error('Social login is only available in browser');
+    }
+
     try {
+      // Check if social auth service is available
+      if (!this.socialAuthService) {
+        throw new Error('Social auth service not available');
+      }
+
+      console.log('Calling socialAuthService.signIn for Facebook');
       const user = await this.socialAuthService.signIn(FacebookLoginProvider.PROVIDER_ID);
+      console.log('Facebook user received:', user);
+      
+      if (!user || !user.authToken) {
+        throw new Error('No auth token received from Facebook');
+      }
       
       // Send the access token to your backend
-      this.http.post<AuthResponse>(`${this.apiUrl}/api/auth/facebook-login`, { 
-        accessToken: user.authToken 
-      }).subscribe({
-        next: (response) => this.handleAuthResponse(response),
-        error: (error) => {
-          console.error('Facebook login failed:', error);
-          throw error;
-        }
+      console.log('Sending token to backend');
+      return new Promise((resolve, reject) => {
+        this.http.post<AuthResponse>(`${this.apiUrl}/auth/facebook-login`, { 
+          accessToken: user.authToken 
+        }).subscribe({
+          next: (response) => {
+            console.log('Backend response received:', response);
+            this.isSocialLogin = true;
+            if (this.isBrowser) {
+              localStorage.setItem('isSocialLogin', 'true');
+            }
+            this.handleAuthResponse(response);
+            resolve();
+          },
+          error: (error) => {
+            console.error('Backend error:', error);
+            reject(error);
+          }
+        });
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Facebook sign-in failed:', error);
-      throw error;
+      // Provide more specific error messages
+      if (error.error === 'popup_closed_by_user') {
+        throw new Error('Login cancelled by user');
+      } else if (error.error === 'access_denied') {
+        throw new Error('Access denied. Please try again.');
+      } else if (error.message?.includes('app not active')) {
+        throw new Error('Facebook login is temporarily unavailable');
+      } else {
+        throw error;
+      }
     }
   }
 
   // Social logout
   async socialSignOut(): Promise<void> {
-    try {
-      await this.socialAuthService.signOut();
-    } catch (error) {
-      console.error('Social sign out error:', error);
+    // Only sign out from social providers if it was a social login
+    if (this.isSocialLogin && this.socialAuthService && this.isBrowser) {
+      try {
+        await this.socialAuthService.signOut();
+      } catch (error) {
+        console.error('Social sign out error:', error);
+        // Continue with logout even if social signout fails
+      }
     }
   }
 
@@ -242,7 +363,9 @@ export class AuthService {
       localStorage.removeItem('currentUser');
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
+      localStorage.removeItem('isSocialLogin');
     }
+    this.isSocialLogin = false;
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
   }
