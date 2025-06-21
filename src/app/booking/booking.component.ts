@@ -9,6 +9,7 @@ import { ProfileService } from '../services/profile.service';
 import { LocationService } from '../services/location.service';
 import { BookingDataService } from '../services/booking-data.service';
 import { DurationUtils } from '../utils/duration.utils';
+import { SpecialOfferService, UserSpecialOffer } from '../services/special-offer.service';
 
 interface SelectedService {
   service: Service;
@@ -41,6 +42,11 @@ export class BookingComponent implements OnInit {
   selectedServices: SelectedService[] = [];
   selectedExtraServices: SelectedExtraService[] = [];
   selectedSubscription: Subscription | null = null;
+
+  // Special offers
+  userSpecialOffers: UserSpecialOffer[] = [];
+  firstTimeDiscountPercentage: number = 0; // No discount if not set in admin
+  hasFirstTimeDiscountOffer: boolean = false; // New property to track if offer exists
   
   // Form
   bookingForm: FormGroup;
@@ -107,7 +113,8 @@ export class BookingComponent implements OnInit {
     private profileService: ProfileService,
     private locationService: LocationService,
     private router: Router,
-    private bookingDataService: BookingDataService
+    private bookingDataService: BookingDataService,
+    private specialOfferService: SpecialOfferService
   ) {
     this.bookingForm = this.fb.group({
       serviceDate: [{value: '', disabled: false}, Validators.required],
@@ -167,11 +174,13 @@ export class BookingComponent implements OnInit {
             next: () => {
               this.loadInitialData();
               this.setupFormListeners();
+              this.loadSpecialOffers(); // ADD THIS LINE
             },
             error: () => {
               // Even if refresh fails, continue with cached data
               this.loadInitialData();
               this.setupFormListeners();
+              this.loadSpecialOffers(); // ADD THIS LINE
             }
           });
         } else {
@@ -718,7 +727,7 @@ export class BookingComponent implements OnInit {
 
     // Calculate promo or first-time discount (can stack with subscription)
     if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
-      this.promoOrFirstTimeDiscountAmount = Math.round(subTotal * 0.20 * 100) / 100;
+      this.promoOrFirstTimeDiscountAmount = Math.round(subTotal * (this.firstTimeDiscountPercentage / 100) * 100) / 100;
     } else if (this.promoCodeApplied) {
       if (this.promoIsPercentage) {
         this.promoOrFirstTimeDiscountAmount = Math.round(subTotal * (this.promoDiscount / 100) * 100) / 100;
@@ -1092,6 +1101,28 @@ export class BookingComponent implements OnInit {
     this.promoCode.enable();
     this.errorMessage = '';
     this.calculateTotal();
+  }
+
+  loadSpecialOffers() {
+    if (this.authService.isLoggedIn()) {
+      this.specialOfferService.getMySpecialOffers().subscribe({
+        next: (offers) => {
+          this.userSpecialOffers = offers;
+          // Find first-time offer if exists
+          const firstTimeOffer = offers.find(o => o.name.includes('First Time'));
+          if (firstTimeOffer) {
+            this.firstTimeDiscountPercentage = firstTimeOffer.discountValue;
+            this.hasFirstTimeDiscountOffer = true;
+          } else {
+            this.hasFirstTimeDiscountOffer = false;
+          }
+        },
+        error: (error) => {
+          console.error('Error loading special offers:', error);
+          this.hasFirstTimeDiscountOffer = false;
+        }
+      });
+    }
   }
 
   // Form control getters for type safety

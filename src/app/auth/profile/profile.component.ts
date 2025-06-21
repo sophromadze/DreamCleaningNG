@@ -7,6 +7,7 @@ import { AuthService } from '../../services/auth.service';
 import { LocationService } from '../../services/location.service';
 import { OrderService, OrderList } from '../../services/order.service';
 import { Router } from '@angular/router';
+import { SpecialOfferService, UserSpecialOffer } from '../../services/special-offer.service';
 
 @Component({
   selector: 'app-profile',
@@ -24,6 +25,7 @@ export class ProfileComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
   recentOrders: OrderList[] = [];
+  specialOffers: UserSpecialOffer[] = [];
 
   // Profile edit form
   editProfileForm = {
@@ -56,13 +58,15 @@ export class ProfileComponent implements OnInit {
     private authService: AuthService,
     private locationService: LocationService,
     private orderService: OrderService,
-    private router: Router
+    private router: Router,
+    private specialOfferService: SpecialOfferService
   ) {}
 
   ngOnInit() {
     this.loadProfile();
     this.loadLocationData();
     this.loadRecentOrders();
+    this.loadSpecialOffers();
   }
 
   loadLocationData() {
@@ -346,6 +350,17 @@ export class ProfileComponent implements OnInit {
 
   logout() {
     this.authService.logout();
+  }
+
+  loadSpecialOffers() {
+    this.specialOfferService.getMySpecialOffers().subscribe({
+      next: (offers) => {
+        this.specialOffers = offers;
+      },
+      error: (error) => {
+        console.error('Error loading special offers:', error);
+      }
+    });
   }
 
   loadRecentOrders() {

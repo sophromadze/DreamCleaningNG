@@ -85,17 +85,8 @@ export class AuthService {
     if (this.isBrowser) {
       // For social auth, we need to wait for it to initialize
       this.socialAuthService.initState.subscribe((isReady) => {
-        console.log('Social auth init state:', isReady);
         if (isReady) {
           this.isInitializedSubject.next(true);
-        }
-      });
-
-      // Also listen to auth state changes
-      this.socialAuthService.authState.subscribe((user) => {
-        console.log('Social auth state changed:', user);
-        if (user) {
-          console.log('Social user logged in:', user);
         }
       });
 
@@ -103,7 +94,6 @@ export class AuthService {
       // mark as initialized anyway (for non-social login functionality)
       setTimeout(() => {
         if (!this.isInitializedSubject.value) {
-          console.log('Social auth initialization timeout - marking as initialized');
           this.isInitializedSubject.next(true);
         }
       }, 2000);
@@ -147,7 +137,6 @@ export class AuthService {
         // Check if email verification is required
         if (response.requiresEmailVerification) {
           // Don't store anything in localStorage - user must verify email first
-          console.log('Registration successful - email verification required');
         } else if (response.token && response.refreshToken) {
           // This case shouldn't happen with our new flow, but handle it just in case
           if (this.isBrowser) {
@@ -179,9 +168,7 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/auth/reset-password`, { token, newPassword });
   }
 
-  async handleGoogleUser(user: SocialUser): Promise<void> {
-    console.log('Handling Google user:', user);
-    
+  async handleGoogleUser(user: SocialUser): Promise<void> {  
     if (!user || !user.idToken) {
       throw new Error('No ID token received from Google');
     }
@@ -191,7 +178,6 @@ export class AuthService {
         idToken: user.idToken 
       }).subscribe({
         next: (response) => {
-          console.log('Backend response received:', response);
           this.isSocialLogin = true;
           if (this.isBrowser) {
             localStorage.setItem('isSocialLogin', 'true');

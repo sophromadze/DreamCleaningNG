@@ -220,10 +220,10 @@
           </div>
 
           <div class="discounts">
-            <div class="first-time-discount" *ngIf="hasFirstTimeDiscount">
+            <div class="first-time-discount" *ngIf="hasFirstTimeDiscount && hasFirstTimeDiscountOffer">
               <div class="discount-card" [class.applied]="firstTimeDiscountApplied">
                 <h4>First Time Customer Discount</h4>
-                <p>Get 20% off your first order!</p>
+                <p>Get {{ firstTimeDiscountPercentage }}% off your first order!</p>
                 <button
                   class="apply-btn"
                   (click)="applyFirstTimeDiscount()"
@@ -476,7 +476,7 @@
             <!-- Show promo/first-time discount if active -->
             <div class="price-item" *ngIf="promoOrFirstTimeDiscountAmount > 0">
               <span>
-                <ng-container *ngIf="firstTimeDiscountApplied">First-Time Discount (20%)</ng-container>
+                <ng-container *ngIf="firstTimeDiscountApplied">First-Time Discount ({{ firstTimeDiscountPercentage }}%)</ng-container>
                 <ng-container *ngIf="promoCodeApplied && !firstTimeDiscountApplied">
                   Promo Code Discount
                   <ng-container *ngIf="promoIsPercentage">({{ promoDiscount }}%)</ng-container>

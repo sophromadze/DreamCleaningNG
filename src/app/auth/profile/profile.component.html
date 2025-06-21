@@ -48,9 +48,13 @@
               </small>
             </span>
           </div>
-          <div class="info-row" *ngIf="profile.firstTimeOrder">
-            <label>Special Offer:</label>
-            <span class="special-offer">20% off on your first order!</span>
+          <div class="info-row" *ngIf="specialOffers && specialOffers.length > 0">
+            <label>Special Offers:</label>
+            <div class="special-offers-list">
+              <span class="special-offer" *ngFor="let offer of specialOffers">
+                <i class="fas fa-gift"></i> {{ offer.name }}: {{ offer.description }}
+              </span>
+            </div>
           </div>
         </div>
   
