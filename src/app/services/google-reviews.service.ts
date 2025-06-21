@@ -15,29 +15,14 @@ export interface Review {
   providedIn: 'root'
 })
 export class GooglePlacesService {
-  private apiKey = environment.googleMapsApiKey;
-  private baseUrl = 'https://maps.googleapis.com/maps/api/place';
+  private apiUrl = environment.apiUrl;
   private readonly placeId = 'ChIJHSWM5PolFKIRKY3v5B2aLKg'; // Your Google Place ID
 
   constructor(private http: HttpClient) { }
 
-  searchPlaces(query: string): Observable<any> {
-    const url = `${this.baseUrl}/textsearch/json?query=${encodeURIComponent(query)}&key=${this.apiKey}`;
-    return this.http.get(url);
-  }
-
-  getPlaceDetails(placeId: string): Observable<any> {
-    const url = `${this.baseUrl}/details/json?place_id=${placeId}&fields=name,formatted_address,geometry,rating,reviews,user_ratings_total&key=${this.apiKey}`;
-    return this.http.get(url);
-  }
-
-  getPlaceReviews(placeId: string): Observable<any> {
-    const url = `${this.baseUrl}/details/json?place_id=${placeId}&fields=reviews&key=${this.apiKey}`;
-    return this.http.get(url);
-  }
-
   getReviews(): Observable<{ reviews: Review[], overallRating: number, totalReviews: number }> {
-    return this.getPlaceDetails(this.placeId).pipe(
+    // THIS IS THE KEY CHANGE - calling your backend instead of Google directly
+    return this.http.get<any>(`${this.apiUrl}/googlereviews/${this.placeId}`).pipe(
       map(response => {
         const result = response.result;
         if (!result) {
@@ -63,6 +48,7 @@ export class GooglePlacesService {
         };
       }),
       catchError(error => {
+        console.error('Error loading reviews from backend:', error);
         return of({
           reviews: [],
           overallRating: 0,
@@ -71,4 +57,17 @@ export class GooglePlacesService {
       })
     );
   }
-} 
+
+  // These methods are not used in your app but keeping for compatibility
+  searchPlaces(query: string): Observable<any> {
+    return of({ results: [] });
+  }
+
+  getPlaceDetails(placeId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/googlereviews/${placeId}`);
+  }
+
+  getPlaceReviews(placeId: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/googlereviews/${placeId}`);
+  }
+}

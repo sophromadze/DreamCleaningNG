@@ -21,6 +21,7 @@ export class GiftCardsComponent implements OnInit {
   successMessage = '';
   isProcessingPayment = false;
   currentUser: any = null;
+  copiedCode: string | null = null;
 
   // Predefined amounts for selection
   predefinedAmounts = [100, 200, 300, 400, 500, 1000];
@@ -187,8 +188,37 @@ export class GiftCardsComponent implements OnInit {
 
   copyGiftCardCode(code: string) {
     navigator.clipboard.writeText(code).then(() => {
-      // You could show a toast notification here
+      this.copiedCode = code;
+      // Show feedback for 2 seconds
+      setTimeout(() => {
+        this.copiedCode = null;
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy code:', err);
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = code;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        this.copiedCode = code;
+        setTimeout(() => {
+          this.copiedCode = null;
+        }, 2000);
+      } catch (err) {
+        console.error('Fallback copy failed:', err);
+      }
+      document.body.removeChild(textArea);
     });
+  }
+
+  // Add method to check if code was just copied
+  isCodeCopied(code: string): boolean {
+    return this.copiedCode === code;
   }
 
   private markFormGroupTouched() {

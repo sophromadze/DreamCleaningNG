@@ -188,7 +188,7 @@
               {{ getGiftCardStatusText(giftCard) }}
             </div>
             <button class="btn btn-small" (click)="copyGiftCardCode(giftCard.code)">
-              Copy Code
+              {{ isCodeCopied(giftCard.code) ? 'Copied!' : 'Copy Code' }}
             </button>
           </div>
           <div class="right-section">
