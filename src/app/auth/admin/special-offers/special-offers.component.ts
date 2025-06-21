@@ -99,12 +99,32 @@ export class SpecialOffersComponent implements OnInit {
       next: (offers) => {
         this.specialOffers = offers;
         this.isLoading = false;
+        this.clearMessages();
       },
       error: (error) => {
-        this.errorMessage = 'Failed to load special offers';
+        console.error('Error loading special offers:', error);
+        this.errorMessage = error.error?.message || 'Failed to load special offers';
         this.isLoading = false;
       }
     });
+  }
+
+  clearMessages() {
+    setTimeout(() => {
+      this.successMessage = '';
+      this.errorMessage = '';
+    }, 5000);
+  }
+
+  // Add this method to properly display offer types
+  getOfferTypeString(type: number): string {
+    switch(type) {
+      case 0: return 'FirstTime';
+      case 1: return 'Seasonal';
+      case 2: return 'Holiday';
+      case 3: return 'Custom';
+      default: return 'Custom';
+    }
   }
 
   showCreateOfferForm() {
