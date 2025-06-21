@@ -1,1 +1,191 @@
-<p>special-offers works!</p>
+<!-- src/app/auth/admin/special-offers/special-offers.component.html -->
+
+<div class="special-offers">
+    <div class="header">
+      <h1>Special Offers Management</h1>
+      <button class="create-btn" (click)="showCreateOfferForm()" *ngIf="canCreate && !showCreateForm">
+        <i class="fas fa-plus"></i> Create New Offer
+      </button>
+    </div>
+  
+    <!-- Success/Error Messages -->
+    <div class="alert alert-success" *ngIf="successMessage">
+      <i class="fas fa-check-circle"></i> {{ successMessage }}
+    </div>
+    <div class="alert alert-danger" *ngIf="errorMessage">
+      <i class="fas fa-exclamation-circle"></i> {{ errorMessage }}
+    </div>
+  
+    <!-- Create/Edit Form -->
+    <div class="offer-form-container" *ngIf="showCreateForm">
+      <div class="form-card">
+        <h2>{{ editingOfferId ? 'Edit' : 'Create' }} Special Offer</h2>
+        
+        <form [formGroup]="specialOfferForm" (ngSubmit)="saveOffer()">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Offer Name *</label>
+              <input type="text" formControlName="name" placeholder="e.g., Mother's Day Special">
+              <div class="error" *ngIf="specialOfferForm.get('name')?.touched && specialOfferForm.get('name')?.errors?.['required']">
+                Name is required
+              </div>
+            </div>
+  
+            <div class="form-group">
+              <label>Offer Type *</label>
+              <select formControlName="type" [disabled]="isEditingFirstTimeOffer()">
+                <option *ngFor="let type of offerTypes" [value]="type.value">{{ type.label }}</option>
+              </select>
+            </div>
+  
+            <div class="form-group full-width">
+              <label>Description</label>
+              <textarea formControlName="description" rows="3" placeholder="Describe the offer..."></textarea>
+            </div>
+  
+            <div class="form-group">
+              <label>Discount Type *</label>
+              <select formControlName="isPercentage">
+                <option [value]="true">Percentage</option>
+                <option [value]="false">Fixed Amount</option>
+              </select>
+            </div>
+  
+            <div class="form-group">
+              <label>Discount Value *</label>
+              <div class="input-group">
+                <span class="input-prefix" *ngIf="!specialOfferForm.get('isPercentage')?.value">$</span>
+                <input type="number" formControlName="discountValue" min="0.01" [max]="specialOfferForm.get('isPercentage')?.value ? 100 : null">
+                <span class="input-suffix" *ngIf="specialOfferForm.get('isPercentage')?.value">%</span>
+              </div>
+              <div class="error" *ngIf="specialOfferForm.get('discountValue')?.touched && specialOfferForm.get('discountValue')?.errors?.['max']">
+                Percentage cannot exceed 100%
+              </div>
+            </div>
+  
+            <div class="form-group">
+              <label>Valid From</label>
+              <input type="date" formControlName="validFrom">
+            </div>
+  
+            <div class="form-group">
+              <label>Valid To</label>
+              <input type="date" formControlName="validTo">
+            </div>
+  
+            <div class="form-group">
+              <label>Minimum Order Amount</label>
+              <div class="input-group">
+                <span class="input-prefix">$</span>
+                <input type="number" formControlName="minimumOrderAmount" min="0">
+              </div>
+            </div>
+  
+            <div class="form-group">
+              <label>Badge Color</label>
+              <input type="color" formControlName="badgeColor">
+            </div>
+  
+            <div class="form-group full-width">
+              <label class="checkbox-label">
+                <input type="checkbox" formControlName="requiresFirstTimeCustomer">
+                Requires First-Time Customer
+              </label>
+            </div>
+          </div>
+  
+          <div class="form-actions">
+            <button type="submit" class="save-btn" [disabled]="!specialOfferForm.valid || isLoading">
+              {{ isLoading ? 'Saving...' : 'Save Offer' }}
+            </button>
+            <button type="button" class="cancel-btn" (click)="cancelEdit()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  
+    <!-- Special Offers List -->
+    <div class="offers-list" *ngIf="!isLoading">
+      <div class="offer-card" *ngFor="let offer of specialOffers" [class.inactive]="!offer.isActive">
+        <div class="offer-header">
+          <h3>
+            {{ offer.name }}
+            <span class="offer-type-badge" [style.background-color]="offer.badgeColor || '#6c757d'">
+              {{ getOfferTypeLabel(offer.type) }}
+            </span>
+          </h3>
+          <div class="offer-actions">
+            <button class="edit-btn" (click)="editOffer(offer)" *ngIf="canUpdate">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="delete-btn" (click)="deleteOffer(offer)" *ngIf="canDelete && !isFirstTimeOffer(offer)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </div>
+  
+        <div class="offer-details">
+          <p class="description">{{ offer.description }}</p>
+          
+          <div class="offer-info">
+            <div class="info-item">
+              <span class="label">Discount:</span>
+              <span class="value">
+                {{ offer.isPercentage ? offer.discountValue + '%' : '$' + offer.discountValue }}
+              </span>
+            </div>
+  
+            <div class="info-item" *ngIf="offer.validFrom || offer.validTo">
+              <span class="label">Valid Period:</span>
+              <span class="value">
+                {{ offer.validFrom ? (offer.validFrom | date) : 'Always' }} - 
+                {{ offer.validTo ? (offer.validTo | date) : 'Always' }}
+              </span>
+            </div>
+  
+            <div class="info-item">
+              <span class="label">Status:</span>
+              <span class="value" [class.active]="offer.isActive" [class.inactive]="!offer.isActive">
+                {{ offer.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+  
+            <div class="info-item" *ngIf="offer.totalUsersGranted !== undefined">
+              <span class="label">Users Granted:</span>
+              <span class="value">{{ offer.totalUsersGranted }}</span>
+            </div>
+  
+            <div class="info-item" *ngIf="offer.timesUsed !== undefined">
+              <span class="label">Times Used:</span>
+              <span class="value">{{ offer.timesUsed }}</span>
+            </div>
+          </div>
+  
+          <div class="offer-grant-section" *ngIf="canUpdate && offer.type !== 'FirstTime'">
+            <button class="grant-btn" (click)="grantToAllUsers(offer)">
+              <i class="fas fa-gift"></i> Grant to All Eligible Users
+            </button>
+          </div>
+  
+          <div class="first-time-notice" *ngIf="isFirstTimeOffer(offer)">
+            <i class="fas fa-info-circle"></i>
+            This is the system-wide first-time customer discount. It's automatically granted to new users upon registration.
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Loading State -->
+    <div class="loading" *ngIf="isLoading">
+      <i class="fas fa-spinner fa-spin"></i> Loading...
+    </div>
+  
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!isLoading && specialOffers.length === 0">
+      <i class="fas fa-gift"></i>
+      <p>No special offers created yet.</p>
+      <button class="create-btn" (click)="showCreateOfferForm()" *ngIf="canCreate">
+        Create First Offer
+      </button>
+    </div>
+  </div>

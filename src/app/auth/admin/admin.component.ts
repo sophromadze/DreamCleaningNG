@@ -8,6 +8,7 @@ import { UserManagementComponent } from './user-management/user-management.compo
 import { BookingServicesComponent } from './booking-services/booking-services.component';
 import { AdminGiftCardsComponent } from './admin-gift-cards/admin-gift-cards.component';
 import { AuditHistoryComponent } from './audit-history/audit-history.component';
+import { SpecialOffersComponent } from './special-offers/special-offers.component';
 
 @Component({
   selector: 'app-admin',
@@ -20,7 +21,8 @@ import { AuditHistoryComponent } from './audit-history/audit-history.component';
     UserManagementComponent,
     BookingServicesComponent,
     AdminGiftCardsComponent,
-    AuditHistoryComponent
+    AuditHistoryComponent,
+    SpecialOffersComponent
   ],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss']

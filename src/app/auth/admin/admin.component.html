@@ -1,112 +1,121 @@
+<!-- src/app/auth/admin/admin.component.html -->
+
 <div class="admin-container">
-    <h1>Admin Panel</h1>
-    
-    <!-- Permissions Info Card -->
-    <div class="permissions-card" *ngIf="userRole">
-      <div class="permissions-header">
-        <h6>Your Role: 
-          <span class="role-badge" 
-                [ngClass]="{
-                  'superadmin': userRole === 'SuperAdmin',
-                  'admin': userRole === 'Admin',
-                  'moderator': userRole === 'Moderator'
-                }">
-            {{ userRole }}
-          </span>
-        </h6>
-      </div>
-      <div class="permissions-grid">
-        <div class="permission-item" [class.active]="userPermissions?.permissions?.canView">
-          <span class="icon">👁️</span>
-          <span class="label">View</span>
-        </div>
-        <div class="permission-item" [class.active]="userPermissions?.permissions?.canCreate">
-          <span class="icon">➕</span>
-          <span class="label">Create</span>
-        </div>
-        <div class="permission-item" [class.active]="userPermissions?.permissions?.canUpdate">
-          <span class="icon">✏️</span>
-          <span class="label">Update</span>
-        </div>
-        <div class="permission-item" [class.active]="userPermissions?.permissions?.canDelete">
-          <span class="icon">🗑️</span>
-          <span class="label">Delete</span>
-        </div>
-        <div class="permission-item" [class.active]="userPermissions?.permissions?.canActivate">
-          <span class="icon">✅</span>
-          <span class="label">Activate</span>
-        </div>
-        <div class="permission-item" [class.active]="userPermissions?.permissions?.canDeactivate">
-          <span class="icon">🚫</span>
-          <span class="label">Deactivate</span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Tab Navigation -->
-    <div class="admin-tabs">
-      <button class="tab-btn" 
-              [class.active]="activeTab === 'orders'"
-              (click)="setActiveTab('orders')"
-              *ngIf="userPermissions?.permissions?.canView">
-        Orders
-      </button>
-      <button class="tab-btn" 
-              [class.active]="activeTab === 'users'"
-              (click)="setActiveTab('users')"
-              *ngIf="userPermissions?.permissions?.canView">
-        Users
-      </button>
-      <button class="tab-btn" 
-              [class.active]="activeTab === 'promo-codes'"
-              (click)="setActiveTab('promo-codes')"
-              *ngIf="userPermissions?.permissions?.canView">
-        Promos
-      </button>
-      <button class="tab-btn" 
-              [class.active]="activeTab === 'booking-services'"
-              (click)="setActiveTab('booking-services')"
-              *ngIf="userPermissions?.permissions?.canView">
-        Services
-      </button>
-      <button class="tab-btn" 
-              [class.active]="activeTab === 'subscriptions'"
-              (click)="setActiveTab('subscriptions')"
-              *ngIf="userPermissions?.permissions?.canView">
-        Subs
-      </button>
-      <button class="tab-btn" 
-              [class.active]="activeTab === 'gift-cards'"
-              (click)="setActiveTab('gift-cards')"
-              *ngIf="userPermissions?.permissions?.canView">
-        Gift Cards
-      </button>
-      <button class="tab-btn" 
-              [class.active]="activeTab === 'audit-history'"
-              (click)="setActiveTab('audit-history')"
-              *ngIf="userPermissions?.permissions?.canView">
-        Audits
-      </button>
-    </div>
+  <h1>Admin Panel</h1>
   
-    <!-- Messages -->
-    <div class="error-message" *ngIf="errorMessage">
-      {{ errorMessage }}
+  <!-- Permissions Info Card -->
+  <div class="permissions-card" *ngIf="userRole">
+    <div class="permissions-header">
+      <h6>Your Role: 
+        <span class="role-badge" 
+              [ngClass]="{
+                'superadmin': userRole === 'SuperAdmin',
+                'admin': userRole === 'Admin',
+                'moderator': userRole === 'Moderator'
+              }">
+          {{ userRole }}
+        </span>
+      </h6>
     </div>
-    <div class="success-message" *ngIf="successMessage">
-      {{ successMessage }}
-    </div>
-  
-    <!-- Tab Content -->
-    <div class="tab-content">
-      <ng-container [ngSwitch]="activeTab">
-        <app-orders *ngSwitchCase="'orders'"></app-orders>
-        <app-user-management *ngSwitchCase="'users'"></app-user-management>
-        <app-promo-codes *ngSwitchCase="'promo-codes'"></app-promo-codes>
-        <app-booking-services *ngSwitchCase="'booking-services'"></app-booking-services>
-        <app-subscriptions *ngSwitchCase="'subscriptions'"></app-subscriptions>
-        <app-admin-gift-cards *ngSwitchCase="'gift-cards'"></app-admin-gift-cards>
-        <app-audit-history *ngSwitchCase="'audit-history'"></app-audit-history>
-      </ng-container>
+    <div class="permissions-grid">
+      <div class="permission-item" [class.active]="userPermissions?.permissions?.canView">
+        <span class="icon">👁️</span>
+        <span class="label">View</span>
+      </div>
+      <div class="permission-item" [class.active]="userPermissions?.permissions?.canCreate">
+        <span class="icon">➕</span>
+        <span class="label">Create</span>
+      </div>
+      <div class="permission-item" [class.active]="userPermissions?.permissions?.canUpdate">
+        <span class="icon">✏️</span>
+        <span class="label">Update</span>
+      </div>
+      <div class="permission-item" [class.active]="userPermissions?.permissions?.canDelete">
+        <span class="icon">🗑️</span>
+        <span class="label">Delete</span>
+      </div>
+      <div class="permission-item" [class.active]="userPermissions?.permissions?.canActivate">
+        <span class="icon">✅</span>
+        <span class="label">Activate</span>
+      </div>
+      <div class="permission-item" [class.active]="userPermissions?.permissions?.canDeactivate">
+        <span class="icon">🚫</span>
+        <span class="label">Deactivate</span>
+      </div>
     </div>
   </div>
+  
+  <!-- Tab Navigation -->
+  <div class="admin-tabs">
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'orders'"
+            (click)="setActiveTab('orders')"
+            *ngIf="userPermissions?.permissions?.canView">
+      Orders
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'users'"
+            (click)="setActiveTab('users')"
+            *ngIf="userPermissions?.permissions?.canView">
+      Users
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'promo-codes'"
+            (click)="setActiveTab('promo-codes')"
+            *ngIf="userPermissions?.permissions?.canView">
+      Promos
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'special-offers'"
+            (click)="setActiveTab('special-offers')"
+            *ngIf="userPermissions?.permissions?.canView">
+      Special Offers
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'booking-services'"
+            (click)="setActiveTab('booking-services')"
+            *ngIf="userPermissions?.permissions?.canView">
+      Services
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'subscriptions'"
+            (click)="setActiveTab('subscriptions')"
+            *ngIf="userPermissions?.permissions?.canView">
+      Subs
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'gift-cards'"
+            (click)="setActiveTab('gift-cards')"
+            *ngIf="userPermissions?.permissions?.canView">
+      Gift Cards
+    </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'audit-history'"
+            (click)="setActiveTab('audit-history')"
+            *ngIf="userPermissions?.permissions?.canView">
+      Audits
+    </button>
+  </div>
+
+  <!-- Messages -->
+  <div class="error-message" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+  <div class="success-message" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <ng-container [ngSwitch]="activeTab">
+      <app-orders *ngSwitchCase="'orders'"></app-orders>
+      <app-user-management *ngSwitchCase="'users'"></app-user-management>
+      <app-promo-codes *ngSwitchCase="'promo-codes'"></app-promo-codes>
+      <app-special-offers *ngSwitchCase="'special-offers'"></app-special-offers>
+      <app-booking-services *ngSwitchCase="'booking-services'"></app-booking-services>
+      <app-subscriptions *ngSwitchCase="'subscriptions'"></app-subscriptions>
+      <app-admin-gift-cards *ngSwitchCase="'gift-cards'"></app-admin-gift-cards>
+      <app-audit-history *ngSwitchCase="'audit-history'"></app-audit-history>
+    </ng-container>
+  </div>
+</div>
