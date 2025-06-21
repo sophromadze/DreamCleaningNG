@@ -174,13 +174,59 @@
         color: #28a745;
         font-weight: 600;
       }
-  
-      .special-offer {
-        color: #ffc107;
+    }
+  }
+
+.special-offers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  .special-offer-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 5px;
+
+    .offer-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      color: white;
+      flex-shrink: 0;
+
+      i {
+        font-size: 0.7rem;
+      }
+    }
+
+    .offer-details {
+      display: flex;
+      align-items: flex-start;
+      gap: 5px;
+      flex: 1;
+
+      .offer-name {
         font-weight: 600;
+        color: #333;
+        font-size: 0.9rem;
+      }
+
+      .offer-description {
+        font-size: 0.85rem;
+        color: #666;
+      }
+
+      .offer-expiry {
+        font-size: 0.8rem;
+        color: #999;
+        font-style: italic;
       }
     }
   }
+}
   
   .edit-form, .apartment-form {
     .form-group {

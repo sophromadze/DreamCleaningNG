@@ -213,53 +213,85 @@
         <!-- Step 6: Discounts -->
         <section class="booking-section" *ngIf="selectedServiceType">
           <h2>6. Apply Discounts</h2>
-
+        
           <!-- Show error message if there is one -->
           <div class="discount-error" *ngIf="errorMessage">
             <p class="error-message">{{ errorMessage }}</p>
           </div>
-
+        
           <div class="discounts">
-            <div class="first-time-discount" *ngIf="hasFirstTimeDiscount && hasFirstTimeDiscountOffer">
-              <div class="discount-card" [class.applied]="firstTimeDiscountApplied">
-                <h4>First Time Customer Discount</h4>
-                <p>Get {{ firstTimeDiscountPercentage }}% off your first order!</p>
-                <button
-                  class="apply-btn"
-                  (click)="applyFirstTimeDiscount()"
-                  [disabled]="firstTimeDiscountApplied">
-                  {{ firstTimeDiscountApplied ? 'Applied' : 'Apply' }}
-                </button>
-                <button
-                  class="remove-btn"
-                  (click)="removeFirstTimeDiscount()"
-                  *ngIf="firstTimeDiscountApplied">
-                  Remove
-                </button>
+            <!-- Special Offers Section -->
+            <div class="special-offers-section" *ngIf="userSpecialOffers.length > 0">
+              <h3>Available Special Offers</h3>
+              <div class="special-offers-grid">
+                <div class="special-offer-card" 
+                     *ngFor="let offer of userSpecialOffers"
+                     [class.applied]="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
+                  <div class="offer-info">
+                    <span class="offer-badge" [style.background-color]="offer.badgeColor || '#28a745'">
+                      <i class="fas fa-gift"></i>
+                    </span>
+                    <div class="offer-content">
+                      <h4>{{ offer.name }}</h4>
+                      <div class="offer-details">
+                        <p *ngIf="offer.description">{{ offer.description }}</p>
+                        <span class="offer-expiry" *ngIf="offer.expiresAt">
+                          Expires: {{ offer.expiresAt | date: 'MMM d, y' }}
+                        </span>
+                        <span class="offer-minimum" *ngIf="offer.minimumOrderAmount">
+                          Min. order: ${{ offer.minimumOrderAmount }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="offer-actions">
+                    <button
+                      class="apply-btn"
+                      (click)="applySpecialOffer(offer)"
+                      [disabled]="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
+                      {{ (specialOfferApplied && selectedSpecialOffer?.id === offer.id) ? 'Applied' : 'Apply' }}
+                    </button>
+                    <button
+                      class="remove-btn"
+                      (click)="removeSpecialOffer()"
+                      *ngIf="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
+                      Remove
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
-          
-            <div class="promo-code">
-              <label>Promo Code or Gift Card</label>
-              <div class="promo-input">
-                <input
-                  type="text"
-                  [formControl]="promoCode"
-                  placeholder="Enter promo code or gift card code">
-                <button
-                  (click)="applyPromoCode()">
-                  Apply
-                </button>
-                <button
-                  class="remove-btn"
-                  (click)="removePromoCode()"
-                  *ngIf="promoCodeApplied || giftCardApplied">
-                  Remove
-                </button>
+        
+            <!-- Promo Code Section -->
+            <div class="promo-code-section">
+              <h3>Or Use a Promo Code / Gift Card</h3>
+              <div class="promo-code">
+                <label>Promo Code or Gift Card</label>
+                <div class="promo-input">
+                  <input
+                    type="text"
+                    [formControl]="promoCode"
+                    placeholder="Enter promo code or gift card code"
+                    [disabled]="specialOfferApplied">
+                  <button
+                    (click)="applyPromoCode()"
+                    [disabled]="specialOfferApplied || promoCode.disabled">
+                    Apply
+                  </button>
+                  <button
+                    class="remove-btn"
+                    (click)="removePromoCode()"
+                    *ngIf="promoCodeApplied || giftCardApplied">
+                    Remove
+                  </button>
+                </div>
+                <p class="promo-note" *ngIf="specialOfferApplied">
+                  <i class="fas fa-info-circle"></i> Remove special offer to use a promo code
+                </p>
               </div>
             </div>
-          
-            <!-- ADD GIFT CARD APPLIED MESSAGE HERE -->
+        
+            <!-- Gift Card Applied Message - KEEP YOUR EXISTING CODE -->
             <div class="gift-card-applied" *ngIf="giftCardApplied && isGiftCard">
               <div class="gift-card-info">
                 <div class="gift-card-icon">🎁</div>
@@ -274,7 +306,6 @@
                 </div>
               </div>
             </div>
-          
           </div>
         </section>
 
@@ -473,11 +504,17 @@
               <span class="discount">-${{ subscriptionDiscountAmount.toFixed(2) }}</span>
             </div>
             
-            <!-- Show promo/first-time discount if active -->
+            <!-- Show promo/first-time/special offer discount if active -->
             <div class="price-item" *ngIf="promoOrFirstTimeDiscountAmount > 0">
               <span>
-                <ng-container *ngIf="firstTimeDiscountApplied">First-Time Discount ({{ firstTimeDiscountPercentage }}%)</ng-container>
-                <ng-container *ngIf="promoCodeApplied && !firstTimeDiscountApplied">
+                <ng-container *ngIf="specialOfferApplied && selectedSpecialOffer">
+                  {{ selectedSpecialOffer.name }}
+                  <ng-container *ngIf="selectedSpecialOffer.isPercentage">({{ selectedSpecialOffer.discountValue }}%)</ng-container>
+                </ng-container>
+                <ng-container *ngIf="firstTimeDiscountApplied && !specialOfferApplied">
+                  First-Time Discount ({{ firstTimeDiscountPercentage }}%)
+                </ng-container>
+                <ng-container *ngIf="promoCodeApplied && !firstTimeDiscountApplied && !specialOfferApplied">
                   Promo Code Discount
                   <ng-container *ngIf="promoIsPercentage">({{ promoDiscount }}%)</ng-container>
                 </ng-container>

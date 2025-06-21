@@ -24,7 +24,7 @@ export class SpecialOffersComponent implements OnInit {
   specialOfferForm!: FormGroup;
   
   offerTypes = [
-    { value: OfferType.FirstTime, label: 'First Time Customer' },
+    { value: OfferType.FirstTime, label: 'First Time' },
     { value: OfferType.Seasonal, label: 'Seasonal' },
     { value: OfferType.Holiday, label: 'Holiday' },
     { value: OfferType.Custom, label: 'Custom' }

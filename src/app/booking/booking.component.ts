@@ -45,8 +45,10 @@ export class BookingComponent implements OnInit {
 
   // Special offers
   userSpecialOffers: UserSpecialOffer[] = [];
-  firstTimeDiscountPercentage: number = 0; // No discount if not set in admin
-  hasFirstTimeDiscountOffer: boolean = false; // New property to track if offer exists
+  firstTimeDiscountPercentage: number = 0; 
+  hasFirstTimeDiscountOffer: boolean = false;
+  selectedSpecialOffer: UserSpecialOffer | null = null;
+  specialOfferApplied = false;
   
   // Form
   bookingForm: FormGroup;
@@ -478,7 +480,13 @@ export class BookingComponent implements OnInit {
     const code = this.promoCode.value;
     if (!code) return;
 
-    // If first-time discount is already applied, show error
+    // If special offer is already applied, show error
+    if (this.specialOfferApplied) {
+      this.errorMessage = 'Cannot apply promo code when a special offer is already applied. Please remove the special offer first.';
+      return;
+    }
+
+    // Keep your existing first-time discount check as is
     if (this.firstTimeDiscountApplied) {
       this.errorMessage = 'Cannot apply promo code when first-time discount is already applied. Please remove the first-time discount first.';
       return;
@@ -726,9 +734,18 @@ export class BookingComponent implements OnInit {
     }
 
     // Calculate promo or first-time discount (can stack with subscription)
-    if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
+    if (this.specialOfferApplied && this.selectedSpecialOffer) {
+      // Use selected special offer
+      const offer = this.selectedSpecialOffer;
+      if (offer.isPercentage) {
+        this.promoOrFirstTimeDiscountAmount = Math.round(subTotal * (offer.discountValue / 100) * 100) / 100;
+      } else {
+        this.promoOrFirstTimeDiscountAmount = Math.min(offer.discountValue, subTotal);
+      }
+    } else if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
+      // Old logic for backward compatibility
       this.promoOrFirstTimeDiscountAmount = Math.round(subTotal * (this.firstTimeDiscountPercentage / 100) * 100) / 100;
-    } else if (this.promoCodeApplied) {
+    } else if (this.promoCodeApplied && !this.giftCardApplied) {
       if (this.promoIsPercentage) {
         this.promoOrFirstTimeDiscountAmount = Math.round(subTotal * (this.promoDiscount / 100) * 100) / 100;
       } else {
@@ -1029,7 +1046,9 @@ export class BookingComponent implements OnInit {
       apartmentId: apartmentId,
       apartmentName: apartmentName,
       promoCode: this.giftCardApplied && this.isGiftCard ? null : 
-             (this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode),
+         (this.specialOfferApplied && this.selectedSpecialOffer ? null :
+         (this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode)),
+      specialOfferId: this.specialOfferApplied ? this.selectedSpecialOffer?.specialOfferId : undefined,
       tips: formValue.tips,
       maidsCount: this.calculatedMaidsCount,
       discountAmount: this.promoOrFirstTimeDiscountAmount,
@@ -1116,13 +1135,61 @@ export class BookingComponent implements OnInit {
           } else {
             this.hasFirstTimeDiscountOffer = false;
           }
+          // Check if user has first-time discount in their offers (for backward compatibility)
+          this.hasFirstTimeDiscount = offers.some(o => o.name.toLowerCase().includes('first time'));
         },
         error: (error) => {
           console.error('Error loading special offers:', error);
           this.hasFirstTimeDiscountOffer = false;
+          this.userSpecialOffers = [];
         }
       });
     }
+  }
+
+  applySpecialOffer(offer: UserSpecialOffer) {
+    // Check if promo code is already applied (but NOT gift card)
+    if (this.promoCodeApplied && !this.isGiftCard) {
+      this.errorMessage = 'Cannot apply special offer when a promo code is already applied. Please remove the promo code first.';
+      return;
+    }
+  
+    // Check if another special offer is already applied
+    if (this.specialOfferApplied && this.selectedSpecialOffer?.id !== offer.id) {
+      this.errorMessage = 'Only one special offer can be applied at a time. Please remove the current offer first.';
+      return;
+    }
+  
+    // Clear any previous error
+    this.errorMessage = '';
+  
+    // Apply the special offer
+    this.selectedSpecialOffer = offer;
+    this.specialOfferApplied = true;
+    
+    // Disable promo code input ONLY if it's not a gift card
+    if (!this.giftCardApplied) {
+      this.promoCode.disable();
+    }
+    
+    // For backward compatibility with first-time discount
+    if (offer.name.toLowerCase().includes('first time')) {
+      this.firstTimeDiscountApplied = true;
+    }
+    
+    this.calculateTotal();
+  }
+  
+  removeSpecialOffer() {
+    this.selectedSpecialOffer = null;
+    this.specialOfferApplied = false;
+    this.firstTimeDiscountApplied = false;
+    
+    // Re-enable promo code input
+    this.promoCode.enable();
+    this.errorMessage = '';
+    
+    this.calculateTotal();
   }
 
   // Form control getters for type safety

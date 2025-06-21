@@ -50,13 +50,21 @@
           </div>
           <div class="info-row" *ngIf="specialOffers && specialOffers.length > 0">
             <label>Special Offers:</label>
-            <div class="special-offers-list">
-              <span class="special-offer" *ngFor="let offer of specialOffers">
-                <i class="fas fa-gift"></i> {{ offer.name }}: {{ offer.description }}
-              </span>
+            <div class="special-offers-container">
+              <div class="special-offer-item" *ngFor="let offer of specialOffers">
+                <span class="offer-badge" [style.background-color]="offer.badgeColor || '#28a745'">
+                  <i class="fas fa-gift"></i>
+                </span>
+                <div class="offer-details">
+                  <span class="offer-name">{{ offer.name }}:</span>
+                  <span class="offer-description" *ngIf="offer.description"> {{ offer.description }}</span>
+                  <span class="offer-expiry" *ngIf="offer.expiresAt">
+                    (Expires: {{ offer.expiresAt | date: 'MMM d, y' }})
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
   
         <div *ngIf="isEditingProfile" class="edit-form">
           <div class="form-group">

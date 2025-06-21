@@ -517,6 +517,172 @@
       }
     }
   }
+
+  // Special Offers Styles
+.special-offers-section {
+  margin-bottom: 2rem;
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+
+  .special-offers-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+
+    .special-offer-card {
+      background-color: #fff3cd;
+      border: 1px solid #ffeeba;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: #ffc107;
+        box-shadow: 0 2px 8px rgba(255, 193, 7, 0.2);
+      }
+
+      &.applied {
+        background-color: #e8f5e9;
+        border-color: #c8e6c9;
+      }
+
+      .offer-info {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+
+        .offer-badge {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          color: white;
+          flex-shrink: 0;
+          font-size: 0.9rem;
+
+          i {
+            font-size: 0.9rem;
+          }
+        }
+
+        .offer-content {
+          flex: 1;
+
+          h4 {
+            margin: 0;
+            color: #856404;
+            font-size: 1rem;
+            font-weight: 600;
+            line-height: 1.2;
+          }
+
+          .offer-details {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.25rem;
+
+            p {
+              margin: 0;
+              color: #856404;
+              font-size: 0.9rem;
+            }
+
+            .offer-discount {
+              color: #28a745;
+              font-weight: 600;
+              font-size: 0.9rem;
+            }
+
+            .offer-expiry,
+            .offer-minimum {
+              font-size: 0.8rem;
+              color: #856404;
+            }
+          }
+        }
+      }
+
+      .offer-actions {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+
+        .apply-btn {
+          background-color: #ffc107;
+          color: #212529;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 0.9rem;
+
+          &:hover:not(:disabled) {
+            background-color: #e0a800;
+          }
+
+          &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+        }
+
+        .remove-btn {
+          background-color: #dc3545;
+          color: white;
+          border: none;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 0.9rem;
+
+          &:hover {
+            background-color: #c82333;
+          }
+        }
+      }
+    }
+  }
+}
+
+.promo-code-section {
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+
+  .promo-code {
+    // Your existing promo-code styles stay the same
+    
+    .promo-note {
+      font-size: 0.875rem;
+      color: #666;
+      margin-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      i {
+        color: #ff9800;
+      }
+    }
+  }
+}
   
   // Tips Section
   .tips-section {
