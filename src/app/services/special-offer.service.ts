@@ -112,6 +112,14 @@ export class SpecialOfferService {
     return this.http.get<UserSpecialOffer[]>(`${this.apiUrl}/profile/special-offers`);
   }
 
+  enableSpecialOffer(id: number): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/special-offers/${id}/enable`, {});
+  }
+  
+  disableSpecialOffer(id: number): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/admin/special-offers/${id}/disable`, {});
+  }
+
   // Get first-time discount percentage
   getFirstTimeDiscountPercentage(): Observable<number> {
     return new Observable(observer => {

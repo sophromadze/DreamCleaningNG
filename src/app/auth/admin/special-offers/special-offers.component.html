@@ -174,10 +174,15 @@
                       (click)="editOffer(offer)">
                 Edit
               </button>
-              <button *ngIf="canUpdate && offer.type !== 'FirstTime'" 
-                      class="action-btn grant" 
-                      (click)="grantToAllUsers(offer)">
-                Grant
+              <button *ngIf="canUpdate && offer.isActive" 
+                      class="action-btn disable" 
+                      (click)="toggleOfferStatus(offer, false)">
+                Disable
+              </button>
+              <button *ngIf="canUpdate && !offer.isActive" 
+                      class="action-btn enable" 
+                      (click)="toggleOfferStatus(offer, true)">
+                Enable
               </button>
               <button *ngIf="canDelete && !isFirstTimeOffer(offer)" 
                       class="action-btn delete" 

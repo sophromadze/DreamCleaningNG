@@ -114,11 +114,11 @@
           vertical-align: middle;
 
           &.actions {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 5px;
+            text-align: center;
+            
+            .action-btn{
+              margin:2px 3px;
+            }
           }
           
           &:last-child {

@@ -242,18 +242,23 @@ export class SpecialOffersComponent implements OnInit {
     });
   }
 
-  grantToAllUsers(offer: SpecialOffer) {
-    if (!confirm(`Grant "${offer.name}" to all eligible users?`)) {
+  toggleOfferStatus(offer: SpecialOffer, enable: boolean) {
+    const action = enable ? 'enable' : 'disable';
+    if (!confirm(`Are you sure you want to ${action} "${offer.name}"?`)) {
       return;
     }
-
-    this.specialOfferService.grantOfferToAllUsers(offer.id).subscribe({
+  
+    const serviceCall = enable ? 
+      this.specialOfferService.enableSpecialOffer(offer.id) : 
+      this.specialOfferService.disableSpecialOffer(offer.id);
+  
+    serviceCall.subscribe({
       next: (response) => {
         this.successMessage = response.message;
         this.loadSpecialOffers();
       },
       error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to grant offer';
+        this.errorMessage = error.error?.message || `Failed to ${action} special offer`;
       }
     });
   }

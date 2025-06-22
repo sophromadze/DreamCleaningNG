@@ -5,30 +5,19 @@
   padding: 1rem;
 
   .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-
     h2 {
       font-size: 1.5rem;
       color: #495057;
       margin: 0;
+      margin: 0 0 1rem;
     }
 
     .create-btn {
-      background: #007bff;
+      background: #28a745;
       color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 4px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
 
       &:hover {
-        background: #0056b3;
+        background: #218838;
       }
     }
   }
@@ -331,12 +320,9 @@
 
     .offer-type-badge {
       font-size: 0.75rem;
-      font-weight: 500;
       color: white;
       padding: 0.25rem 0.5rem;
       border-radius: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
 
     .status-badge {
@@ -361,10 +347,10 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
-      font-size: 0.75rem;
-      font-weight: 500;
+      font-size: 0.875rem;
       transition: all 0.2s ease;
       margin: 2px 3px;
+      text-align: center;
 
       &.edit {
         background: #007bff;
@@ -375,12 +361,21 @@
         }
       }
 
-      &.grant {
-        background: #17a2b8;
+      &.enable {
+        background-color: #28a745;
         color: white;
+        
+        &:hover {
+          background-color: #218838;
+        }
+      }
+
+      &.disable {
+        background: #ffc107;
+        color: #212529;
 
         &:hover {
-          background: #138496;
+          background-color: #e0a800;
         }
       }
 

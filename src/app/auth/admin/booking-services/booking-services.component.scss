@@ -94,9 +94,10 @@
       }
 
       .actions {
-        white-space: nowrap;
-        display: flex;
-        gap: 0.5rem;
+        text-align: center;
+        .action-btn{
+          margin:2px 3px;
+        }
       }
     }
   }
@@ -251,10 +252,6 @@
         
         &:last-child {
           border-right: none;
-          display: flex;
-          justify-content: space-evenly;
-          flex-wrap: wrap;
-          gap: 5px;
         }
       }
     }
@@ -673,6 +670,7 @@
       
       &:last-child {
         border-right: none;
+        text-align: center;
       }
     }
   }
@@ -693,10 +691,11 @@
         
         &:last-child {
           border-right: none;
-          display: flex;
-          gap: 5px;
-          flex-wrap: wrap;
-          justify-content: center;
+          text-align: center;
+
+          .action-btn{
+            margin:2px 3px;
+          }
         }
       }
     }

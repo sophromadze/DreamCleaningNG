@@ -127,10 +127,11 @@
               }
   
               &.actions {
-                display: flex;
-                gap: 0.25rem;
-                justify-content: center;
-                flex-wrap: wrap;
+                text-align: center;
+
+                .action-btn{
+                  margin:2px 3px;
+                }
               }
             }
           }
