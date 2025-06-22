@@ -86,6 +86,7 @@ export interface BookingData {
   apartmentId?: number | null;
   apartmentName?: string;
   promoCode?: string;
+  userSpecialOfferId?: number;
   tips: number;
   maidsCount: number;
   totalDuration: number;

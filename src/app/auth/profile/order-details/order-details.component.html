@@ -140,25 +140,33 @@
             <span>${{ order.subTotal.toFixed(2) }}</span>
           </div>
           
-          <!-- Show subscription discount if present -->
+          <!-- Subscription Discount -->
           <div class="price-row" *ngIf="order.subscriptionDiscountAmount && order.subscriptionDiscountAmount > 0">
-            <span>Subscription Discount:</span>
+            <span>Subscription Discount ({{ order.subscriptionName }}):</span>
             <span class="discount">-${{ order.subscriptionDiscountAmount.toFixed(2) }}</span>
           </div>
           
-          <!-- Show other discounts (promo/first-time) -->
-          <div class="price-row" *ngIf="order.discountAmount > 0">
-            <span>
-              <ng-container *ngIf="order.promoCode === 'firstUse'">First-Time Discount:</ng-container>
-              <ng-container *ngIf="order.promoCode && order.promoCode !== 'firstUse'">Promo Discount:</ng-container>
-              <ng-container *ngIf="!order.promoCode">Discount:</ng-container>
-            </span>
+          <!-- Special Offer Discount -->
+          <div class="price-row" *ngIf="order.specialOfferName && order.discountAmount > 0">
+            <span>{{ order.specialOfferName }}:</span>
             <span class="discount">-${{ order.discountAmount.toFixed(2) }}</span>
           </div>
-
-          <!-- Gift Card Discount -->
-          <div class="price-row" *ngIf="order.giftCardCode && (order.giftCardAmountUsed || 0) > 0">
-            <span>Gift Card Applied ({{ order.giftCardCode }}):</span>
+          
+          <!-- Promo Code Discount -->
+          <div class="price-row" *ngIf="!order.specialOfferName && order.promoCodeDetails && order.discountAmount > 0">
+            <span>Promo Code {{ order.promoCodeDetails }}:</span>
+            <span class="discount">-${{ order.discountAmount.toFixed(2) }}</span>
+          </div>
+          
+          <!-- Legacy First-Time Discount -->
+          <div class="price-row" *ngIf="!order.specialOfferName && order.promoCode === 'firstUse' && order.discountAmount > 0">
+            <span>First-Time Discount:</span>
+            <span class="discount">-${{ order.discountAmount.toFixed(2) }}</span>
+          </div>
+          
+          <!-- Gift Card -->
+          <div class="price-row" *ngIf="order.giftCardDetails && (order.giftCardAmountUsed || 0) > 0">
+            <span>Gift Card {{ order.giftCardDetails }}:</span>
             <span class="discount">-${{ (order.giftCardAmountUsed || 0).toFixed(2) }}</span>
           </div>
           

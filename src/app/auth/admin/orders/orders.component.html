@@ -130,9 +130,29 @@
                     <p><strong>Subtotal:</strong> ${{formatCurrency(selectedOrder.subTotal)}}</p>
                     <p><strong>Tax:</strong> ${{formatCurrency(selectedOrder.tax)}}</p>
                     <p><strong>Tips:</strong> ${{formatCurrency(selectedOrder.tips)}}</p>
-                    <p *ngIf="selectedOrder.discountAmount > 0"><strong>Discount:</strong> -${{formatCurrency(selectedOrder.discountAmount)}}</p>
+                    <!-- Subscription Discount -->
                     <p *ngIf="selectedOrder.subscriptionDiscountAmount && selectedOrder.subscriptionDiscountAmount > 0">
-                      <strong>Subscription Discount:</strong> -${{formatCurrency(selectedOrder.subscriptionDiscountAmount)}}
+                      <strong>Subscription Discount ({{selectedOrder.subscriptionName}}):</strong> -${{formatCurrency(selectedOrder.subscriptionDiscountAmount)}}
+                    </p>
+                    
+                    <!-- Special Offer Discount -->
+                    <p *ngIf="selectedOrder.specialOfferName && selectedOrder.discountAmount > 0">
+                      <strong>{{selectedOrder.specialOfferName}}:</strong> -${{formatCurrency(selectedOrder.discountAmount)}}
+                    </p>
+                    
+                    <!-- Promo Code Discount -->
+                    <p *ngIf="!selectedOrder.specialOfferName && selectedOrder.promoCodeDetails && selectedOrder.discountAmount > 0">
+                      <strong>Promo Code {{selectedOrder.promoCodeDetails}}:</strong> -${{formatCurrency(selectedOrder.discountAmount)}}
+                    </p>
+                    
+                    <!-- Legacy Discount (fallback) -->
+                    <p *ngIf="!selectedOrder.specialOfferName && !selectedOrder.promoCodeDetails && selectedOrder.discountAmount > 0">
+                      <strong>Discount:</strong> -${{formatCurrency(selectedOrder.discountAmount)}}
+                    </p>
+                    
+                    <!-- Gift Card -->
+                    <p *ngIf="selectedOrder.giftCardDetails && (selectedOrder.giftCardAmountUsed || 0) > 0">
+                      <strong>Gift Card {{selectedOrder.giftCardDetails}}:</strong> -${{formatCurrency(selectedOrder.giftCardAmountUsed || 0)}}
                     </p>
                     <p class="total-amount"><strong>Total:</strong> ${{formatCurrency(selectedOrder.total)}}</p>
                   </div>

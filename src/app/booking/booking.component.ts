@@ -1049,6 +1049,7 @@ export class BookingComponent implements OnInit {
          (this.specialOfferApplied && this.selectedSpecialOffer ? null :
          (this.firstTimeDiscountApplied && !formValue.promoCode ? 'firstUse' : formValue.promoCode)),
       specialOfferId: this.specialOfferApplied ? this.selectedSpecialOffer?.specialOfferId : undefined,
+      userSpecialOfferId: this.specialOfferApplied && this.selectedSpecialOffer ? this.selectedSpecialOffer.id : undefined,
       tips: formValue.tips,
       maidsCount: this.calculatedMaidsCount,
       discountAmount: this.promoOrFirstTimeDiscountAmount,

@@ -51,6 +51,10 @@ export interface Order {
   paidAt?: Date;
   services: OrderService[];
   extraServices: OrderExtraService[];
+  specialOfferName?: string;
+  userSpecialOfferId?: number;
+  promoCodeDetails?: string;
+  giftCardDetails?: string;
 }
 
 export interface OrderService {
