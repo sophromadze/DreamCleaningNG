@@ -9,6 +9,11 @@
     <div class="booking-grid">
       <!-- Left Side - Service Selection -->
       <div class="booking-form">
+        <div class="clear-form-section" *ngIf="formPersistenceService.hasSavedData()">
+          <button class="clear-all-btn" (click)="clearAllFormData()">
+            Clear All
+          </button>
+        </div>
         <!-- Step 1: Service Type -->
         <section class="booking-section">
           <h2>1. Select Service Type</h2>
@@ -264,7 +269,6 @@
         
             <!-- Promo Code Section -->
             <div class="promo-code-section">
-              <h3>Or Use a Promo Code / Gift Card</h3>
               <div class="promo-code">
                 <label>Promo Code or Gift Card</label>
                 <div class="promo-input">

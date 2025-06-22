@@ -41,6 +41,7 @@
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     padding: 2rem;
+    position: relative;
   }
   
   .booking-section {
@@ -724,6 +725,46 @@
           border-radius: 8px;
         }
       }
+    }
+  }
+
+  .clear-form-section {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+    
+    @media (max-width: 768px) {
+      top: 5px;
+      right: 5px;
+    }
+  }
+  
+  .clear-all-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    &:hover {
+      background-color: #c82333;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    &:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    i {
+      font-size: 16px;
     }
   }
   

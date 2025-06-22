@@ -1,0 +1,159 @@
+import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
+
+export interface BookingFormData {
+  // Service Type and Services
+  selectedServiceTypeId?: string;
+  selectedServices?: Array<{
+    serviceId: string;
+    quantity: number;
+  }>;
+  selectedExtraServices?: Array<{
+    extraServiceId: string;
+    quantity: number;
+    hours: number;
+  }>;
+  
+  // Form Fields
+  serviceDate?: string;
+  serviceTime?: string;
+  entryMethod?: string;
+  customEntryMethod?: string;
+  specialInstructions?: string;
+  contactFirstName?: string;
+  contactLastName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  selectedApartmentId?: string;
+  serviceAddress?: string;
+  apartmentName?: string;
+  aptSuite?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  promoCode?: string;
+  tips?: number;
+  
+  // Selected Subscription
+  selectedSubscriptionId?: string;
+  
+  // Timestamp for when form was saved
+  savedAt?: number;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class FormPersistenceService {
+  private readonly STORAGE_KEY = 'booking_form_data';
+  private readonly FORM_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  
+  private formDataSubject = new BehaviorSubject<BookingFormData | null>(null);
+  public formData$ = this.formDataSubject.asObservable();
+
+  constructor() {
+    // Load any existing data on service initialization
+    this.loadFormData();
+    
+    // Listen for storage events to sync across tabs
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', (event) => {
+        if (event.key === this.STORAGE_KEY) {
+          this.loadFormData();
+        }
+      });
+    }
+  }
+
+  /**
+   * Save form data to sessionStorage
+   */
+  saveFormData(data: BookingFormData): void {
+    try {
+      const dataToSave = {
+        ...data,
+        savedAt: Date.now()
+      };
+      
+      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(dataToSave));
+      this.formDataSubject.next(dataToSave);
+    } catch (error) {
+      console.error('Error saving form data:', error);
+    }
+  }
+
+  /**
+   * Load form data from sessionStorage
+   */
+  loadFormData(): BookingFormData | null {
+    try {
+      const savedData = sessionStorage.getItem(this.STORAGE_KEY);
+      if (!savedData) return null;
+      
+      const parsedData = JSON.parse(savedData) as BookingFormData;
+      
+      // Check if data is expired (older than 24 hours)
+      if (parsedData.savedAt) {
+        const age = Date.now() - parsedData.savedAt;
+        if (age > this.FORM_TTL) {
+          this.clearFormData();
+          return null;
+        }
+      }
+      
+      this.formDataSubject.next(parsedData);
+      return parsedData;
+    } catch (error) {
+      console.error('Error loading form data:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get current form data
+   */
+  getFormData(): BookingFormData | null {
+    return this.formDataSubject.value;
+  }
+
+  /**
+   * Clear all saved form data
+   */
+  clearFormData(): void {
+    try {
+      sessionStorage.removeItem(this.STORAGE_KEY);
+      this.formDataSubject.next(null);
+    } catch (error) {
+      console.error('Error clearing form data:', error);
+    }
+  }
+
+  /**
+   * Update specific fields in the saved data
+   */
+  updateFormData(updates: Partial<BookingFormData>): void {
+    const currentData = this.getFormData() || {};
+    const updatedData = {
+      ...currentData,
+      ...updates,
+      savedAt: Date.now()
+    };
+    this.saveFormData(updatedData);
+  }
+
+  /**
+   * Check if there's saved form data
+   */
+  hasSavedData(): boolean {
+    return !!this.getFormData();
+  }
+
+  /**
+   * Get the age of saved data in milliseconds
+   */
+  getDataAge(): number {
+    const data = this.getFormData();
+    if (!data || !data.savedAt) return 0;
+    return Date.now() - data.savedAt;
+  }
+}

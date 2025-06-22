@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +10,8 @@ import { LocationService } from '../services/location.service';
 import { BookingDataService } from '../services/booking-data.service';
 import { DurationUtils } from '../utils/duration.utils';
 import { SpecialOfferService, UserSpecialOffer } from '../services/special-offer.service';
+import { FormPersistenceService, BookingFormData } from '../services/form-persistence.service';
+import { Subject, takeUntil, debounceTime } from 'rxjs';
 
 interface SelectedService {
   service: Service;
@@ -30,7 +32,9 @@ interface SelectedExtraService {
   templateUrl: './booking.component.html',
   styleUrl: './booking.component.scss'
 })
-export class BookingComponent implements OnInit {
+export class BookingComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
+
   // Data
   serviceTypes: ServiceType[] = [];
   subscriptions: Subscription[] = [];
@@ -116,7 +120,8 @@ export class BookingComponent implements OnInit {
     private locationService: LocationService,
     private router: Router,
     private bookingDataService: BookingDataService,
-    private specialOfferService: SpecialOfferService
+    private specialOfferService: SpecialOfferService,
+    public formPersistenceService: FormPersistenceService
   ) {
     this.bookingForm = this.fb.group({
       serviceDate: [{value: '', disabled: false}, Validators.required],
@@ -165,6 +170,9 @@ export class BookingComponent implements OnInit {
     // Set default values
     this.serviceDate.setValue(formattedDate);
     this.serviceTime.setValue('08:00');
+
+    // Load saved form data if exists
+    this.loadSavedFormData();
     
     // Wait for auth service to be initialized before proceeding
     this.authService.isInitialized$.subscribe(isInitialized => {
@@ -176,13 +184,13 @@ export class BookingComponent implements OnInit {
             next: () => {
               this.loadInitialData();
               this.setupFormListeners();
-              this.loadSpecialOffers(); // ADD THIS LINE
+              this.loadSpecialOffers();
             },
             error: () => {
               // Even if refresh fails, continue with cached data
               this.loadInitialData();
               this.setupFormListeners();
-              this.loadSpecialOffers(); // ADD THIS LINE
+              this.loadSpecialOffers();
             }
           });
         } else {
@@ -193,6 +201,39 @@ export class BookingComponent implements OnInit {
       }
     });
   }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private loadSavedFormData() {
+    const savedData = this.formPersistenceService.getFormData();
+    if (!savedData) return;
+  
+    // Restore form fields
+    const formValues: any = {};
+    if (savedData.serviceDate) formValues.serviceDate = savedData.serviceDate;
+    if (savedData.serviceTime) formValues.serviceTime = savedData.serviceTime;
+    if (savedData.entryMethod) formValues.entryMethod = savedData.entryMethod;
+    if (savedData.customEntryMethod) formValues.customEntryMethod = savedData.customEntryMethod;
+    if (savedData.specialInstructions) formValues.specialInstructions = savedData.specialInstructions;
+    if (savedData.contactFirstName) formValues.contactFirstName = savedData.contactFirstName;
+    if (savedData.contactLastName) formValues.contactLastName = savedData.contactLastName;
+    if (savedData.contactEmail) formValues.contactEmail = savedData.contactEmail;
+    if (savedData.contactPhone) formValues.contactPhone = savedData.contactPhone;
+    if (savedData.selectedApartmentId) formValues.selectedApartmentId = savedData.selectedApartmentId;
+    if (savedData.serviceAddress) formValues.serviceAddress = savedData.serviceAddress;
+    if (savedData.apartmentName) formValues.apartmentName = savedData.apartmentName;
+    if (savedData.aptSuite) formValues.aptSuite = savedData.aptSuite;
+    if (savedData.city) formValues.city = savedData.city;
+    if (savedData.state) formValues.state = savedData.state;
+    if (savedData.zipCode) formValues.zipCode = savedData.zipCode;
+    if (savedData.promoCode) formValues.promoCode = savedData.promoCode;
+    if (savedData.tips !== undefined) formValues.tips = savedData.tips;
+  
+    this.bookingForm.patchValue(formValues);
+  }  
 
   private loadInitialData() {
     // Clear any existing error messages
@@ -206,24 +247,68 @@ export class BookingComponent implements OnInit {
         if (this.errorMessage === 'Failed to load service types') {
           this.errorMessage = '';
         }
+        
+        // Restore selected service type from saved data
+        const savedData = this.formPersistenceService.getFormData();
+        if (savedData?.selectedServiceTypeId) {
+          const savedServiceType = serviceTypes.find(st => String(st.id) === String(savedData.selectedServiceTypeId));
+          if (savedServiceType) {
+            this.selectServiceType(savedServiceType);
+            
+            // Restore selected services
+            if (savedData.selectedServices) {
+              savedData.selectedServices.forEach(ss => {
+                const service = savedServiceType.services.find(s => String(s.id) === String(ss.serviceId));
+                if (service) {
+                  const existingIndex = this.selectedServices.findIndex(s => String(s.service.id) === String(service.id));
+                  if (existingIndex >= 0) {
+                    this.selectedServices[existingIndex].quantity = ss.quantity;
+                  }
+                }
+              });
+            }
+            
+            // Restore selected extra services
+            if (savedData.selectedExtraServices) {
+              savedData.selectedExtraServices.forEach(ses => {
+                const extraService = savedServiceType.extraServices.find(es => String(es.id) === String(ses.extraServiceId));
+                if (extraService) {
+                  this.selectedExtraServices.push({
+                    extraService,
+                    quantity: ses.quantity,
+                    hours: ses.hours
+                  });
+                }
+              });
+            }
+            
+            this.calculateTotal();
+          }
+        }
       },
       error: (error) => {
         console.error('Failed to load service types:', error);
         this.errorMessage = 'Failed to load service types';
       }
     });
-  
+    
     // Load location data
     this.locationService.getStates().subscribe({
       next: (states) => {
         this.states = states;
-        if (states.length > 0) {
+        const savedState = this.bookingForm.get('state')?.value;
+        
+        if (savedState && states.includes(savedState)) {
+          // Use saved state and load its cities
+          this.loadCities(savedState);
+        } else if (states.length > 0 && !savedState) {
+          // No saved state, use default
           this.bookingForm.patchValue({ state: states[0] });
           this.loadCities(states[0]);
         }
       }
     });
-  
+    
     // Load subscriptions
     this.bookingService.getSubscriptions().subscribe({
       next: (subscriptions) => {
@@ -232,7 +317,17 @@ export class BookingComponent implements OnInit {
         if (this.errorMessage === 'Failed to load subscriptions') {
           this.errorMessage = '';
         }
-  
+        
+        // Check for saved subscription first
+        const savedData = this.formPersistenceService.getFormData();
+        if (savedData?.selectedSubscriptionId) {
+          const savedSubscription = subscriptions.find(s => String(s.id) === String(savedData.selectedSubscriptionId));
+          if (savedSubscription) {
+            this.selectedSubscription = savedSubscription;
+            return; // Don't override with default if we have saved data
+          }
+        }
+        
         // Set default subscription logic...
         if (!this.hasActiveSubscription) {
           if (subscriptions.length > 0) {
@@ -248,35 +343,45 @@ export class BookingComponent implements OnInit {
         this.errorMessage = 'Failed to load subscriptions';
       }
     });
-  
+    
     // Load current user data
     this.authService.currentUser.subscribe(user => {
       this.currentUser = user;
       if (user) {
         this.hasFirstTimeDiscount = user.firstTimeOrder;
-        this.bookingForm.patchValue({
-          contactFirstName: user.firstName,
-          contactLastName: user.lastName,
-          contactEmail: user.email,
-          contactPhone: user.phone || ''
-        });
+        
+        // Check if we have saved form data
+        const savedData = this.formPersistenceService.getFormData();
+        
+        // Only pre-fill contact info if there's no saved data
+        if (!savedData || !savedData.contactFirstName) {
+          this.bookingForm.patchValue({
+            contactFirstName: user.firstName,
+            contactLastName: user.lastName,
+            contactEmail: user.email,
+            contactPhone: user.phone || ''
+          });
+        }
         
         // Load user apartments
         this.profileService.getApartments().subscribe({
           next: (apartments) => {
             this.userApartments = apartments;
-  
-            // Auto-fill with first apartment if available
-            if (apartments.length > 0) {
+            
+            // Only auto-fill with first apartment if no saved apartment selection
+            if (apartments.length > 0 && !savedData?.selectedApartmentId) {
               const firstApartment = apartments[0];
               this.bookingForm.patchValue({
                 selectedApartmentId: firstApartment.id.toString()
               });
               this.fillApartmentAddress(firstApartment.id.toString());
+            } else if (savedData?.selectedApartmentId) {
+              // Restore saved apartment selection
+              this.fillApartmentAddress(savedData.selectedApartmentId);
             }
           }
         });
-  
+        
         // Load user subscription after loading user data
         this.loadUserSubscription();
       }
@@ -312,12 +417,12 @@ export class BookingComponent implements OnInit {
       
       apartmentNameControl?.updateValueAndValidity();
     });
-  
+    
     // Listen to tips changes
     this.bookingForm.get('tips')?.valueChanges.subscribe(() => {
       this.calculateTotal();
     });
-
+    
     // Listen to service date changes
     this.bookingForm.get('serviceDate')?.valueChanges.subscribe(newDate => {
       if (this.isSameDaySelected && newDate) {
@@ -334,6 +439,49 @@ export class BookingComponent implements OnInit {
         }
       }
     });
+    
+    // Add auto-save functionality with debounce
+    this.bookingForm.valueChanges
+      .pipe(
+        debounceTime(1000), // Wait 1 second after user stops typing
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.saveFormData();
+      });
+  }
+  
+  private saveFormData() {
+    const formData: BookingFormData = {
+      // Service Type and Services
+      selectedServiceTypeId: this.selectedServiceType?.id ? String(this.selectedServiceType.id) : undefined,
+      selectedServices: this.selectedServices.map(s => ({
+        serviceId: String(s.service.id),
+        quantity: s.quantity
+      })),
+      selectedExtraServices: this.selectedExtraServices.map(es => ({
+        extraServiceId: String(es.extraService.id),
+        quantity: es.quantity,
+        hours: es.hours
+      })),
+      
+      // Form Values
+      ...this.bookingForm.value,
+      
+      // Selected Subscription
+      selectedSubscriptionId: this.selectedSubscription?.id ? String(this.selectedSubscription.id) : undefined
+    };
+  
+    this.formPersistenceService.saveFormData(formData);
+  }
+
+  clearAllFormData() {
+    if (confirm('Are you sure you want to clear all form data?')) {
+      this.formPersistenceService.clearFormData();
+      this.router.navigate(['/booking']).then(() => {
+        window.location.reload();
+      });
+    }
   }
 
   onApartmentSelect(event: any) {
@@ -384,6 +532,7 @@ export class BookingComponent implements OnInit {
     }
     
     this.calculateTotal();
+    this.saveFormData();
   }
 
 
@@ -398,6 +547,7 @@ export class BookingComponent implements OnInit {
       }
       this.calculateTotal();
     }
+    this.saveFormData();
   }
 
   toggleExtraService(extraService: ExtraService) {
@@ -434,6 +584,7 @@ export class BookingComponent implements OnInit {
     }
     
     this.calculateTotal();
+    this.saveFormData();
   }
 
   updateExtraServiceQuantity(extraService: ExtraService, quantity: number) {
