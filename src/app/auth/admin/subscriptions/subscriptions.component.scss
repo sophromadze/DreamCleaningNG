@@ -228,4 +228,72 @@
   background-color: #d4edda;
   color: #155724;
   border-radius: 4px;
+}
+
+// Subscription Edit Styling
+.edit-input,
+.edit-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: #fff;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus {
+    border-color: #007bff !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+  }
+
+  &:hover {
+    border-color: #adb5bd;
+  }
+}
+
+.edit-input {
+  height: 36px;
+}
+
+.edit-textarea {
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+// Enhanced table styling for edit mode
+.subscriptions-list {
+  table {
+    tbody {
+      tr {
+        &.editing {
+          background-color: #f8f9fa;
+          border: 2px solid #007bff;
+          border-radius: 4px;
+          
+          td {
+            padding: 8px;
+            background-color: #fff;
+            
+            .edit-input,
+            .edit-textarea {
+              margin: 0;
+              background-color: #fff;
+              
+              &:focus {
+                border-color: #007bff !important;
+                outline: 0 !important;
+                box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+              }
+            }
+          }
+          
+          &:hover {
+            background-color: #f8f9fa;
+          }
+        }
+      }
+    }
+  }
 } 

@@ -68,6 +68,7 @@
         <tbody>
           <tr *ngFor="let type of serviceTypes" 
               [class.selected]="selectedServiceType?.id === type.id"
+              [class.editing]="isEditingServiceType && selectedServiceType?.id === type.id"
               (click)="selectServiceType(type)">
             <td>{{type.id}}</td>
             <td>
@@ -76,7 +77,8 @@
               </ng-container>
               <input *ngIf="isEditingServiceType && selectedServiceType?.id === type.id" 
                      type="text" 
-                     [(ngModel)]="type.name">
+                     [(ngModel)]="type.name"
+                     class="edit-input">
             </td>
             <td>
               <ng-container *ngIf="!isEditingServiceType || selectedServiceType?.id !== type.id">
@@ -84,14 +86,16 @@
               </ng-container>
               <input *ngIf="isEditingServiceType && selectedServiceType?.id === type.id" 
                      type="number" 
-                     [(ngModel)]="type.basePrice">
+                     [(ngModel)]="type.basePrice"
+                     class="edit-input">
             </td>
             <td>
               <ng-container *ngIf="!isEditingServiceType || selectedServiceType?.id !== type.id">
                 {{type.description}}
               </ng-container>
               <textarea *ngIf="isEditingServiceType && selectedServiceType?.id === type.id" 
-                        [(ngModel)]="type.description"></textarea>
+                        [(ngModel)]="type.description"
+                        class="edit-textarea"></textarea>
             </td>
             <td>
               <span class="status-badge" [class.active]="type.isActive" [class.inactive]="!type.isActive">

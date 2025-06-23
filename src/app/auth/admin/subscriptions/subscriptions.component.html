@@ -58,22 +58,37 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let subscription of subscriptions">
+        <tr *ngFor="let subscription of subscriptions"
+            [class.editing]="editingSubscriptionId === subscription.id">
           <td>
             <div *ngIf="editingSubscriptionId !== subscription.id">{{subscription.name}}</div>
-            <input *ngIf="editingSubscriptionId === subscription.id" type="text" [(ngModel)]="subscription.name">
+            <input *ngIf="editingSubscriptionId === subscription.id" 
+                   type="text" 
+                   [(ngModel)]="subscription.name"
+                   class="edit-input">
           </td>
           <td>
             <div *ngIf="editingSubscriptionId !== subscription.id">{{subscription.description}}</div>
-            <textarea *ngIf="editingSubscriptionId === subscription.id" [(ngModel)]="subscription.description"></textarea>
+            <textarea *ngIf="editingSubscriptionId === subscription.id" 
+                      [(ngModel)]="subscription.description"
+                      class="edit-textarea"></textarea>
           </td>
           <td>
             <div *ngIf="editingSubscriptionId !== subscription.id">{{subscription.discountPercentage}}%</div>
-            <input *ngIf="editingSubscriptionId === subscription.id" type="number" [(ngModel)]="subscription.discountPercentage" min="0" max="100">
+            <input *ngIf="editingSubscriptionId === subscription.id" 
+                   type="number" 
+                   [(ngModel)]="subscription.discountPercentage" 
+                   min="0" 
+                   max="100"
+                   class="edit-input">
           </td>
           <td>
             <div *ngIf="editingSubscriptionId !== subscription.id">{{subscription.subscriptionDays}} days</div>
-            <input *ngIf="editingSubscriptionId === subscription.id" type="number" [(ngModel)]="subscription.subscriptionDays" min="1">
+            <input *ngIf="editingSubscriptionId === subscription.id" 
+                   type="number" 
+                   [(ngModel)]="subscription.subscriptionDays" 
+                   min="1"
+                   class="edit-input">
           </td>
           <td>
             <span class="status-badge" [class.active]="subscription.isActive" [class.inactive]="!subscription.isActive">

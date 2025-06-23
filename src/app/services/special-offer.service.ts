@@ -54,6 +54,7 @@ export interface UpdateSpecialOffer {
   description: string;
   isPercentage: boolean;
   discountValue: number;
+  type?: number; 
   validFrom?: Date;
   validTo?: Date;
   icon?: string;

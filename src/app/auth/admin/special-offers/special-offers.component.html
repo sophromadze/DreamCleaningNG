@@ -181,7 +181,8 @@
 
                 <div class="form-group">
                   <label>Offer Type *</label>
-                  <select [(ngModel)]="offer.type" [disabled]="isEditingFirstTimeOffer()">
+                  <select [(ngModel)]="editingOfferType[offer.id]" 
+                          [disabled]="isEditingFirstTimeOffer()">
                     <option *ngFor="let type of offerTypes" [value]="type.value">{{ type.label }}</option>
                   </select>
                 </div>

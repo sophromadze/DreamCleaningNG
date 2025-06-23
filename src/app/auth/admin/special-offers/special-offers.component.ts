@@ -22,6 +22,8 @@ export class SpecialOffersComponent implements OnInit {
   showCreateForm = false;
   editingOfferId: number | null = null;
   specialOfferForm!: FormGroup;
+
+  editingOfferType: { [key: number]: number } = {};
   
   offerTypes = [
     { value: OfferType.FirstTime, label: 'First Time' },
@@ -141,8 +143,11 @@ export class SpecialOffersComponent implements OnInit {
 
   editOffer(offer: SpecialOffer) {
     this.editingOfferId = offer.id;
-    this.showCreateForm = false; // Don't show the top form when editing inline
+    this.showCreateForm = false;
+    // Store the numeric type value
+    this.editingOfferType[offer.id] = this.getOfferTypeValue(offer.type);
   }
+  
 
   getOfferTypeValue(typeString: string): number {
     switch(typeString) {
@@ -166,6 +171,7 @@ export class SpecialOffersComponent implements OnInit {
           description: offer.description,
           isPercentage: offer.isPercentage,
           discountValue: offer.discountValue,
+          type: this.editingOfferType[offer.id],
           validFrom: offer.validFrom ? new Date(offer.validFrom) : undefined,
           validTo: offer.validTo ? new Date(offer.validTo) : undefined,
           icon: offer.icon || '',

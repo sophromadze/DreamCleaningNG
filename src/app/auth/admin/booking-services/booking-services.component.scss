@@ -238,10 +238,6 @@
         background: #f8f9fa;
       }
       
-      &.selected {
-        background: #e7f3ff;
-      }
-      
       td {
         padding: 5px;
         color: #6c757d;
@@ -252,6 +248,23 @@
         
         &:last-child {
           border-right: none;
+          text-align: center;
+
+          .action-btn{
+            margin:2px 3px;
+          }
+        }
+        
+        .edit-input,
+        .edit-textarea {
+          margin: 0;
+          background-color: #fff;
+          
+          &:focus {
+            border-color: #007bff !important;
+            outline: 0 !important;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+          }
         }
       }
     }
@@ -517,7 +530,7 @@
         transition: border-color 0.2s;
 
         &:focus {
-          border-color: #80bdff;
+          border-color: #007bff;
           outline: 0;
           box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
         }
@@ -606,7 +619,7 @@
           transition: border-color 0.2s;
 
           &:focus {
-            border-color: #80bdff;
+            border-color: #007bff;
             outline: 0;
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
           }
@@ -682,19 +695,18 @@
       }
       
       td {
-        padding: 5px;
-        color: #6c757d;
-        font-size: 0.875rem;
-        border-bottom: 1px solid #e9ecef;
-        border-right: 1px solid #e9ecef;
-        vertical-align: middle;
+        padding: 8px;
+        background-color: #fff;
         
-        &:last-child {
-          border-right: none;
-          text-align: center;
-
-          .action-btn{
-            margin:2px 3px;
+        .edit-input,
+        .edit-textarea {
+          margin: 0;
+          background-color: #fff;
+          
+          &:focus {
+            border-color: #007bff !important;
+            outline: 0 !important;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
           }
         }
       }
@@ -787,6 +799,72 @@
           transform: translate(-50%, -50%);
           color: white;
           font-size: 14px;
+        }
+      }
+    }
+  }
+}
+
+// Service Type Edit Styling
+.edit-input,
+.edit-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: #fff;
+  font-size: 0.875rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus {
+    border-color: #007bff !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+  }
+
+  &:hover {
+    border-color: #adb5bd;
+  }
+}
+
+.edit-input {
+  height: 36px;
+}
+
+.edit-textarea {
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+// Enhanced table styling for edit mode
+.data-table {
+  tbody {
+    tr {
+      &.editing {
+        background-color: #f8f9fa;
+        border: 2px solid #007bff;
+        border-radius: 4px;
+        
+        td {
+          padding: 8px;
+          background-color: #fff;
+          
+          .edit-input,
+          .edit-textarea {
+            margin: 0;
+            background-color: #fff;
+            
+            &:focus {
+              border-color: #007bff !important;
+              outline: 0 !important;
+              box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+            }
+          }
+        }
+        
+        &:hover {
+          background-color: #f8f9fa;
         }
       }
     }
