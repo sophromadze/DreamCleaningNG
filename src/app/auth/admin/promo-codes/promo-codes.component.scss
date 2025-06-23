@@ -201,6 +201,92 @@
                 margin:2px 3px;
               }
             }
+
+            // Edit mode styles
+            textarea, input, select {
+              width: 100%;
+              padding: 0.375rem 0.75rem;
+              border: 1px solid #e9ecef;
+              border-radius: 4px;
+              font-size: 0.875rem;
+              color: #495057;
+              background: #fff;
+              transition: all 0.2s ease;
+
+              &:focus {
+                outline: none;
+                border-color: #007bff;
+                box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+              }
+
+              &::placeholder {
+                color: #6c757d;
+                opacity: 0.7;
+              }
+            }
+
+            textarea {
+              min-height: 60px;
+              resize: vertical;
+              font-family: inherit;
+            }
+
+            input[type="number"] {
+              width: 80px;
+            }
+
+            input[type="datetime-local"] {
+              width: 140px;
+            }
+
+            select {
+              cursor: pointer;
+              background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+              background-position: right 0.5rem center;
+              background-repeat: no-repeat;
+              background-size: 1.5em 1.5em;
+              padding-right: 2.5rem;
+              appearance: none;
+            }
+
+            // Edit mode containers
+            .edit-discount, .edit-limits, .edit-validity {
+              display: flex;
+              gap: 0.5rem;
+              align-items: center;
+              flex-wrap: wrap;
+
+              input, select {
+                flex: 1;
+                min-width: 60px;
+              }
+
+              select {
+                flex: 0 0 auto;
+                width: auto;
+                min-width: 50px;
+              }
+            }
+
+            .edit-limits {
+              flex-direction: column;
+              align-items: stretch;
+              gap: 0.25rem;
+
+              input {
+                width: 100%;
+              }
+            }
+
+            .edit-validity {
+              flex-direction: column;
+              align-items: stretch;
+              gap: 0.25rem;
+
+              input {
+                width: 100%;
+              }
+            }
           }
         }
       }

@@ -140,22 +140,8 @@ export class SpecialOffersComponent implements OnInit {
   }
 
   editOffer(offer: SpecialOffer) {
-    this.showCreateForm = true;
     this.editingOfferId = offer.id;
-    
-    this.specialOfferForm.patchValue({
-      name: offer.name,
-      description: offer.description,
-      isPercentage: offer.isPercentage,
-      discountValue: offer.discountValue,
-      type: this.getOfferTypeValue(offer.type),
-      validFrom: offer.validFrom ? new Date(offer.validFrom).toISOString().split('T')[0] : null,
-      validTo: offer.validTo ? new Date(offer.validTo).toISOString().split('T')[0] : null,
-      minimumOrderAmount: (offer as any).minimumOrderAmount || null,
-      requiresFirstTimeCustomer: (offer as any).requiresFirstTimeCustomer || false,
-      icon: offer.icon || '',
-      badgeColor: offer.badgeColor || '#28a745'
-    });
+    this.showCreateForm = false; // Don't show the top form when editing inline
   }
 
   getOfferTypeValue(typeString: string): number {
@@ -169,36 +155,52 @@ export class SpecialOffersComponent implements OnInit {
   }
 
   saveOffer() {
-    if (!this.specialOfferForm.valid) {
-      this.markFormGroupTouched(this.specialOfferForm);
-      return;
-    }
-
-    this.isLoading = true;
-    const formValue = this.specialOfferForm.value;
-
     if (this.editingOfferId) {
-      // Update existing offer
-      const updateData: UpdateSpecialOffer = {
-        ...formValue,
-        isActive: true
-      };
+      // Save inline edited offer
+      const offer = this.specialOffers.find(o => o.id === this.editingOfferId);
+      if (offer) {
+        this.isLoading = true;
+        
+        const updateData: UpdateSpecialOffer = {
+          name: offer.name,
+          description: offer.description,
+          isPercentage: offer.isPercentage,
+          discountValue: offer.discountValue,
+          validFrom: offer.validFrom ? new Date(offer.validFrom) : undefined,
+          validTo: offer.validTo ? new Date(offer.validTo) : undefined,
+          icon: offer.icon || '',
+          badgeColor: offer.badgeColor || '#28a745',
+          isActive: offer.isActive
+        };
 
-      this.specialOfferService.updateSpecialOffer(this.editingOfferId, updateData).subscribe({
-        next: () => {
-          this.successMessage = 'Special offer updated successfully';
-          this.showCreateForm = false;
-          this.loadSpecialOffers();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          this.errorMessage = error.error?.message || 'Failed to update special offer';
-          this.isLoading = false;
-        }
-      });
+        this.specialOfferService.updateSpecialOffer(offer.id, updateData).subscribe({
+          next: () => {
+            this.successMessage = 'Special offer updated successfully';
+            this.editingOfferId = null;
+            this.loadSpecialOffers();
+            this.isLoading = false;
+          },
+          error: (error) => {
+            this.errorMessage = error.error?.message || 'Failed to update special offer';
+            this.isLoading = false;
+          }
+        });
+      }
     } else {
+      // Save new offer (existing logic)
+      if (!this.specialOfferForm.valid) {
+        this.markFormGroupTouched(this.specialOfferForm);
+        return;
+      }
+
+      this.isLoading = true;
+      const formValue = this.specialOfferForm.value;
+
       // Create new offer
-      const createData: CreateSpecialOffer = formValue;
+      const createData: CreateSpecialOffer = {
+        ...formValue,
+        type: formValue.type
+      };
 
       this.specialOfferService.createSpecialOffer(createData).subscribe({
         next: () => {
