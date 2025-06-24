@@ -39,6 +39,15 @@
                  required>
         </div>
         <div class="form-group">
+          <label for="newServiceTypeDisplayOrder">Display Order:</label>
+          <input type="number" 
+                 id="newServiceTypeDisplayOrder" 
+                 [(ngModel)]="newServiceType.displayOrder" 
+                 name="displayOrder" 
+                 min="1"
+                 required>
+        </div>
+        <div class="form-group">
           <label for="newServiceTypeDescription">Description:</label>
           <textarea id="newServiceTypeDescription" 
                     [(ngModel)]="newServiceType.description" 
@@ -61,6 +70,7 @@
             <th>Name</th>
             <th>Base Price</th>
             <th>Description</th>
+            <th>Order</th>
             <th>Status</th>
             <th *ngIf="userRole !== 'Moderator'">Actions</th>
           </tr>
@@ -96,6 +106,16 @@
               <textarea *ngIf="isEditingServiceType && selectedServiceType?.id === type.id" 
                         [(ngModel)]="type.description"
                         class="edit-textarea"></textarea>
+            </td>
+            <td>
+              <ng-container *ngIf="!isEditingServiceType || selectedServiceType?.id !== type.id">
+                {{type.displayOrder || 0}}
+              </ng-container>
+              <input *ngIf="isEditingServiceType && selectedServiceType?.id === type.id" 
+                     type="number" 
+                     [(ngModel)]="type.displayOrder"
+                     class="edit-input"
+                     min="1">
             </td>
             <td>
               <span class="status-badge" [class.active]="type.isActive" [class.inactive]="!type.isActive">
@@ -199,6 +219,10 @@
             <input type="number" [(ngModel)]="newService.timeDuration">
           </div>
           <div class="form-group">
+            <label>Display Order</label>
+            <input type="number" [(ngModel)]="newService.displayOrder" min="1">
+          </div>
+          <div class="form-group">
             <label>Input Type</label>
             <select [(ngModel)]="newService.inputType">
               <option value="dropdown">Dropdown</option>
@@ -254,6 +278,7 @@
               <th>Cost</th>
               <th>Duration</th>
               <th>Type</th>
+              <th>Order</th>
               <th>Status</th>
               <th *ngIf="userRole !== 'Moderator'">Actions</th>
             </tr>
@@ -266,6 +291,7 @@
               <td *ngIf="editingServiceId !== service.id">${{ service.cost }}</td>
               <td *ngIf="editingServiceId !== service.id">{{ service.timeDuration }}min</td>
               <td *ngIf="editingServiceId !== service.id">{{ service.inputType }}</td>
+              <td *ngIf="editingServiceId !== service.id">{{ service.displayOrder || 0 }}</td>
               <td *ngIf="editingServiceId !== service.id">
                 <span class="status-badge" [class.active]="service.isActive" [class.inactive]="!service.isActive">
                   {{ service.isActive ? 'Active' : 'Inactive' }}
@@ -297,6 +323,10 @@
                     <div class="form-group">
                       <label>Duration (minutes)</label>
                       <input type="number" [(ngModel)]="service.timeDuration">
+                    </div>
+                    <div class="form-group">
+                      <label>Display Order</label>
+                      <input type="number" [(ngModel)]="service.displayOrder" min="1">
                     </div>
                   </div>
                   <div class="form-row">
@@ -414,6 +444,10 @@
             <input type="number" [(ngModel)]="newExtraService.duration">
           </div>
           <div class="form-group">
+            <label>Display Order</label>
+            <input type="number" [(ngModel)]="newExtraService.displayOrder" min="1">
+          </div>
+          <div class="form-group">
             <label>Price Multiplier</label>
             <input type="number" [(ngModel)]="newExtraService.priceMultiplier" step="0.1">
           </div>
@@ -471,6 +505,7 @@
               <th>Price</th>
               <th>Duration</th>
               <th>Type</th>
+              <th>Order</th>
               <th>Status</th>
               <th *ngIf="userRole !== 'Moderator'">Actions</th>
             </tr>
@@ -486,6 +521,7 @@
                 <span class="universal-badge" *ngIf="extra.isAvailableForAll">Universal</span>
                 <span class="service-specific-badge" *ngIf="!extra.isAvailableForAll">Specific</span>
               </td>
+              <td *ngIf="editingExtraServiceId !== extra.id">{{ extra.displayOrder || 0 }}</td>
               <td *ngIf="editingExtraServiceId !== extra.id">
                 <span class="status-badge" [class.active]="extra.isActive" [class.inactive]="!extra.isActive">
                   {{ extra.isActive ? 'Active' : 'Inactive' }}
@@ -517,6 +553,10 @@
                     <div class="form-group">
                       <label>Duration (minutes)</label>
                       <input type="number" [(ngModel)]="extra.duration">
+                    </div>
+                    <div class="form-group">
+                      <label>Display Order</label>
+                      <input type="number" [(ngModel)]="extra.displayOrder" min="1">
                     </div>
                   </div>
                   <div class="form-row">

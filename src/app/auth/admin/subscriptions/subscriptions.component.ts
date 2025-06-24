@@ -64,7 +64,10 @@ export class SubscriptionsComponent implements OnInit {
   loadSubscriptions() {
     this.adminService.getSubscriptions().subscribe({
       next: (subscriptions) => {
-        this.subscriptions = subscriptions;
+        // Sort by displayOrder
+        this.subscriptions = subscriptions.sort((a, b) => 
+          (a.displayOrder || 0) - (b.displayOrder || 0)
+        );
       },
       error: (error) => {
         console.error('Error loading subscriptions:', error);
@@ -99,7 +102,7 @@ export class SubscriptionsComponent implements OnInit {
   addSubscription() {
     this.adminService.createSubscription(this.newSubscription).subscribe({
       next: (response) => {
-        this.subscriptions.push(response);
+        this.loadSubscriptions(); // Change from push to reload
         this.isAddingSubscription = false;
         this.newSubscription = {
           name: '',
@@ -131,15 +134,12 @@ export class SubscriptionsComponent implements OnInit {
       description: subscription.description,
       discountPercentage: subscription.discountPercentage,
       subscriptionDays: subscription.subscriptionDays,
-      displayOrder: 0 // TODO: Add display order to the interface
+      displayOrder: subscription.displayOrder || 0 
     };
-
+  
     this.adminService.updateSubscription(subscription.id, updateData).subscribe({
       next: (response) => {
-        const index = this.subscriptions.findIndex(s => s.id === response.id);
-        if (index !== -1) {
-          this.subscriptions[index] = response;
-        }
+        this.loadSubscriptions(); // Add this line to reload and re-sort
         this.editingSubscriptionId = null;
         this.successMessage = 'Subscription updated successfully.';
       },

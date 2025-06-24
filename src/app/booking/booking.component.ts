@@ -241,8 +241,33 @@ export class BookingComponent implements OnInit, OnDestroy {
     
     // Load service types
     this.bookingService.getServiceTypes().subscribe({
-      next: (serviceTypes) => {
-        this.serviceTypes = serviceTypes;
+      next: (serviceTypes) => {       
+        // Sort service types by displayOrder
+        this.serviceTypes = serviceTypes.sort((a, b) => {
+          const orderA = a.displayOrder || 999;
+          const orderB = b.displayOrder || 999;
+          return orderA - orderB;
+        });
+        
+        // Sort services and extra services within each service type
+        this.serviceTypes.forEach(serviceType => {
+          if (serviceType.services) {
+            serviceType.services.sort((a, b) => {
+              const orderA = a.displayOrder || 999;
+              const orderB = b.displayOrder || 999;
+              return orderA - orderB;
+            });
+          }
+          
+          if (serviceType.extraServices) {
+            serviceType.extraServices.sort((a, b) => {
+              const orderA = a.displayOrder || 999;
+              const orderB = b.displayOrder || 999;
+              return orderA - orderB;
+            });
+          }
+        });
+        
         // Clear error message on success
         if (this.errorMessage === 'Failed to load service types') {
           this.errorMessage = '';
@@ -251,7 +276,7 @@ export class BookingComponent implements OnInit, OnDestroy {
         // Restore selected service type from saved data
         const savedData = this.formPersistenceService.getFormData();
         if (savedData?.selectedServiceTypeId) {
-          const savedServiceType = serviceTypes.find(st => String(st.id) === String(savedData.selectedServiceTypeId));
+          const savedServiceType = this.serviceTypes.find(st => String(st.id) === String(savedData.selectedServiceTypeId));
           if (savedServiceType) {
             this.selectServiceType(savedServiceType);
             
@@ -312,7 +337,13 @@ export class BookingComponent implements OnInit, OnDestroy {
     // Load subscriptions
     this.bookingService.getSubscriptions().subscribe({
       next: (subscriptions) => {
-        this.subscriptions = subscriptions;
+        // Sort subscriptions by displayOrder
+        this.subscriptions = subscriptions.sort((a, b) => {
+          const orderA = a.displayOrder || 999;
+          const orderB = b.displayOrder || 999;
+          return orderA - orderB;
+        });
+        
         // Clear error message on success
         if (this.errorMessage === 'Failed to load subscriptions') {
           this.errorMessage = '';
@@ -321,7 +352,7 @@ export class BookingComponent implements OnInit, OnDestroy {
         // Check for saved subscription first
         const savedData = this.formPersistenceService.getFormData();
         if (savedData?.selectedSubscriptionId) {
-          const savedSubscription = subscriptions.find(s => String(s.id) === String(savedData.selectedSubscriptionId));
+          const savedSubscription = this.subscriptions.find(s => String(s.id) === String(savedData.selectedSubscriptionId));
           if (savedSubscription) {
             this.selectedSubscription = savedSubscription;
             return; // Don't override with default if we have saved data
@@ -330,8 +361,8 @@ export class BookingComponent implements OnInit, OnDestroy {
         
         // Set default subscription logic...
         if (!this.hasActiveSubscription) {
-          if (subscriptions.length > 0) {
-            const oneTimeSubscription = subscriptions.find(s => s.name === 'One Time') || subscriptions[0];
+          if (this.subscriptions.length > 0) {
+            const oneTimeSubscription = this.subscriptions.find(s => s.name === 'One Time') || this.subscriptions[0];
             this.selectedSubscription = oneTimeSubscription;
           }
         } else if (this.userSubscription) {
@@ -514,18 +545,19 @@ export class BookingComponent implements OnInit, OnDestroy {
     
     // Initialize services based on type
     if (serviceType.services) {
-      serviceType.services.forEach(service => {
-        if (service.inputType === 'dropdown') {
-          // Set default to 0 for bedrooms, otherwise use minValue or 1
-          const defaultQuantity = service.serviceKey === 'bedrooms' ? 0 : (service.minValue || 1);
+      // Sort services by displayOrder before processing
+      const sortedServices = [...serviceType.services].sort((a, b) => 
+        (a.displayOrder || 999) - (b.displayOrder || 999)
+      );
+      
+      sortedServices.forEach(service => {
+        if (service.isActive !== false) {
+          // Use minValue as default for all services
+          const defaultQuantity = service.minValue ?? 1;
+          
           this.selectedServices.push({
             service: service,
             quantity: defaultQuantity
-          });
-        } else if (service.isRangeInput) {
-          this.selectedServices.push({
-            service: service,
-            quantity: service.minValue || 400
           });
         }
       });

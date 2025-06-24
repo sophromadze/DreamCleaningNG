@@ -29,7 +29,7 @@
 
       <div class="form-group">
         <label for="subscriptionDays">Duration (Days)</label>
-        <input type="number" id="subscriptionDays" [(ngModel)]="newSubscription.subscriptionDays" name="subscriptionDays" required min="1">
+        <input type="number" id="subscriptionDays" [(ngModel)]="newSubscription.subscriptionDays" name="subscriptionDays" required min="0">
       </div>
 
       <div class="form-group">
@@ -53,6 +53,7 @@
           <th>Description</th>
           <th>Discount</th>
           <th>Duration</th>
+          <th>Order</th>
           <th>Status</th>
           <th *ngIf="userRole !== 'Moderator'">Actions</th>
         </tr>
@@ -83,12 +84,25 @@
                    class="edit-input">
           </td>
           <td>
-            <div *ngIf="editingSubscriptionId !== subscription.id">{{subscription.subscriptionDays}} days</div>
+            <div *ngIf="editingSubscriptionId !== subscription.id">
+              <span *ngIf="subscription.subscriptionDays === 0">One Time</span>
+              <span *ngIf="subscription.subscriptionDays > 0">{{subscription.subscriptionDays}} days</span>
+            </div>
             <input *ngIf="editingSubscriptionId === subscription.id" 
                    type="number" 
                    [(ngModel)]="subscription.subscriptionDays" 
-                   min="1"
+                   min="0"
                    class="edit-input">
+          </td>
+          <td>
+            <div *ngIf="editingSubscriptionId !== subscription.id">
+              {{ subscription.displayOrder || 0 }}
+            </div>
+            <input *ngIf="editingSubscriptionId === subscription.id" 
+                   type="number" 
+                   [(ngModel)]="subscription.displayOrder" 
+                   class="edit-input"
+                   min="1">
           </td>
           <td>
             <span class="status-badge" [class.active]="subscription.isActive" [class.inactive]="!subscription.isActive">

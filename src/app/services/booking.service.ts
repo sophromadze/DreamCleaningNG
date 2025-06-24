@@ -11,6 +11,7 @@ export interface ServiceType {
   services: Service[];
   extraServices: ExtraService[];
   isActive: boolean;
+  displayOrder?: number;
 }
 
 export interface Service {
@@ -28,6 +29,7 @@ export interface Service {
   unit?: string;
   serviceRelationType?: string;
   isActive: boolean;
+  displayOrder?: number;
 }
 
 export interface ExtraService {
@@ -45,6 +47,7 @@ export interface ExtraService {
   priceMultiplier: number;
   isAvailableForAll: boolean;
   isActive: boolean;
+  displayOrder?: number;
 }
 
 export interface Subscription {
@@ -54,6 +57,7 @@ export interface Subscription {
   discountPercentage: number;
   subscriptionDays: number;
   isActive: boolean;
+  displayOrder?: number;
 }
 
 export interface PromoCodeValidationDto {

@@ -123,8 +123,26 @@ export class BookingServicesComponent implements OnInit {
   // Service Types Methods
   loadServiceTypes() {
     this.adminService.getServiceTypes().subscribe({
-      next: (types) => {
-        this.serviceTypes = types;
+      next: (types) => {       
+        // Sort by displayOrder
+        this.serviceTypes = types.sort((a, b) => 
+          (a.displayOrder || 0) - (b.displayOrder || 0)
+        );
+        
+        // Also sort services within each type
+        this.serviceTypes.forEach(type => {
+          if (type.services) {
+            type.services.sort((a, b) => 
+              (a.displayOrder || 0) - (b.displayOrder || 0)
+            );
+          }
+
+          if (type.extraServices) {
+            type.extraServices.sort((a, b) => 
+              (a.displayOrder || 0) - (b.displayOrder || 0)
+            );
+          }
+        });
       },
       error: (error) => {
         console.error('Error loading service types:', error);
@@ -247,7 +265,7 @@ export class BookingServicesComponent implements OnInit {
         name: this.selectedServiceType.name,
         basePrice: this.selectedServiceType.basePrice,
         description: this.selectedServiceType.description,
-        displayOrder: 1
+        displayOrder: this.selectedServiceType.displayOrder || 1
       };
       this.adminService.updateServiceType(this.selectedServiceType.id, updateData).subscribe({
         next: (response) => {
@@ -255,6 +273,7 @@ export class BookingServicesComponent implements OnInit {
           if (index !== -1) {
             this.serviceTypes[index] = response;
           }
+          this.loadServiceTypes();
           this.isEditingServiceType = false;
           this.serviceTypeMessage.success = 'Service type updated successfully.';
         },
@@ -427,7 +446,7 @@ export class BookingServicesComponent implements OnInit {
       isRangeInput: service.isRangeInput,
       unit: service.unit,
       serviceRelationType: service.serviceRelationType,
-      displayOrder: 1
+      displayOrder: service.displayOrder || 1
     }).subscribe({
       next: (response) => {
         if (this.selectedServiceType) {
@@ -662,7 +681,7 @@ export class BookingServicesComponent implements OnInit {
       priceMultiplier: extraService.priceMultiplier,
       serviceTypeId: extraService.isAvailableForAll ? undefined : this.selectedServiceType?.id,
       isAvailableForAll: extraService.isAvailableForAll,
-      displayOrder: 1
+      displayOrder: extraService.displayOrder || 1
     };
     this.adminService.updateExtraService(extraService.id, updateData).subscribe({
       next: (response) => {
@@ -672,6 +691,7 @@ export class BookingServicesComponent implements OnInit {
             this.selectedServiceType.extraServices[index] = response;
           }
         }
+        this.loadServiceTypes();
         this.editingExtraServiceId = null;
         this.extraServiceMessage.success = 'Extra service updated successfully.';
       },
