@@ -487,4 +487,15 @@ export class AdminService {
   getUserCompleteHistory(userId: number): Observable<AuditLog[]> {
     return this.http.get<AuditLog[]>(`${this.apiUrl}/users/${userId}/history`);
   }
+
+  getGiftCardConfig(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/gift-card-config`);
+  }
+
+  uploadGiftCardBackground(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    return this.http.post(`${this.apiUrl}/upload-gift-card-background`, formData);
+  }
 }

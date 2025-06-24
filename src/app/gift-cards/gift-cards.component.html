@@ -145,7 +145,14 @@
 
         <!-- Right Side - Gift Card Preview -->
         <div class="gift-card-preview">
-          <div class="gift-card">
+          <div class="gift-card" 
+                [style.backgroundImage]="giftCardBackgroundPath ? 'url(' + giftCardBackgroundPath + ')' : 'none'"
+                [class.loading]="isLoadingBackground">
+            
+            <!-- Optional: Show loading overlay -->
+            <div class="loading-overlay" *ngIf="isLoadingBackground"></div>
+            
+            <!-- Your existing gift card content -->
             <div class="gift-card-header">
               <h3>Dream Cleaning</h3>
               <div class="amount">{{ formatCurrency(previewGiftCard?.amount || 0) }}</div>
@@ -165,10 +172,8 @@
             </div>
           </div>
         </div>
-      </div>
-    </form>
   </div>
-</div>
+</form>
 
 <!-- User's Gift Cards -->
 <div class="user-gift-cards" *ngIf="userGiftCards.length > 0">
@@ -176,7 +181,7 @@
   
   <div class="gift-cards-grid">
     <div class="gift-card-item" *ngFor="let giftCard of userGiftCards">
-      <div class="gift-card">
+      <div class="gift-card" [style.backgroundImage]="'url(' + giftCardBackgroundPath + ')'">
         <div class="gift-card-header">
           <h3>Dream Cleaning</h3>
           <div class="amount">{{ formatCurrency(giftCard.currentBalance) }}</div>

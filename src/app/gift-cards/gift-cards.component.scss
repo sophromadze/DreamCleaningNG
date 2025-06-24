@@ -3,9 +3,6 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 2rem;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     background-color: #fff;
   }
   
@@ -49,6 +46,12 @@
   
   .gift-cards-content {
     .gift-card-form {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      padding: 2rem;
+      background-color: #fff;
+
       .form-layout {
         display: grid;
         grid-template-columns: 50% 50%;
@@ -146,7 +149,6 @@
   }
   
   .gift-card {
-    background: url("/images/mainImage.png");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

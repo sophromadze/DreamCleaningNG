@@ -25,6 +25,62 @@
         </div>
       </div>
     </div>
+
+    <div class="gift-card-config-section">
+      <div class="config-card">
+        <div class="config-form">
+          <!-- Left Side: Title, Description, and Upload Section -->
+          <div class="left-section">
+            <h3>Gift Card Background Configuration</h3>
+            <p class="config-description">Upload a background image for all gift cards</p>
+            
+            <div class="upload-section">
+              <div class="upload-controls">
+                <input 
+                  type="file" 
+                  id="file-input"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,.jpg,.jpeg,.png,.gif,.webp"
+                  (change)="onFileSelected($event)"
+                  class="file-input">
+                <label for="file-input" class="file-label">
+                  Choose Image
+                </label>
+                <button 
+                  class="btn-upload" 
+                  (click)="uploadImage()"
+                  [disabled]="!selectedFile || isUploading || (!isSuperAdmin && !userPermissions.permissions.canUpdate)">
+                  {{ isUploading ? 'Uploading...' : 'Upload' }}
+                </button>
+              </div>
+              
+              <div class="upload-info">
+                <small>Supported formats: JPG, PNG, GIF, WebP (Max 5MB)</small>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Right Side: Preview Section -->
+          <div class="preview-section">
+            <div class="preview-container">
+              <!-- Show uploaded preview if available -->
+              <div 
+                class="background-preview" 
+                *ngIf="imagePreviewUrl"
+                [style.backgroundImage]="'url(' + imagePreviewUrl + ')'">
+                <span class="preview-badge">New Upload</span>
+              </div>
+              <!-- Show current background -->
+              <div 
+                class="background-preview" 
+                *ngIf="!imagePreviewUrl && giftCardBackgroundPath"
+                [style.backgroundImage]="'url(' + giftCardBackgroundPath + ')'">
+                <span class="preview-badge">Current</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   
     <div class="filters">
       <div class="search-box">

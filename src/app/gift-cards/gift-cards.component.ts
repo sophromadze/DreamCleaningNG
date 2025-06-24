@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { GiftCardService, CreateGiftCard, GiftCard } from '../services/gift-card.service';
 import { AuthService } from '../services/auth.service';
 
@@ -22,6 +23,8 @@ export class GiftCardsComponent implements OnInit {
   isProcessingPayment = false;
   currentUser: any = null;
   copiedCode: string | null = null;
+  giftCardBackgroundPath: string = '';
+  isLoadingBackground: boolean = true;
 
   // Predefined amounts for selection
   predefinedAmounts = [100, 200, 300, 400, 500, 1000];
@@ -30,7 +33,8 @@ export class GiftCardsComponent implements OnInit {
     private fb: FormBuilder,
     private giftCardService: GiftCardService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {
     this.giftCardForm = this.fb.group({
       amount: ['', [Validators.required, Validators.min(50), Validators.max(10000)]],
@@ -51,7 +55,7 @@ export class GiftCardsComponent implements OnInit {
     this.loadCurrentUser();
     this.loadUserGiftCards();
     this.prefillUserData();
-    // Initialize preview with empty values
+    this.loadGiftCardBackground();
     this.updatePreview(this.giftCardForm.value);
   }
 
@@ -226,6 +230,70 @@ export class GiftCardsComponent implements OnInit {
       this.giftCardForm.get(key)?.markAsTouched();
     });
   }
+
+  loadGiftCardBackground() {
+    // Step 1: Check cache first for instant display
+    const cachedPath = localStorage.getItem('giftCardBackground');
+    if (cachedPath) {
+      this.giftCardBackgroundPath = cachedPath;
+      this.isLoadingBackground = false;
+    }
+    
+    // Step 2: Fetch latest from API to check for updates
+    this.http.get<any>('/api/admin/gift-card-config').subscribe({
+      next: (response) => {
+        const newPath = response.backgroundImagePath || '/images/mainImage.png';
+        
+        // If path changed or no cache, preload the new image
+        if (newPath !== this.giftCardBackgroundPath || !cachedPath) {
+          this.preloadImage(newPath);
+        } else {
+          // Path hasn't changed, we're already showing the right image
+          this.isLoadingBackground = false;
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading gift card background:', error);
+        
+        // If no cached version, use fallback
+        if (!this.giftCardBackgroundPath) {
+          this.giftCardBackgroundPath = '/images/mainImage.png';
+          this.isLoadingBackground = false;
+        }
+      }
+    });
+  }
+
+  private preloadImage(imagePath: string) {
+    const img = new Image();
+    
+    img.onload = () => {
+      // Image loaded successfully
+      this.giftCardBackgroundPath = imagePath;
+      this.isLoadingBackground = false;
+      
+      // Update cache with new path
+      localStorage.setItem('giftCardBackground', imagePath);
+    };
+    
+    img.onerror = () => {
+      // Image failed to load, use fallback
+      console.error('Failed to load gift card background:', imagePath);
+      this.giftCardBackgroundPath = '/images/mainImage.png';
+      this.isLoadingBackground = false;
+      
+      // Don't cache failed image
+      localStorage.removeItem('giftCardBackground');
+    };
+    
+    // Start loading the image
+    img.src = imagePath;
+  }
+
+  getGiftCardBackground(): string {
+    return this.giftCardBackgroundPath;
+  }
+
 
   // Form getters for template
   get amount() { return this.giftCardForm.get('amount'); }

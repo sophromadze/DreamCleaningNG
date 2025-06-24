@@ -64,6 +64,14 @@ export class AdminGiftCardsComponent implements OnInit {
   totalAmountSold = 0;
   totalAmountUsed = 0;
   activeGiftCards = 0;
+
+  giftCardBackgroundPath: string = '';
+  hasGiftCardBackground: boolean = false;
+  isUpdatingBackground: boolean = false;
+
+  selectedFile: File | null = null;
+  isUploading: boolean = false;
+  imagePreviewUrl: string | null = null;
   
   loading = false;
   errorMessage = '';
@@ -80,6 +88,7 @@ export class AdminGiftCardsComponent implements OnInit {
   ngOnInit() {
     this.checkUserRole();
     this.loadGiftCards();
+    this.loadGiftCardConfig();
   }
 
   checkUserRole() {
@@ -283,5 +292,76 @@ export class AdminGiftCardsComponent implements OnInit {
 
   formatDateTime(date: any): string {
     return new Date(date).toLocaleString();
+  }
+
+  loadGiftCardConfig() {
+    this.adminService.getGiftCardConfig().subscribe({
+      next: (config) => {
+        this.giftCardBackgroundPath = config.backgroundImagePath || '';
+        this.hasGiftCardBackground = config.hasBackground;
+      },
+      error: (error) => {
+        console.error('Error loading gift card config:', error);
+      }
+    });
+  }
+  
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      // Validate file type - ADDED image/webp
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        alert('Please select a valid image file (JPG, PNG, GIF, or WebP)');
+        return;
+      }
+      
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+      
+      this.selectedFile = file;
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.imagePreviewUrl = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+  
+  uploadImage() {
+    if (!this.selectedFile) {
+      alert('Please select an image first');
+      return;
+    }
+    
+    this.isUploading = true;
+    this.adminService.uploadGiftCardBackground(this.selectedFile).subscribe({
+      next: (response) => {
+        this.isUploading = false;
+        this.giftCardBackgroundPath = response.imagePath;
+        this.hasGiftCardBackground = true;
+        this.selectedFile = null;
+        this.imagePreviewUrl = null;
+        
+        // Clear file input
+        const fileInput = document.getElementById('file-input') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+        
+        alert('Background image uploaded successfully!');
+        // Clear the cache so next visit loads the new image
+        localStorage.removeItem('giftCardBackground');
+        this.loadGiftCardConfig(); // Reload config
+      },
+      error: (error) => {
+        this.isUploading = false;
+        alert('Upload failed: ' + (error.error?.message || 'Unknown error'));
+        console.error('Upload error:', error);
+      }
+    });
   }
 }
