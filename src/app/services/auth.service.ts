@@ -330,6 +330,8 @@ export class AuthService {
         localStorage.setItem('currentUser', JSON.stringify(response.user));
         localStorage.setItem('token', response.token);
         localStorage.setItem('refreshToken', response.refreshToken);
+        // Set initial activity timestamp when user logs in
+        localStorage.setItem('lastActivity', Date.now().toString());
       }
       this.currentUserSubject.next(response.user);
       

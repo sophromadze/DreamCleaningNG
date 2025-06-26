@@ -21,15 +21,24 @@ export class AuthInterceptor implements HttpInterceptor {
   }
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // Check if user has been inactive for 24 hours
-    if (this.isBrowser && this.checkInactivity()) {
-      this.authService.logout();
-      return throwError(() => new Error('Session expired due to inactivity'));
-    }
+    // Skip auth checks for auth endpoints
+    const isAuthEndpoint = request.url.includes('/auth/login') || 
+                          request.url.includes('/auth/register') || 
+                          request.url.includes('/auth/refresh-token') ||
+                          request.url.includes('/auth/google') ||
+                          request.url.includes('/auth/facebook');
 
-    // Update last activity time
-    if (this.isBrowser) {
-      localStorage.setItem('lastActivity', Date.now().toString());
+    if (!isAuthEndpoint) {
+      // Check if user has been inactive for 24 hours (only for non-auth endpoints)
+      if (this.isBrowser && this.checkInactivity()) {
+        this.authService.logout();
+        return throwError(() => new Error('Session expired due to inactivity'));
+      }
+
+      // Update last activity time
+      if (this.isBrowser) {
+        localStorage.setItem('lastActivity', Date.now().toString());
+      }
     }
 
     // Get the auth token from localStorage only if in browser
@@ -46,13 +55,13 @@ export class AuthInterceptor implements HttpInterceptor {
     }
 
     // Clone the request and add the authorization header
-    if (token) {
+    if (token && !isAuthEndpoint) {
       request = this.addToken(request, token);
     }
 
     return next.handle(request).pipe(
       catchError(error => {
-        if (error instanceof HttpErrorResponse && error.status === 401) {
+        if (error instanceof HttpErrorResponse && error.status === 401 && !isAuthEndpoint) {
           return this.handle401Error(request, next);
         }
         return throwError(() => error);
@@ -62,8 +71,19 @@ export class AuthInterceptor implements HttpInterceptor {
 
   private checkInactivity(): boolean {
     try {
+      // Only check inactivity if user is logged in
+      const token = localStorage.getItem('token');
+      if (!token) {
+        // No token means not logged in, so no inactivity check needed
+        return false;
+      }
+
       const lastActivity = localStorage.getItem('lastActivity');
-      if (!lastActivity) return false;
+      if (!lastActivity) {
+        // User is logged in but no activity recorded yet, set it now
+        localStorage.setItem('lastActivity', Date.now().toString());
+        return false;
+      }
       
       const lastActivityTime = parseInt(lastActivity);
       const currentTime = Date.now();
@@ -86,9 +106,7 @@ export class AuthInterceptor implements HttpInterceptor {
 
   private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Don't try to refresh for auth endpoints
-    if (request.url.includes('/auth/login') || 
-        request.url.includes('/auth/register') || 
-        request.url.includes('/auth/refresh-token')) {
+    if (request.url.includes('/auth/')) {
       this.authService.logout();
       return throwError(() => new Error('Authentication failed'));
     }

@@ -104,20 +104,19 @@
         <section class="booking-section" *ngIf="selectedServiceType">
           <h2>3. Add Extra Services</h2>
           
-          <!-- Cleaning Type Display -->
-          <div class="cleaning-type-display">
-            <strong>Cleaning Type:</strong> 
-            <span class="cleaning-type-badge" 
-                  [class.regular]="getCleaningTypeText() === 'Normal Cleaning'"
-                  [class.deep]="getCleaningTypeText() === 'Deep Cleaning'"
-                  [class.super-deep]="getCleaningTypeText() === 'Super Deep Cleaning'">
-              {{ getCleaningTypeText() }}
-            </span>
+          <!-- Cleaning Type Selection -->
+          <div class="cleaning-type-selection">
+            <label>Cleaning Type *</label>
+            <select [formControl]="cleaningType" (change)="onCleaningTypeChange(cleaningType.value)">
+              <option value="normal">Normal Cleaning</option>
+              <option value="deep">Deep Cleaning</option>
+              <option value="super-deep">Super Deep Cleaning</option>
+            </select>
           </div>
 
           <div class="extra-services">
             <div class="extra-service-card" 
-                 *ngFor="let extra of selectedServiceType.extraServices"
+                 *ngFor="let extra of getFilteredExtraServices()"
                  [class.selected]="isExtraServiceSelected(extra)"
                  (click)="toggleExtraService(extra)">
               <div class="extra-header">
@@ -275,11 +274,10 @@
                   <input
                     type="text"
                     [formControl]="promoCode"
-                    placeholder="Enter promo code or gift card code"
-                    [disabled]="specialOfferApplied">
+                    placeholder="Enter promo code or gift card code">
                   <button
                     (click)="applyPromoCode()"
-                    [disabled]="specialOfferApplied || promoCode.disabled">
+                    [disabled]="isPromoCodeDisabled()">
                     Apply
                   </button>
                   <button

@@ -2,12 +2,19 @@
   <div class="container">
     <nav class="nav">
       <a routerLink="/" class="logo">DreamCleaning</a>
-      <div class="nav-links">
-        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
-        <a routerLink="/about" routerLinkActive="active">About</a>
-        <a routerLink="/service-page" routerLinkActive="active">Services</a>
-        <a routerLink="/booking" routerLinkActive="active">Booking</a>
-        <a routerLink="/contact" routerLinkActive="active">Contact</a>
+      <div class="nav-container">
+        <div class="nav-links">
+          <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">Home</a>
+          <a routerLink="/about" routerLinkActive="active" (click)="closeMobileMenu()">About</a>
+          <a routerLink="/service-page" routerLinkActive="active" (click)="closeMobileMenu()">Services</a>
+          <a routerLink="/booking" routerLinkActive="active" (click)="closeMobileMenu()">Booking</a>
+          <a routerLink="/contact" routerLinkActive="active" (click)="closeMobileMenu()">Contact</a>          
+        </div>
+        <button class="mobile-menu-btn" [class.active]="isMenuOpen" (click)="toggleMenu()">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
         <ng-container *ngIf="shouldShowLogin(); else userMenu">
           <a routerLink="/login" routerLinkActive="active" class="login-btn">Login</a>
         </ng-container>
@@ -15,8 +22,12 @@
           <div class="user-menu" (click)="toggleUserMenu()" *ngIf="shouldShowUserMenu()">
             <div class="user-avatar">
               {{ userInitials }}
+              <svg class="chevron-down" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <g fill-rule="evenodd" transform="translate(-448 -544)">
+                  <path fill-rule="nonzero" d="M452.707 549.293a1 1 0 0 0-1.414 1.414l4 4a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414L456 552.586l-3.293-3.293z"></path>
+                </g>
+              </svg>
             </div>
-            <i class="fas fa-chevron-down"></i>
             <div class="dropdown-menu" *ngIf="isUserMenuOpen">
               <div class="user-info">
                 {{ currentUser?.firstName }} {{ currentUser?.lastName }}
@@ -27,25 +38,23 @@
                   {{ currentUser?.role }}
                 </small>
               </div>
-              <a routerLink="/profile">Profile</a>
-              <a routerLink="/profile/orders">My Orders</a>
-              <a routerLink="/gift-cards">Gift Cards</a>
-              <a routerLink="/change-password">Change Password</a>
+              <a routerLink="/profile" (click)="closeDropdownMenu()">Profile</a>
+              <a routerLink="/profile/orders" (click)="closeDropdownMenu()">My Orders</a>
+              <a routerLink="/gift-cards" (click)="closeDropdownMenu()">Gift Cards</a>
+              <a routerLink="/change-password" (click)="closeDropdownMenu()">Change Password</a>
               <!-- Show Admin Panel for SuperAdmin, Admin, and Moderator -->
               <a routerLink="/admin"
+                  (click)="closeDropdownMenu()"
                   *ngIf="currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin' || currentUser?.role === 'Moderator'">
                 Admin Panel
               </a>
-              <a (click)="logout()">Logout</a>
+              <a (click)="logout(); closeDropdownMenu()">Logout</a>
             </div>
           </div>
-        </ng-template>        
+        </ng-template>    
       </div>
-      <button class="mobile-menu-btn" (click)="toggleMenu()">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
+      
+      
     </nav>
   </div>
 </header>

@@ -113,7 +113,8 @@ export class OrderEditComponent implements OnInit {
       state: ['', Validators.required],
       zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
       tips: [0, Validators.min(0)],
-      services: this.fb.array([])
+      services: this.fb.array([]),
+      cleaningType: ['normal', Validators.required]
     });
     this.serviceControls = this.orderForm.get('services') as FormArray;
   }
@@ -324,6 +325,10 @@ export class OrderEditComponent implements OnInit {
         });
       }
     });
+
+    // Sync cleaning type with restored extra services
+    const currentCleaningType = this.getCurrentCleaningType();
+    this.cleaningType.setValue(currentCleaningType);
   }
 
   getServiceControl(index: number): FormControl {
@@ -446,8 +451,10 @@ export class OrderEditComponent implements OnInit {
     if (!this.serviceType || !this.serviceType.extraServices) {
       return [];
     }
-    // Filter out same day service in order edit
-    return this.serviceType.extraServices.filter(extra => !extra.isSameDayService);
+    // Filter out same day service and deep cleaning services in order edit
+    return this.serviceType.extraServices.filter(extra => 
+      !extra.isSameDayService && !extra.isDeepCleaning && !extra.isSuperDeepCleaning
+    );
   }
 
   getOriginalServiceHours(service: Service): number {
@@ -902,5 +909,49 @@ export class OrderEditComponent implements OnInit {
       return 20; // 20 minutes for studio apartment
     }
     return service.timeDuration;
+  }
+
+  // Handle cleaning type selection
+  onCleaningTypeChange(cleaningType: string) {
+    // Remove any existing deep cleaning or super deep cleaning services
+    this.selectedExtraServices = this.selectedExtraServices.filter(
+      s => !s.extraService.isDeepCleaning && !s.extraService.isSuperDeepCleaning
+    );
+
+    // Add the selected cleaning type if not normal
+    if (cleaningType !== 'normal' && this.serviceType) {
+      const cleaningService = this.serviceType.extraServices.find(extra => {
+        if (cleaningType === 'deep' && extra.isDeepCleaning) return true;
+        if (cleaningType === 'super-deep' && extra.isSuperDeepCleaning) return true;
+        return false;
+      });
+
+      if (cleaningService) {
+        this.selectedExtraServices.push({
+          extraService: cleaningService,
+          quantity: 1,
+          hours: cleaningService.hasHours ? 0.5 : 0
+        });
+      }
+    }
+
+    this.calculateNewTotal();
+  }
+
+  // Get current cleaning type from form
+  getCurrentCleaningType(): string {
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+    
+    if (superDeepCleaning) {
+      return 'super-deep';
+    } else if (deepCleaning) {
+      return 'deep';
+    }
+    return 'normal';
+  }
+
+  get cleaningType() {
+    return this.orderForm.get('cleaningType') as FormControl;
   }
 }

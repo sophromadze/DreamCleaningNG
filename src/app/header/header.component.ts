@@ -55,10 +55,32 @@ export class HeaderComponent implements OnInit {
     if (navLinks) {
       navLinks.classList.toggle('active');
     }
+    // Close user menu when mobile menu is toggled
+    if (this.isUserMenuOpen) {
+      this.isUserMenuOpen = false;
+    }
+  }
+
+  closeMobileMenu() {
+    this.isUserMenuOpen = false;
+    this.isMenuOpen = false;
+    const navLinks = document.querySelector('.nav-links');
+    if (navLinks) {
+      navLinks.classList.remove('active');
+    }
+  }
+
+  closeDropdownMenu() {
+    this.isUserMenuOpen = true;
   }
 
   toggleUserMenu() {
     this.isUserMenuOpen = !this.isUserMenuOpen;
+    this.isMenuOpen = false;
+    const navLinks = document.querySelector('.nav-links');
+    if (navLinks) {
+      navLinks.classList.remove('active');
+    }
   }
 
   logout() {

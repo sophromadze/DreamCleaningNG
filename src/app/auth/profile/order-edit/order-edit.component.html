@@ -111,15 +111,14 @@
         <div class="section" *ngIf="serviceType && serviceType.extraServices.length > 0">
           <h2>Extra Services</h2>
           
-          <!-- Cleaning Type Display -->
-          <div class="cleaning-type-display">
-            <strong>Cleaning Type:</strong> 
-            <span class="cleaning-type-badge" 
-                  [class.regular]="getCleaningTypeText() === 'Normal Cleaning'"
-                  [class.deep]="getCleaningTypeText() === 'Deep Cleaning'"
-                  [class.super-deep]="getCleaningTypeText() === 'Super Deep Cleaning'">
-              {{ getCleaningTypeText() }}
-            </span>
+          <!-- Cleaning Type Selection -->
+          <div class="cleaning-type-selection">
+            <label>Cleaning Type *</label>
+            <select [formControl]="cleaningType" (change)="onCleaningTypeChange(cleaningType.value)">
+              <option value="normal">Normal Cleaning</option>
+              <option value="deep">Deep Cleaning</option>
+              <option value="super-deep">Super Deep Cleaning</option>
+            </select>
           </div>
 
           <div class="extra-services">

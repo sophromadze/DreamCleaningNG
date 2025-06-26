@@ -28,74 +28,81 @@
     }
   }
   
-  .nav-links {
+  .nav-container {
     display: flex;
-    gap: 30px;
     align-items: center;
+    gap: 10px;
   
-    a {
-      color: #333;
-      text-decoration: none;
-      font-weight: 500;
+    // Login button styling
+    .login-btn {
+      background-color: transparent;
+      border: 2px solid #007bff;
+      color: #007bff;
+      padding: 8px 20px;
+      border-radius: 25px;
+      font-weight: 600;
       transition: all 0.3s ease;
-      position: relative;
-      padding: 8px 0;
-  
+      text-decoration: none;
+
       &:hover {
-        color: #007bff;
-      }
-  
-      &.active {
-        color: #007bff;
-      }
-  
-      // Special styling for Book Now link
-      &[routerLink="/booking"] {
         background-color: #007bff;
         color: white;
-        padding: 10px 20px;
-        border-radius: 25px;
-        font-weight: 600;
-        box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
-        transition: all 0.3s ease;
-  
-        &:hover {
-          background-color: #0056b3;
-          color: white;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
-        }
-  
-        &.active {
-          background-color: #0056b3;
-          color: white;
-        }
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
       }
-  
-      // Login button styling
-      &.login-btn {
-        background-color: transparent;
-        border: 2px solid #007bff;
-        color: #007bff;
-        padding: 8px 20px;
-        border-radius: 25px;
-        font-weight: 600;
+
+      &.active {
+        background-color: #007bff;
+        color: white;
+      }
+    }  
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+    
+      a {
+        color: #333;
+        text-decoration: none;
+        font-weight: 500;
         transition: all 0.3s ease;
-  
+        position: relative;
+        padding: 8px 0;
+      
         &:hover {
-          background-color: #007bff;
-          color: white;
-          transform: translateY(-2px);
-          box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+          color: #007bff;
         }
-  
+      
         &.active {
+          color: #007bff;
+        }
+      
+        // Special styling for Book Now link
+        &[routerLink="/booking"] {
           background-color: #007bff;
           color: white;
+          padding: 10px 20px;
+          border-radius: 25px;
+          font-weight: 600;
+          box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+          transition: all 0.3s ease;
+        
+          &:hover {
+            background-color: #0056b3;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+          }
+        
+          &.active {
+            background-color: #0056b3;
+            color: white;
+          }
         }
       }
     }
-  }
+}
   
   .mobile-menu-btn {
     display: none;
@@ -112,36 +119,26 @@
       margin: 5px 0;
       transition: 0.3s;
     }
+  
+    // Active state: show as X
+    &.active {
+      span {
+        &:nth-child(1) {
+          transform: rotate(-45deg) translate(-5px, 6px);
+        }
+        
+        &:nth-child(2) {
+          opacity: 0;
+        }
+        
+        &:nth-child(3) {
+          transform: rotate(45deg) translate(-5px, -6px);
+        }
+      }
+    }
   }  
   
-  @media (max-width: 768px) {
-    .nav-links {
-      display: none;
-      position: absolute;
-      top: 80px;
-      left: 0;
-      right: 0;
-      background-color: #ffffff;
-      flex-direction: column;
-      padding: 20px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   
-      &.active {
-        display: flex;
-      }
-  
-      a[routerLink="/booking"],
-      a.login-btn {
-        width: 100%;
-        text-align: center;
-        margin-top: 10px;
-      }
-    }
-  
-    .mobile-menu-btn {
-      display: block;
-    }
-  }
   
   .user-menu {
     position: relative;
@@ -167,12 +164,24 @@
       align-items: center;
       justify-content: center;
       font-weight: 600;
+      position: relative;
     }
   
-    .fa-chevron-down {
-      font-size: 12px;
-      color: #666;
+    .chevron-down {
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      color: #007bff;
+      background-color: white;
+      border-radius: 50%;
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #007bff;
       transition: transform 0.3s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
   
     .dropdown-menu {
@@ -208,28 +217,54 @@
         &:last-child {
           color: #dc3545;
           border-top: 1px solid #eee;
+          border-bottom-right-radius: 8px;
+          border-bottom-left-radius: 8px;
   
           &:hover {
             background-color: #dc3545;
             color: white;
+            
           }
         }
       }
     }
   }
-  
+
   @media (max-width: 768px) {
-    .user-menu {
-      width: 100%;
-      justify-content: center;
-      margin-top: 10px;
+    .nav-container {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 80px;
+        left: 0;
+        right: 0;
+        background-color: #ffffff;
+        flex-direction: column;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+        &.active {
+          display: flex;
+          gap: 5px;
+        }
+    
+        a[routerLink="/booking"],
+        a.login-btn,.user-menu {
+          width: 100%;
+          text-align: center;
+          margin-top: 0;
+        }
   
-      .dropdown-menu {
-        position: static;
-        box-shadow: none;
-        margin-top: 8px;
-        border: 1px solid #eee;
+        a {
+          width: 100%;
+          text-align: center;
+          border: 1px solid #007bff;
+          border-radius: 25px;
+        }
+      }
+    
+      .mobile-menu-btn {
+        display: block;
       }
     }
   }
-  

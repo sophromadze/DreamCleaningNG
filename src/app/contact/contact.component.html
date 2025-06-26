@@ -1,1 +1,120 @@
-<p>contact works!</p>
+<div class="contact-container">
+    <div class="contact-content">
+      <h1>Contact Us</h1>
+      <p class="contact-intro">We'd love to hear from you! Send us a message and we'll respond as soon as possible.</p>
+  
+      <!-- Success Message -->
+      <div class="alert alert-success" *ngIf="showSuccess">
+        <i class="success-icon">✓</i>
+        <span>Your message has been sent successfully! We'll get back to you soon.</span>
+      </div>
+  
+      <!-- Error Message -->
+      <div class="alert alert-error" *ngIf="showError">
+        <i class="error-icon">✕</i>
+        <span>{{ errorMessage }}</span>
+      </div>
+  
+      <form [formGroup]="contactForm" (ngSubmit)="onSubmit()" class="contact-form">
+        <!-- Full Name Field -->
+        <div class="form-group">
+          <label for="fullName">Full Name *</label>
+          <input 
+            type="text" 
+            id="fullName" 
+            formControlName="fullName" 
+            class="form-control"
+            [class.error]="hasError('fullName')"
+            placeholder="Enter your full name">
+          <span class="error-message" *ngIf="hasError('fullName')">
+            {{ getErrorMessage('fullName') }}
+          </span>
+        </div>
+  
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email">Email Address *</label>
+          <input 
+            type="email" 
+            id="email" 
+            formControlName="email" 
+            class="form-control"
+            [class.error]="hasError('email')"
+            placeholder="your@email.com">
+          <span class="error-message" *ngIf="hasError('email')">
+            {{ getErrorMessage('email') }}
+          </span>
+          <small class="field-hint" *ngIf="currentUser">
+            Using your account email address
+          </small>
+        </div>
+  
+        <!-- Phone Field -->
+        <div class="form-group">
+          <label for="phone">Phone Number * <span class="phone-hint">(10 digits)</span></label>
+          <input 
+            type="tel" 
+            id="phone" 
+            formControlName="phone" 
+            class="form-control"
+            [class.error]="hasError('phone')"
+            (input)="onPhoneInput($event)"
+            placeholder="1234567890"
+            maxlength="10">
+          <span class="error-message" *ngIf="hasError('phone')">
+            {{ getErrorMessage('phone') }}
+          </span>
+        </div>
+  
+        <!-- Message Field -->
+        <div class="form-group">
+          <label for="message">Message *</label>
+          <textarea 
+            id="message" 
+            formControlName="message" 
+            class="form-control"
+            [class.error]="hasError('message')"
+            rows="5"
+            placeholder="Tell us how we can help you..."></textarea>
+          <span class="error-message" *ngIf="hasError('message')">
+            {{ getErrorMessage('message') }}
+          </span>
+        </div>
+  
+        <!-- Submit Button -->
+        <div class="form-actions">
+          <button 
+            type="submit" 
+            class="btn btn-primary"
+            [disabled]="isSubmitting">
+            <span *ngIf="!isSubmitting">Send Message</span>
+            <span *ngIf="isSubmitting" class="loading">
+              <i class="spinner"></i> Sending...
+            </span>
+          </button>
+        </div>
+      </form>
+  
+      <!-- Contact Information -->
+      <div class="contact-info">
+        <h2>Other Ways to Reach Us</h2>
+        <div class="info-grid">
+          <div class="info-item">
+            <i class="icon">📧</i>
+            <h3>Email</h3>
+            <p>info&#64;dreamcleaning.com</p>
+          </div>
+          <div class="info-item">
+            <i class="icon">📱</i>
+            <h3>Phone</h3>
+            <p>(929) 930-1525</p>
+          </div>
+          <div class="info-item">
+            <i class="icon">📍</i>
+            <h3>Address</h3>
+            <p>123 Cleaning Street<br>City, State 12345</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

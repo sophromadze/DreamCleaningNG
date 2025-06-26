@@ -149,7 +149,8 @@ export class BookingComponent implements OnInit, OnDestroy {
           if (value === 0) return null; // Allow 0 as default
           return value >= this.minTipAmount ? null : { minTipAmount: true };
         }
-      ]]
+      ]],
+      cleaningType: ['normal', Validators.required] // Add new form control for cleaning type
     });
   }
 
@@ -231,6 +232,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (savedData.zipCode) formValues.zipCode = savedData.zipCode;
     if (savedData.promoCode) formValues.promoCode = savedData.promoCode;
     if (savedData.tips !== undefined) formValues.tips = savedData.tips;
+    if (savedData.cleaningType) formValues.cleaningType = savedData.cleaningType;
   
     this.bookingForm.patchValue(formValues);
   }  
@@ -305,6 +307,10 @@ export class BookingComponent implements OnInit, OnDestroy {
                   });
                 }
               });
+              
+              // Sync cleaning type with restored extra services
+              const currentCleaningType = this.getCurrentCleaningType();
+              this.cleaningType.setValue(currentCleaningType);
             }
             
             this.calculateTotal();
@@ -833,8 +839,9 @@ export class BookingComponent implements OnInit, OnDestroy {
         const cost = selected.service.cost * selected.quantity * priceMultiplier;
         subTotal += cost;
         if (!useExplicitHours) {
-          totalDuration += selected.service.timeDuration * selected.quantity;
-          actualTotalDuration += selected.service.timeDuration * selected.quantity;
+          const serviceDuration = selected.service.timeDuration * selected.quantity;
+          totalDuration += serviceDuration;
+          actualTotalDuration += serviceDuration;
         }
       }
     });
@@ -847,14 +854,16 @@ export class BookingComponent implements OnInit, OnDestroy {
         if (selected.extraService.hasHours) {
           subTotal += selected.extraService.price * selected.hours * currentMultiplier;
           if (!useExplicitHours) {
-            totalDuration += selected.extraService.duration * selected.hours;
-            actualTotalDuration += selected.extraService.duration * selected.hours;
+            const extraDuration = selected.extraService.duration * selected.hours;
+            totalDuration += extraDuration;
+            actualTotalDuration += extraDuration;
           }
         } else if (selected.extraService.hasQuantity) {
           subTotal += selected.extraService.price * selected.quantity * currentMultiplier;
           if (!useExplicitHours) {
-            totalDuration += selected.extraService.duration * selected.quantity;
-            actualTotalDuration += selected.extraService.duration * selected.quantity;
+            const extraDuration = selected.extraService.duration * selected.quantity;
+            totalDuration += extraDuration;
+            actualTotalDuration += extraDuration;
           }
         } else {
           subTotal += selected.extraService.price * currentMultiplier;
@@ -937,9 +946,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
 
     // Total discount is the sum of both
-    const totalDiscountAmount = this.subscriptionDiscountAmount + this.promoOrFirstTimeDiscountAmount;
-
-    
+    const totalDiscountAmount = this.subscriptionDiscountAmount + this.promoOrFirstTimeDiscountAmount;    
 
     // Calculate tax on discounted subtotal
     const discountedSubTotal = subTotal - totalDiscountAmount;
@@ -986,19 +993,6 @@ export class BookingComponent implements OnInit, OnDestroy {
       this.nextOrderDiscount = 0;
       this.nextOrderTotal = 0;
     }
-  }
-
-   // Get cleaning type text
-  getCleaningTypeText(): string {
-    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
-    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
-    
-    if (superDeepCleaning) {
-      return 'Super Deep Cleaning';
-    } else if (deepCleaning) {
-      return 'Deep Cleaning';
-    }
-    return 'Normal Cleaning';
   }
 
   // Get cleaner pricing text
@@ -1120,7 +1114,8 @@ export class BookingComponent implements OnInit, OnDestroy {
   isFormValid(): boolean {
     return this.bookingForm.valid && 
            this.selectedServiceType !== null && 
-           this.selectedSubscription !== null;
+           this.selectedSubscription !== null && 
+           this.cleaningType.value !== null;
   }
 
   onSubmit() {
@@ -1137,7 +1132,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
 
     // Check if the form is valid
-    if (!this.bookingForm.valid || !this.selectedServiceType || !this.selectedSubscription) {
+    if (!this.bookingForm.valid || !this.selectedServiceType || !this.selectedSubscription || !this.cleaningType.value) {
       this.errorMessage = 'Please fill in all required fields';
       return;
     }
@@ -1351,10 +1346,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.selectedSpecialOffer = offer;
     this.specialOfferApplied = true;
     
-    // Disable promo code input ONLY if it's not a gift card
-    if (!this.giftCardApplied) {
-      this.promoCode.disable();
-    }
+    // Update promo code disabled state
+    this.updatePromoCodeDisabledState();
     
     // For backward compatibility with first-time discount
     if (offer.name.toLowerCase().includes('first time')) {
@@ -1369,8 +1362,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.specialOfferApplied = false;
     this.firstTimeDiscountApplied = false;
     
-    // Re-enable promo code input
-    this.promoCode.enable();
+    // Update promo code disabled state
+    this.updatePromoCodeDisabledState();
     this.errorMessage = '';
     
     this.calculateTotal();
@@ -1395,6 +1388,21 @@ export class BookingComponent implements OnInit, OnDestroy {
   get zipCode() { return this.bookingForm.get('zipCode') as FormControl; }
   get promoCode() { return this.bookingForm.get('promoCode') as FormControl; }
   get tips() { return this.bookingForm.get('tips') as FormControl; }
+  get cleaningType() { return this.bookingForm.get('cleaningType') as FormControl; }
+
+  // Check if promo code should be disabled
+  isPromoCodeDisabled(): boolean {
+    return this.specialOfferApplied || this.promoCode.disabled;
+  }
+
+  // Update promo code disabled state based on special offer
+  updatePromoCodeDisabledState() {
+    if (this.specialOfferApplied) {
+      this.promoCode.disable();
+    } else {
+      this.promoCode.enable();
+    }
+  }
 
   private loadUserSubscription() {
     // Only call getUserSubscription if user is logged in
@@ -1451,5 +1459,54 @@ export class BookingComponent implements OnInit, OnDestroy {
       'Monthly': 30
     };
     return mapping[subscriptionName] || 0;
+  }
+
+  // Get filtered extra services (excluding deep cleaning and super deep cleaning)
+  getFilteredExtraServices(): ExtraService[] {
+    if (!this.selectedServiceType) return [];
+    return this.selectedServiceType.extraServices.filter(extra => 
+      !extra.isDeepCleaning && !extra.isSuperDeepCleaning
+    );
+  }
+
+  // Handle cleaning type selection
+  onCleaningTypeChange(cleaningType: string) {
+    // Remove any existing deep cleaning or super deep cleaning services
+    this.selectedExtraServices = this.selectedExtraServices.filter(
+      s => !s.extraService.isDeepCleaning && !s.extraService.isSuperDeepCleaning
+    );
+
+    // Add the selected cleaning type if not normal
+    if (cleaningType !== 'normal' && this.selectedServiceType) {
+      const cleaningService = this.selectedServiceType.extraServices.find(extra => {
+        if (cleaningType === 'deep' && extra.isDeepCleaning) return true;
+        if (cleaningType === 'super-deep' && extra.isSuperDeepCleaning) return true;
+        return false;
+      });
+
+      if (cleaningService) {
+        this.selectedExtraServices.push({
+          extraService: cleaningService,
+          quantity: 1,
+          hours: cleaningService.hasHours ? 0.5 : 0
+        });
+      }
+    }
+
+    this.calculateTotal();
+    this.saveFormData();
+  }
+
+  // Get current cleaning type from form
+  getCurrentCleaningType(): string {
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+    
+    if (superDeepCleaning) {
+      return 'super-deep';
+    } else if (deepCleaning) {
+      return 'deep';
+    }
+    return 'normal';
   }
 }
