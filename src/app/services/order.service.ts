@@ -26,6 +26,7 @@ export interface Order {
   subTotal: number;
   tax: number;
   tips: number;
+  companyDevelopmentTips: number;
   total: number;
   discountAmount: number;
   subscriptionDiscountAmount?: number;
@@ -95,6 +96,7 @@ export interface UpdateOrder {
   services: { serviceId: number; quantity: number }[];
   extraServices: { extraServiceId: number; quantity: number; hours: number }[];
   tips: number;
+  companyDevelopmentTips: number;
   maidsCount: number;
   totalDuration: number;
   calculatedSubTotal: number;

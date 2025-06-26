@@ -311,7 +311,7 @@
           </div>
         </section>
 
-        <!-- Step 7: Tips -->
+        <!-- Step 7: Tips for Cleaners -->
         <section class="booking-section" *ngIf="selectedServiceType">
           <h2>7. Tips for Cleaners</h2>
           <div class="tips-section">
@@ -330,6 +330,32 @@
               <div class="custom-tip">
                 <input type="number" [formControl]="tips" min="0" placeholder="Custom amount">
                 <div class="error-message" *ngIf="tips.errors?.['minTipAmount']">
+                  Custom tip amount must be at least $10
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 8: Tips for Company Development -->
+        <section class="booking-section" *ngIf="selectedServiceType">
+          <h2>9. Tips for Company Development</h2>
+          <div class="tips-section">
+            <p>Support our company's growth and improvement initiatives!</p>
+            <div class="tip-options">
+              <button [class.selected]="companyDevelopmentTips.value === 0" 
+                      (click)="companyDevelopmentTips.setValue(0)">$0</button>
+              <button [class.selected]="companyDevelopmentTips.value === 10" 
+                      (click)="companyDevelopmentTips.setValue(10)">$10</button>
+              <button [class.selected]="companyDevelopmentTips.value === 15" 
+                      (click)="companyDevelopmentTips.setValue(15)">$15</button>
+              <button [class.selected]="companyDevelopmentTips.value === 20" 
+                      (click)="companyDevelopmentTips.setValue(20)">$20</button>
+              <button [class.selected]="companyDevelopmentTips.value === 25" 
+                      (click)="companyDevelopmentTips.setValue(25)">$25</button>
+              <div class="custom-tip">
+                <input type="number" [formControl]="companyDevelopmentTips" min="0" placeholder="Custom amount">
+                <div class="error-message" *ngIf="companyDevelopmentTips.errors?.['minCompanyTipAmount']">
                   Custom tip amount must be at least $10
                 </div>
               </div>
@@ -535,9 +561,14 @@
               <span>${{ calculation.tax.toFixed(2) }}</span>
             </div>
             
-            <div class="price-item" *ngIf="calculation.tips > 0">
-              <span>Tips:</span>
-              <span>${{ calculation.tips.toFixed(2) }}</span>
+            <div class="price-item" *ngIf="tips.value > 0">
+              <span>Tips for Cleaners:</span>
+              <span>${{ (tips.value || 0).toFixed(2) }}</span>
+            </div>
+            
+            <div class="price-item" *ngIf="companyDevelopmentTips.value > 0">
+              <span>Tips for Company Development:</span>
+              <span>${{ (companyDevelopmentTips.value || 0).toFixed(2) }}</span>
             </div>
             
             <div class="total">

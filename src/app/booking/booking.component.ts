@@ -96,7 +96,8 @@ export class BookingComponent implements OnInit, OnDestroy {
   // Constants
   salesTaxRate = 0.088; // 8.8%
   minDate = new Date();
-  minTipAmount = 10; // Minimum tip amount when user enters a custom value
+  minTipAmount = 10; 
+  minCompanyTipAmount = 10;
   
   // Entry methods
   entryMethods = [
@@ -148,6 +149,14 @@ export class BookingComponent implements OnInit, OnDestroy {
           const value = control.value;
           if (value === 0) return null; // Allow 0 as default
           return value >= this.minTipAmount ? null : { minTipAmount: true };
+        }
+      ]],
+      companyDevelopmentTips: [0, [
+        Validators.min(0),
+        (control: AbstractControl): ValidationErrors | null => {
+          const value = control.value;
+          if (value === 0) return null; // Allow 0 as default
+          return value >= this.minCompanyTipAmount ? null : { minCompanyTipAmount: true };
         }
       ]],
       cleaningType: ['normal', Validators.required] // Add new form control for cleaning type
@@ -232,6 +241,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (savedData.zipCode) formValues.zipCode = savedData.zipCode;
     if (savedData.promoCode) formValues.promoCode = savedData.promoCode;
     if (savedData.tips !== undefined) formValues.tips = savedData.tips;
+    if (savedData.companyDevelopmentTips !== undefined) formValues.companyDevelopmentTips = savedData.companyDevelopmentTips;
     if (savedData.cleaningType) formValues.cleaningType = savedData.cleaningType;
   
     this.bookingForm.patchValue(formValues);
@@ -457,6 +467,11 @@ export class BookingComponent implements OnInit, OnDestroy {
     
     // Listen to tips changes
     this.bookingForm.get('tips')?.valueChanges.subscribe(() => {
+      this.calculateTotal();
+    });
+
+    // Listen to company development tips changes
+    this.bookingForm.get('companyDevelopmentTips')?.valueChanges.subscribe(() => {
       this.calculateTotal();
     });
     
@@ -954,9 +969,11 @@ export class BookingComponent implements OnInit, OnDestroy {
 
     // Get tips
     const tips = this.tips.value || 0;
-
+    const companyDevelopmentTips = this.companyDevelopmentTips.value || 0;
+    const totalTips = tips + companyDevelopmentTips;
+      
     // Calculate total
-    const total = discountedSubTotal + tax + tips;
+    const total = discountedSubTotal + tax + totalTips;
 
     // Apply gift card if applicable - ADD THIS BLOCK
     let finalTotal = total;
@@ -974,8 +991,8 @@ export class BookingComponent implements OnInit, OnDestroy {
       subTotal: Math.round(subTotal * 100) / 100,
       tax,
       discountAmount: totalDiscountAmount,
-      tips,
-      total: Math.round(finalTotal * 100) / 100, // Change 'total' to 'finalTotal'
+      tips: totalTips,
+      total: Math.round(finalTotal * 100) / 100,
       totalDuration: displayDuration
     };
 
@@ -1229,6 +1246,7 @@ export class BookingComponent implements OnInit, OnDestroy {
       specialOfferId: this.specialOfferApplied ? this.selectedSpecialOffer?.specialOfferId : undefined,
       userSpecialOfferId: this.specialOfferApplied && this.selectedSpecialOffer ? this.selectedSpecialOffer.id : undefined,
       tips: formValue.tips,
+      companyDevelopmentTips: formValue.companyDevelopmentTips,
       maidsCount: this.calculatedMaidsCount,
       discountAmount: this.promoOrFirstTimeDiscountAmount,
       subscriptionDiscountAmount: shouldApplySubscriptionDiscount ? this.subscriptionDiscountAmount : 0,
@@ -1388,6 +1406,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   get zipCode() { return this.bookingForm.get('zipCode') as FormControl; }
   get promoCode() { return this.bookingForm.get('promoCode') as FormControl; }
   get tips() { return this.bookingForm.get('tips') as FormControl; }
+  get companyDevelopmentTips() { return this.bookingForm.get('companyDevelopmentTips') as FormControl; }
   get cleaningType() { return this.bookingForm.get('cleaningType') as FormControl; }
 
   // Check if promo code should be disabled

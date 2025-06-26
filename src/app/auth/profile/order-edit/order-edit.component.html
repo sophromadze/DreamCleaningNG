@@ -273,10 +273,19 @@
   
         <!-- Tips -->
         <div class="section">
-          <h2>Tips</h2>
+          <h2>Tips for Cleaners</h2>
           <div class="form-group">
             <label>Tip Amount</label>
             <input type="number" formControlName="tips" min="0" step="1">
+          </div>
+        </div>
+
+        <!-- Company Development Tips -->
+        <div class="section">
+          <h2>Tips for Company Development</h2>
+          <div class="form-group">
+            <label>Tip Amount</label>
+            <input type="number" formControlName="companyDevelopmentTips" min="0" step="1">
           </div>
         </div>
 
@@ -377,8 +386,13 @@
           </div>
           
           <div class="price-row" *ngIf="tips.value > 0">
-            <span>Tips:</span>
+            <span>Tips for Cleaners:</span>
             <span class="amount">${{ tips.value.toFixed(2) }}</span>
+          </div>
+          
+          <div class="price-row" *ngIf="companyDevelopmentTips.value > 0">
+            <span>Tips for Company Development:</span>
+            <span class="amount">${{ companyDevelopmentTips.value.toFixed(2) }}</span>
           </div>
           
           <div class="price-row total">

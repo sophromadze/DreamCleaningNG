@@ -113,6 +113,7 @@ export class OrderEditComponent implements OnInit {
       state: ['', Validators.required],
       zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
       tips: [0, Validators.min(0)],
+      companyDevelopmentTips: [0, Validators.min(0)],
       services: this.fb.array([]),
       cleaningType: ['normal', Validators.required]
     });
@@ -126,6 +127,11 @@ export class OrderEditComponent implements OnInit {
     
     // Listen to tips changes
     this.orderForm.get('tips')?.valueChanges.subscribe(() => {
+      this.calculateNewTotal();
+    });
+
+    // Listen to company development tips changes
+    this.orderForm.get('companyDevelopmentTips')?.valueChanges.subscribe(() => {
       this.calculateNewTotal();
     });
 
@@ -217,7 +223,8 @@ export class OrderEditComponent implements OnInit {
       city: order.city,
       state: order.state,
       zipCode: order.zipCode,
-      tips: order.tips
+      tips: order.tips,
+      companyDevelopmentTips: order.companyDevelopmentTips || 0
     });
 
     // Load cities for the selected state
@@ -665,9 +672,11 @@ export class OrderEditComponent implements OnInit {
   
     // Get tips
     const tips = this.orderForm.get('tips')?.value || 0;
-  
+    const companyDevelopmentTips = this.orderForm.get('companyDevelopmentTips')?.value || 0;
+    const totalTips = tips + companyDevelopmentTips;
+
     // Calculate new total
-    this.newTotal = this.newSubTotal + this.newTax + tips;
+    this.newTotal = this.newSubTotal + this.newTax + totalTips;
 
     // Apply gift card if applicable
     let finalTotal = this.newTotal;
@@ -749,6 +758,7 @@ export class OrderEditComponent implements OnInit {
         hours: s.hours
       })),
       tips: formValue.tips || 0,
+      companyDevelopmentTips: formValue.companyDevelopmentTips || 0,
       totalDuration: this.actualTotalDuration,
       maidsCount: this.calculatedMaidsCount,
       calculatedSubTotal: this.newSubTotal + this.originalDiscountAmount + this.originalSubscriptionDiscountAmount,
@@ -881,6 +891,10 @@ export class OrderEditComponent implements OnInit {
 
   get tips() {
     return this.orderForm.get('tips')!;
+  }
+
+  get companyDevelopmentTips() {
+    return this.orderForm.get('companyDevelopmentTips')!;
   }
   
   get totalDurationDisplay(): number {

@@ -33,6 +33,7 @@ export interface BookingFormData {
   zipCode?: string;
   promoCode?: string;
   tips?: number;
+  companyDevelopmentTips?: number;
   cleaningType?: string;
   
   // Selected Subscription

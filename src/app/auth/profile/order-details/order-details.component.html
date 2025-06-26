@@ -176,8 +176,13 @@
           </div>
           
           <div class="price-row" *ngIf="order.tips > 0">
-            <span>Tips:</span>
+            <span>Tips for Cleaners:</span>
             <span>${{ order.tips.toFixed(2) }}</span>
+          </div>
+          
+          <div class="price-row" *ngIf="order.companyDevelopmentTips > 0">
+            <span>Tips for Company Development:</span>
+            <span>${{ order.companyDevelopmentTips.toFixed(2) }}</span>
           </div>
           
           <div class="price-row total">
