@@ -31,11 +31,19 @@
                  required>
         </div>
         <div class="form-group">
-          <label for="newServiceTypeBasePrice">Base Price:</label>
+          <label for="newServiceTypeBasePrice">Price:</label>
           <input type="number" 
                  id="newServiceTypeBasePrice" 
                  [(ngModel)]="newServiceType.basePrice" 
                  name="basePrice" 
+                 required>
+        </div>
+        <div class="form-group">
+          <label for="newServiceTypeTimeDuration">Time Duration (minutes) *</label>
+          <input type="number" 
+                 id="newServiceTypeTimeDuration" 
+                 [(ngModel)]="newServiceType.timeDuration" 
+                 name="timeDuration" 
                  required>
         </div>
         <div class="form-group">
@@ -68,7 +76,8 @@
           <tr>
             <th>ID</th>
             <th>Name</th>
-            <th>Base Price</th>
+            <th>Price</th>
+            <th>Time</th>
             <th>Description</th>
             <th>Order</th>
             <th>Status</th>
@@ -97,6 +106,15 @@
               <input *ngIf="isEditingServiceType && selectedServiceType?.id === type.id" 
                      type="number" 
                      [(ngModel)]="type.basePrice"
+                     class="edit-input">
+            </td>
+            <td>
+              <ng-container *ngIf="!isEditingServiceType || selectedServiceType?.id !== type.id">
+                {{type.timeDuration}} min
+              </ng-container>
+              <input *ngIf="isEditingServiceType && selectedServiceType?.id === type.id" 
+                     type="number" 
+                     [(ngModel)]="type.timeDuration"
                      class="edit-input">
             </td>
             <td>

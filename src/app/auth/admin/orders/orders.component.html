@@ -129,7 +129,8 @@
                     <h5>Pricing Breakdown</h5>
                     <p><strong>Subtotal:</strong> ${{formatCurrency(selectedOrder.subTotal)}}</p>
                     <p><strong>Tax:</strong> ${{formatCurrency(selectedOrder.tax)}}</p>
-                    <p><strong>Tips:</strong> ${{formatCurrency(selectedOrder.tips)}}</p>
+                    <p *ngIf="selectedOrder.tips > 0"><strong>Tips for Cleaners:</strong> ${{formatCurrency(selectedOrder.tips)}}</p>
+                    <p *ngIf="selectedOrder.companyDevelopmentTips > 0"><strong>Tips for Company:</strong> ${{formatCurrency(selectedOrder.companyDevelopmentTips)}}</p>
                     <!-- Subscription Discount -->
                     <p *ngIf="selectedOrder.subscriptionDiscountAmount && selectedOrder.subscriptionDiscountAmount > 0">
                       <strong>Subscription Discount ({{selectedOrder.subscriptionName}}):</strong> -${{formatCurrency(selectedOrder.subscriptionDiscountAmount)}}

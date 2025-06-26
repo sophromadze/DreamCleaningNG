@@ -23,7 +23,8 @@ export class BookingServicesComponent implements OnInit {
     name: '',
     basePrice: 0,
     description: '',
-    displayOrder: 1
+    displayOrder: 1,
+    timeDuration: 90
   };
   
   // Services
@@ -217,7 +218,8 @@ export class BookingServicesComponent implements OnInit {
       name: '',
       basePrice: 0,
       description: '',
-      displayOrder: this.serviceTypes.length + 1
+      displayOrder: this.serviceTypes.length + 1,
+      timeDuration: 90
     };
   }
 
@@ -227,7 +229,8 @@ export class BookingServicesComponent implements OnInit {
       name: '',
       basePrice: 0,
       description: '',
-      displayOrder: 1
+      displayOrder: 1,
+      timeDuration: 90
     };
   }
 
@@ -240,7 +243,8 @@ export class BookingServicesComponent implements OnInit {
           name: '',
           basePrice: 0,
           description: '',
-          displayOrder: 1
+          displayOrder: 1,
+          timeDuration: 90
         };
         this.serviceTypeMessage.success = 'Service type added successfully.';
       },
@@ -265,7 +269,8 @@ export class BookingServicesComponent implements OnInit {
         name: this.selectedServiceType.name,
         basePrice: this.selectedServiceType.basePrice,
         description: this.selectedServiceType.description,
-        displayOrder: this.selectedServiceType.displayOrder || 1
+        displayOrder: this.selectedServiceType.displayOrder || 1,
+        timeDuration: this.selectedServiceType.timeDuration
       };
       this.adminService.updateServiceType(this.selectedServiceType.id, updateData).subscribe({
         next: (response) => {

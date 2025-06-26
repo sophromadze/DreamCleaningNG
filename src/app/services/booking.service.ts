@@ -12,6 +12,7 @@ export interface ServiceType {
   extraServices: ExtraService[];
   isActive: boolean;
   displayOrder?: number;
+  timeDuration: number;
 }
 
 export interface Service {

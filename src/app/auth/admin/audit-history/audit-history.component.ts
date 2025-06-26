@@ -227,6 +227,8 @@ export class AuditHistoryComponent implements OnInit {
            !!log.newValues;
   }
 
+
+
   getFieldDisplayValue(value: any, fieldName?: string): string {   
     // Handle null/undefined
     if (value === null || value === undefined) {
@@ -244,7 +246,12 @@ export class AuditHistoryComponent implements OnInit {
       return roles[value] || value.toString();
     }
     
-    // Handle dates
+    // IMPORTANT: Handle TimeDuration and Duration fields BEFORE date handling
+    if (fieldName === 'TimeDuration' || fieldName === 'Duration') {
+      return `${value} minutes`;
+    }
+    
+    // Handle dates - this comes AFTER the duration check
     if (fieldName && (fieldName.includes('Date') || fieldName.includes('Time') || fieldName === 'CreatedAt' || fieldName === 'UpdatedAt')) {
       if (value === '0001-01-01T00:00:00Z' || value === '0001-01-01T00:00:00') {
         return 'Not set';
@@ -392,4 +399,6 @@ export class AuditHistoryComponent implements OnInit {
 
     return pages;
   }
+
+
 }

@@ -816,6 +816,12 @@ export class BookingComponent implements OnInit, OnDestroy {
     // Calculate base price with multiplier
     if (this.selectedServiceType) {
       subTotal += this.selectedServiceType.basePrice * priceMultiplier;
+
+      // ADD THIS LINE - Add service type's base duration
+      if (!useExplicitHours) {
+        totalDuration += this.selectedServiceType.timeDuration || 0;
+        actualTotalDuration += this.selectedServiceType.timeDuration || 0;
+      }
     }
 
     // Check if we have cleaner-hours relationship

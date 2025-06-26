@@ -531,6 +531,10 @@ export class OrderEditComponent implements OnInit {
     // Calculate base price with multiplier
     if (this.serviceType) {
       subtotal += this.serviceType.basePrice * priceMultiplier;
+
+      // ADD THESE TWO LINES
+      totalDuration += this.serviceType.timeDuration || 0;
+      actualTotalDuration += this.serviceType.timeDuration || 0;
     }
   
     // Check if cleaners are explicitly selected
