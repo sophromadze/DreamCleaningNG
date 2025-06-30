@@ -1,5 +1,5 @@
 // src/app/header/header.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../services/auth.service';
@@ -17,11 +17,12 @@ export class HeaderComponent implements OnInit {
   isUserMenuOpen = false;
   currentUser: any = null;
   userInitials: string = '';
-  isAuthInitialized = false; // Add this to prevent flickering
+  isAuthInitialized = false;
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private elementRef: ElementRef
   ) {}
 
   ngOnInit() {
@@ -37,6 +38,17 @@ export class HeaderComponent implements OnInit {
         this.userInitials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
       }
     });
+  }
+
+  // Listen for clicks outside the dropdown
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const targetElement = event.target as HTMLElement;
+    const clickedInside = this.elementRef.nativeElement.querySelector('.user-menu')?.contains(targetElement);
+    
+    if (!clickedInside && this.isUserMenuOpen) {
+      this.isUserMenuOpen = false;
+    }
   }
 
   // Helper method to determine if we should show login button
@@ -71,10 +83,15 @@ export class HeaderComponent implements OnInit {
   }
 
   closeDropdownMenu() {
-    this.isUserMenuOpen = true;
+    this.isUserMenuOpen = false;
   }
 
-  toggleUserMenu() {
+  toggleUserMenu(event?: Event) {
+    // Prevent the document click listener from immediately closing the menu
+    if (event) {
+      event.stopPropagation();
+    }
+    
     this.isUserMenuOpen = !this.isUserMenuOpen;
     this.isMenuOpen = false;
     const navLinks = document.querySelector('.nav-links');

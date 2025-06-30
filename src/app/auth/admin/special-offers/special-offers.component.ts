@@ -26,7 +26,7 @@ export class SpecialOffersComponent implements OnInit {
   editingOfferType: { [key: number]: number } = {};
   
   offerTypes = [
-    { value: OfferType.FirstTime, label: 'First Time' },
+    { value: OfferType.FirstTime, label: 'New Registered Users' },
     { value: OfferType.Seasonal, label: 'Seasonal' },
     { value: OfferType.Holiday, label: 'Holiday' },
     { value: OfferType.Custom, label: 'Custom' }
@@ -139,6 +139,9 @@ export class SpecialOffersComponent implements OnInit {
       requiresFirstTimeCustomer: false,
       badgeColor: '#28a745'
     });
+    
+    // Ensure type field is enabled for new offers
+    this.specialOfferForm.get('type')?.enable();
   }
 
   editOffer(offer: SpecialOffer) {
@@ -146,6 +149,14 @@ export class SpecialOffersComponent implements OnInit {
     this.showCreateForm = false;
     // Store the numeric type value
     this.editingOfferType[offer.id] = this.getOfferTypeValue(offer.type);
+    
+    // Ensure badge color has a valid value
+    if (!offer.badgeColor || offer.badgeColor === '') {
+      offer.badgeColor = '#28a745';
+    }
+    
+    // Update the form state based on whether it's a first-time offer
+    this.updateTypeFieldState();
   }
   
 
@@ -156,6 +167,16 @@ export class SpecialOffersComponent implements OnInit {
       case 'Holiday': return OfferType.Holiday;
       case 'Custom': return OfferType.Custom;
       default: return OfferType.Custom;
+    }
+  }
+
+  // Method to handle type field disabled state
+  updateTypeFieldState() {
+    const typeControl = this.specialOfferForm.get('type');
+    if (this.isEditingFirstTimeOffer()) {
+      typeControl?.disable();
+    } else {
+      typeControl?.enable();
     }
   }
 
@@ -227,6 +248,7 @@ export class SpecialOffersComponent implements OnInit {
     this.showCreateForm = false;
     this.editingOfferId = null;
     this.specialOfferForm.reset();
+    this.specialOfferForm.get('type')?.enable();
   }
 
   deleteOffer(offer: SpecialOffer) {

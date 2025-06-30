@@ -32,7 +32,7 @@
 
         <div class="form-group">
           <label>Offer Type *</label>
-          <select formControlName="type" [disabled]="isEditingFirstTimeOffer()">
+          <select formControlName="type">
             <option *ngFor="let type of offerTypes" [value]="type.value">{{ type.label }}</option>
           </select>
         </div>
@@ -82,7 +82,7 @@
 
         <div class="form-group">
           <label>Badge Color</label>
-          <input type="color" formControlName="badgeColor">
+          <input type="color" formControlName="badgeColor" [value]="specialOfferForm.get('badgeColor')?.value || '#28a745'">
         </div>
 
         <div class="form-group full-width">
@@ -221,7 +221,7 @@
 
                 <div class="form-group">
                   <label>Badge Color</label>
-                  <input type="color" [(ngModel)]="offer.badgeColor">
+                  <input type="color" [(ngModel)]="offer.badgeColor" [value]="offer.badgeColor || '#28a745'">
                 </div>
               </div>
 

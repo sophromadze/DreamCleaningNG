@@ -151,7 +151,33 @@
     transition: background-color 0.3s ease;
   
     &:hover {
-      background-color: rgba(0, 0, 0, 0.05);
+      .user-avatar {
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(255, 255, 255, 0.2);
+          border-radius: 50%;
+        }
+      }
+    }
+  
+    &:active {
+      .user-avatar {
+        &::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: rgba(255, 255, 255, 0.5);
+          border-radius: 50%;
+        }
+      }
     }
   
     .user-avatar {
@@ -165,6 +191,11 @@
       justify-content: center;
       font-weight: 600;
       position: relative;
+      transition: all 0.5s ease;
+      box-shadow: 
+        0 2px 4px rgba(0, 0, 0, 0.2),
+        0 4px 8px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
   
     .chevron-down {
@@ -260,6 +291,24 @@
           text-align: center;
           border: 1px solid #007bff;
           border-radius: 25px;
+        }
+      }
+
+      .user-menu {
+        &:hover {
+          .user-avatar {
+            &::after {
+              background-color: transparent;
+            }
+          }
+        }
+
+        &:active {
+          .user-avatar {
+            &::after {
+              background-color: rgba(255, 255, 255, 0.2);
+            }
+          }
         }
       }
     
