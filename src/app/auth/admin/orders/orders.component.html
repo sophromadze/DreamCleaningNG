@@ -103,6 +103,7 @@
                   <!-- Service Details -->
                   <div class="detail-section">
                     <h5>Service Details</h5>
+                    <p><strong>Service Type:</strong> {{selectedOrder.serviceTypeName}}</p>
                     <p><strong>Service Time:</strong> {{formatDateTime((selectedOrder.serviceDate || '1970-01-01'), selectedOrder.serviceTime)}}</p>
                     <p><strong>Duration:</strong>
                       <ng-container *ngIf="hasCleanersService(); else perMaid">
