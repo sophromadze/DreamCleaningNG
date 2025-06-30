@@ -93,11 +93,23 @@
           <div class="extra-service-item" *ngFor="let extra of order.extraServices">
             <span class="service-name">{{ extra.extraServiceName }}</span>
             <span class="service-quantity">
-              <ng-container *ngIf="extra.quantity > 0">Qty: {{ extra.quantity }}</ng-container>
-              <ng-container *ngIf="extra.hours > 0">Hours: {{ extra.hours }}</ng-container>
+              <ng-container *ngIf="extra.quantity > 0 && extra.hours > 0">
+                Qty: {{ extra.quantity }}
+              </ng-container>
+              <ng-container *ngIf="extra.quantity > 0 && extra.hours <= 0">
+                Qty: {{ extra.quantity }}
+              </ng-container>
+              <ng-container *ngIf="extra.quantity <= 0 && extra.hours > 0">
+                <!-- Hours are shown in duration column, so nothing here -->
+              </ng-container>
             </span>
             <span class="service-duration">
-              {{ formatServiceDuration(hasCleanerService() ? 0 : extra.duration) }}
+              <ng-container *ngIf="extra.hours > 0">
+                {{ formatServiceDuration(extra.hours * 60) }}
+              </ng-container>
+              <ng-container *ngIf="extra.hours <= 0">
+                {{ formatServiceDuration(hasCleanerService() ? 0 : extra.duration) }}
+              </ng-container>
             </span>
             <span class="service-cost">${{ extra.cost.toFixed(2) }}</span>
           </div>

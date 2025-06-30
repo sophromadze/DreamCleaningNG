@@ -3,6 +3,7 @@ import { MainComponent } from './main/main.component';
 import { authGuard } from './guards/auth.guard';
 import { noAuthGuard } from './guards/no-auth.guard';
 import { adminGuard } from './guards/admin.guard';
+import { CleanerCabinetComponent } from './auth/cleaner-cabinet/cleaner-cabinet.component';
 
 export const routes: Routes = [
   {
@@ -96,5 +97,10 @@ export const routes: Routes = [
     path: 'auth/reset-password',
     canActivate: [noAuthGuard],
     loadComponent: () => import('./auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
+  },
+  {
+    path: 'cleaner/cabinet',
+    canActivate: [authGuard],
+    loadComponent: () => import('./auth/cleaner-cabinet/cleaner-cabinet.component').then(m => m.CleanerCabinetComponent)
   }
 ];

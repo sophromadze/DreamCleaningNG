@@ -261,6 +261,41 @@
     }
   }
 
+  // Role badge styling - matching user-management component
+  .user-role {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    font-weight: 500;
+    margin-top: 4px;
+
+    &.role-superadmin {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    &.role-admin {
+      background-color: #007bff;
+      color: white;
+    }
+
+    &.role-moderator {
+      background-color: #28a745;
+      color: white;
+    }
+
+    &.role-cleaner {
+      background-color: #17a2b8;
+      color: white;
+    }
+
+    &.role-customer {
+      background-color: #6c757d;
+      color: white;
+    }
+  }
+
   @media (max-width: 768px) {
     .nav-container {
       .nav-links {

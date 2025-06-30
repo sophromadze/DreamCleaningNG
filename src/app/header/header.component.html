@@ -34,20 +34,33 @@
                 <small class="user-role"
                        [class.role-superadmin]="currentUser?.role === 'SuperAdmin'"
                        [class.role-admin]="currentUser?.role === 'Admin'"
-                       [class.role-moderator]="currentUser?.role === 'Moderator'">
+                       [class.role-moderator]="currentUser?.role === 'Moderator'"
+                       [class.role-cleaner]="currentUser?.role === 'Cleaner'"
+                       [class.role-customer]="currentUser?.role === 'Customer'">
                   {{ currentUser?.role }}
                 </small>
               </div>
+              
               <a routerLink="/profile" (click)="closeDropdownMenu()">Profile</a>
+              
+              <!-- Show Cabinet for Cleaners -->
+              <a routerLink="/cleaner/cabinet" 
+                 (click)="closeDropdownMenu()"
+                 *ngIf="currentUser?.role === 'Cleaner'">
+                Cabinet
+              </a>
+              
               <a routerLink="/profile/orders" (click)="closeDropdownMenu()">My Orders</a>
               <a routerLink="/gift-cards" (click)="closeDropdownMenu()">Gift Cards</a>
               <a routerLink="/change-password" (click)="closeDropdownMenu()">Change Password</a>
+              
               <!-- Show Admin Panel for SuperAdmin, Admin, and Moderator -->
-              <a routerLink="/admin" 
+              <a routerLink="/admin"
                  (click)="closeDropdownMenu()"
                  *ngIf="currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin' || currentUser?.role === 'Moderator'">
                 Admin Panel
               </a>
+              
               <a (click)="logout(); closeDropdownMenu()">Logout</a>
             </div>
           </div>

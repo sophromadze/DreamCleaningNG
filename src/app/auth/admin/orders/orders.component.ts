@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, UserPermissions } from '../../../services/admin.service';
 import { OrderService, Order, OrderList } from '../../../services/order.service';
+import { CleanerService, AvailableCleaner } from '../../../services/cleaner.service';
 
 // Extended interface for admin orders with additional properties
 export interface AdminOrderList extends OrderList {
@@ -57,9 +58,18 @@ export class OrdersComponent implements OnInit {
   itemsPerPage = 20;
   totalPages = 1;
 
+  // New properties for cleaner assignment
+  showCleanerModal = false;
+  availableCleaners: AvailableCleaner[] = [];
+  selectedCleaners: number[] = [];
+  tipsForCleaner = '';
+  assigningOrderId: number | null = null;
+  assignedCleanersMap: Map<number, {id: number, name: string}[]> = new Map();
+
   constructor(
     private adminService: AdminService,
-    private orderService: OrderService
+    private orderService: OrderService,
+    private cleanerService: CleanerService
   ) {}
 
   ngOnInit() {
@@ -131,6 +141,7 @@ export class OrdersComponent implements OnInit {
             id: order.userId,
             email: order.contactEmail
           });
+          this.loadAssignedCleaners(orderId);
         },
         error: (error) => {
           console.error('Error loading order details:', error);
@@ -146,6 +157,44 @@ export class OrdersComponent implements OnInit {
         error: (error) => {
           console.error('Error loading order details:', error);
           this.errorMessage = 'Failed to load order details.';
+        }
+      });
+    }
+  }
+
+  loadAssignedCleaners(orderId: number) {
+    this.adminService.getAssignedCleanersWithIds(orderId).subscribe({
+      next: (cleaners) => {
+        this.assignedCleanersMap.set(orderId, cleaners);
+      },
+      error: (error) => {
+        console.log('No cleaners assigned or error loading cleaners');
+        this.assignedCleanersMap.set(orderId, []);
+      }
+    });
+  }
+
+  removeCleanerFromOrder(orderId: number, cleanerId: number, cleanerName: string) {
+    const confirmMessage = `Are you sure you want to remove ${cleanerName} from this order? They will receive an email notification about the removal.`;
+    
+    if (confirm(confirmMessage)) {
+      this.cleanerService.removeCleanerFromOrder(orderId, cleanerId).subscribe({
+        next: () => {
+          this.successMessage = `${cleanerName} has been removed from the order and notified via email.`;
+          
+          // Update the local list
+          const currentCleaners = this.assignedCleanersMap.get(orderId) || [];
+          const updatedCleaners = currentCleaners.filter(c => c.id !== cleanerId);
+          this.assignedCleanersMap.set(orderId, updatedCleaners);
+          
+          // Clear success message after 5 seconds
+          setTimeout(() => {
+            this.successMessage = '';
+          }, 5000);
+        },
+        error: (error) => {
+          console.error('Error removing cleaner:', error);
+          this.errorMessage = 'Failed to remove cleaner from order.';
         }
       });
     }
@@ -397,5 +446,96 @@ export class OrdersComponent implements OnInit {
     }
 
     return pages;
+  }
+
+  getAssignedCleaners(orderId: number): string[] {
+    const cleaners = this.assignedCleanersMap.get(orderId) || [];
+    return cleaners.map(c => c.name);
+  }
+
+  getAssignedCleanersWithIds(orderId: number): {id: number, name: string}[] {
+    return this.assignedCleanersMap.get(orderId) || [];
+  }
+
+  openCleanerAssignmentModal(orderId: number) {
+    this.assigningOrderId = orderId;
+    this.selectedCleaners = [];
+    this.tipsForCleaner = '';
+    
+    this.cleanerService.getAvailableCleaners(orderId).subscribe({
+      next: (cleaners) => {
+        this.availableCleaners = cleaners;
+        this.showCleanerModal = true;
+      },
+      error: (error) => {
+        console.error('Error loading available cleaners:', error);
+        this.errorMessage = 'Failed to load available cleaners.';
+      }
+    });
+  }
+
+  closeCleanerModal() {
+    this.showCleanerModal = false;
+    this.assigningOrderId = null;
+    this.selectedCleaners = [];
+    this.tipsForCleaner = '';
+    this.availableCleaners = [];
+  }
+
+  toggleCleanerSelection(cleanerId: number) {
+    const index = this.selectedCleaners.indexOf(cleanerId);
+    if (index > -1) {
+      this.selectedCleaners.splice(index, 1);
+    } else {
+      this.selectedCleaners.push(cleanerId);
+    }
+  }
+
+  isCleanerSelected(cleanerId: number): boolean {
+    return this.selectedCleaners.includes(cleanerId);
+  }
+
+  assignCleanersToOrder() {
+    if (!this.assigningOrderId || this.selectedCleaners.length === 0) {
+      this.errorMessage = 'Please select at least one cleaner.';
+      return;
+    }
+  
+    this.cleanerService.assignCleaners(
+      this.assigningOrderId, 
+      this.selectedCleaners, 
+      this.tipsForCleaner || undefined
+    ).subscribe({
+      next: () => {
+        this.successMessage = 'Cleaners assigned successfully! They will receive email notifications.';
+        this.closeCleanerModal();
+        
+        // FIX: Immediately update the assigned cleaners list
+        if (this.assigningOrderId) {
+          // Create the cleaner names from selected cleaners
+          const assignedCleanerNames = this.selectedCleaners.map(cleanerId => {
+            const cleaner = this.availableCleaners.find(c => c.id === cleanerId);
+            return cleaner ? `${cleaner.firstName} ${cleaner.lastName}` : '';
+          }).filter(name => name !== '');
+          
+          // Update the map immediately
+          this.assignedCleanersMap.set(this.assigningOrderId, 
+            assignedCleanerNames.map((name, index) => ({
+              id: this.selectedCleaners[index],
+              name: name
+            }))
+          );
+        }
+        
+        // Clear success message after 5 seconds
+        setTimeout(() => {
+          this.successMessage = '';
+        }, 5000);
+      },
+      error: (error) => {
+        console.error('Error assigning cleaners:', error);
+        this.errorMessage = 'Failed to assign cleaners. Please try again.';
+      }
+    });
   }
 }

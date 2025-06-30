@@ -121,7 +121,8 @@
                     <h5>Service Address</h5>
                     <p>{{selectedOrder.serviceAddress}}</p>
                     <p *ngIf="selectedOrder.aptSuite">{{selectedOrder.aptSuite}}</p>
-                    <p>{{selectedOrder.city}}, {{selectedOrder.state}} {{selectedOrder.zipCode}}</p>
+                    <p>{{selectedOrder.state}}, {{selectedOrder.city}}</p>
+                    <p>{{selectedOrder.zipCode}}</p>
                   </div>
                   
                   <!-- Pricing -->
@@ -182,7 +183,17 @@
                   <h5>Extra Services</h5>
                   <ul class="services-list">
                     <li *ngFor="let extra of selectedOrder.extraServices">
-                      {{extra.extraServiceName}} - Qty: {{extra.quantity}} - ${{formatCurrency(extra.cost)}}
+                      <ng-container *ngIf="extra.hours > 0 && extra.quantity > 0; else singleDisplay">
+                        {{extra.extraServiceName}} - Qty: {{extra.quantity}} - Hours: {{extra.hours}} - ${{formatCurrency(extra.cost)}}
+                      </ng-container>
+                      <ng-template #singleDisplay>
+                        <ng-container *ngIf="extra.hours > 0; else quantityOnly">
+                          {{extra.extraServiceName}} - Hours: {{extra.hours}} - ${{formatCurrency(extra.cost)}}
+                        </ng-container>
+                        <ng-template #quantityOnly>
+                          {{extra.extraServiceName}} - Qty: {{extra.quantity}} - ${{formatCurrency(extra.cost)}}
+                        </ng-template>
+                      </ng-template>
                     </li>
                   </ul>
                 </div>
@@ -193,8 +204,28 @@
                   <p>{{selectedOrder.specialInstructions}}</p>
                 </div>
 
+                <!-- Assigned Cleaners Section -->
+                <div class="assigned-cleaners-section" *ngIf="getAssignedCleaners(selectedOrder.id).length > 0">
+                  <h5>Assigned Cleaners</h5>
+                  <div class="cleaners-list">
+                    <div *ngFor="let cleaner of getAssignedCleanersWithIds(selectedOrder.id)" class="cleaner-item">
+                      <span class="cleaner-name">{{ cleaner.name }}</span>
+                      <button class="remove-cleaner-btn" 
+                              (click)="removeCleanerFromOrder(selectedOrder.id, cleaner.id, cleaner.name)"
+                              title="Remove cleaner from this order">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Action Buttons in Details View -->
                 <div class="detail-actions">
+                  <button class="action-btn assign-cleaners" 
+                          (click)="openCleanerAssignmentModal(selectedOrder.id)"
+                          *ngIf="userPermissions.permissions.canView">
+                    Assign Cleaners
+                  </button>
                   <button class="action-btn primary" (click)="viewOrderDetails(selectedOrder.id)">
                     Close Details
                   </button>
@@ -251,5 +282,60 @@
   <div *ngIf="successMessage" class="success-message">
     {{successMessage}}
     <button class="close-btn" (click)="clearMessages()">×</button>
+  </div>
+</div>
+
+<!-- Cleaner Assignment Modal -->
+<div class="modal-overlay" *ngIf="showCleanerModal" (click)="closeCleanerModal()">
+  <div class="modal-content cleaner-assignment-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Assign Cleaners to Order #{{ assigningOrderId }}</h3>
+      <button class="close-btn" (click)="closeCleanerModal()">×</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="cleaners-list">
+        <h4>Available Cleaners</h4>
+        <div class="cleaner-grid">
+          <div *ngFor="let cleaner of availableCleaners" 
+               class="cleaner-card"
+               [class.selected]="isCleanerSelected(cleaner.id)"
+               [class.unavailable]="!cleaner.isAvailable"
+               (click)="cleaner.isAvailable && toggleCleanerSelection(cleaner.id)">
+            
+            <div class="cleaner-info">
+              <div class="cleaner-name">{{ cleaner.firstName }} {{ cleaner.lastName }}</div>
+              <div class="cleaner-email">{{ cleaner.email }}</div>
+              <div class="availability-status" 
+                   [class.available]="cleaner.isAvailable"
+                   [class.busy]="!cleaner.isAvailable">
+                {{ cleaner.isAvailable ? 'Available' : 'Busy' }}
+              </div>
+            </div>
+            
+            <div class="selection-indicator" *ngIf="isCleanerSelected(cleaner.id)">
+              ✓
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="tips-section">
+        <label for="tipsForCleaner">Special Instructions for Cleaners (optional):</label>
+        <textarea id="tipsForCleaner" 
+                  [(ngModel)]="tipsForCleaner"
+                  placeholder="Enter any special instructions or tips for the cleaning team..."
+                  rows="3"></textarea>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-secondary" (click)="closeCleanerModal()">Cancel</button>
+        <button class="btn-primary" 
+                (click)="assignCleanersToOrder()"
+                [disabled]="selectedCleaners.length === 0">
+          Assign {{ selectedCleaners.length }} Cleaner(s)
+        </button>
+      </div>
+    </div>
   </div>
 </div>

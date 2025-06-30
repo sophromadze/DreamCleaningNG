@@ -498,4 +498,12 @@ export class AdminService {
     
     return this.http.post(`${this.apiUrl}/upload-gift-card-background`, formData);
   }
+
+  getAssignedCleanersWithIds(orderId: number): Observable<{id: number, name: string}[]> {
+    return this.http.get<{id: number, name: string}[]>(`${this.apiUrl}/orders/${orderId}/assigned-cleaners-with-ids`);
+  } 
+  
+  getAssignedCleaners(orderId: number): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/orders/${orderId}/assigned-cleaners`);
+  }
 }
