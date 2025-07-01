@@ -266,7 +266,7 @@ export class AuditHistoryComponent implements OnInit {
     
     // Handle Role enum (0 = Customer, 1 = Moderator, 2 = Admin, 3 = SuperAdmin)
     if (fieldName === 'Role' && typeof value === 'number') {
-      const roles = ['Customer', 'SuperAdmin', 'Admin', 'Moderator'];
+      const roles = ['Customer', 'SuperAdmin', 'Admin', 'Moderator', 'Cleaner']; 
       return roles[value] || value.toString();
     }
     
