@@ -182,10 +182,6 @@
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
   
-      &.facebook-btn:hover:not(:disabled) {
-        border-color: #4285f4;
-      }
-  
       &:disabled {
         opacity: 0.6;
         cursor: not-allowed;

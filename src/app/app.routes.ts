@@ -102,5 +102,10 @@ export const routes: Routes = [
     path: 'cleaner/cabinet',
     canActivate: [authGuard],
     loadComponent: () => import('./auth/cleaner-cabinet/cleaner-cabinet.component').then(m => m.CleanerCabinetComponent)
+  },
+  {
+    path: 'change-email',
+    canActivate: [authGuard],
+    loadComponent: () => import('./auth/change-email/change-email.component').then(m => m.ChangeEmailComponent)
   }
 ];

@@ -25,8 +25,7 @@ export class AuthInterceptor implements HttpInterceptor {
     const isAuthEndpoint = request.url.includes('/auth/login') || 
                           request.url.includes('/auth/register') || 
                           request.url.includes('/auth/refresh-token') ||
-                          request.url.includes('/auth/google') ||
-                          request.url.includes('/auth/facebook');
+                          request.url.includes('/auth/google');
 
     if (!isAuthEndpoint) {
       // Check if user has been inactive for 24 hours (only for non-auth endpoints)

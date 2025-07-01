@@ -112,28 +112,6 @@ export class LoginComponent {
   //   }
   // }
   
-  async onFacebookLogin() {
-    console.log('Facebook login button clicked');
-    this.isLoading = true;
-    this.errorMessage = null;
-    
-    try {
-      console.log('Calling authService.facebookLogin()');
-      await this.authService.facebookLogin();
-      console.log('Facebook login successful');
-    } catch (error: any) {
-      console.error('Facebook login error:', error);
-      this.isLoading = false;
-      
-      if (error.message?.includes('User cancelled')) {
-        this.errorMessage = 'Login cancelled';
-      } else if (error.message?.includes('app not active')) {
-        this.errorMessage = 'Facebook login is temporarily unavailable. Please use email login or try again later.';
-      } else {
-        this.errorMessage = error?.error?.message || 'Facebook login failed. Please try again.';
-      }
-    }
-  }
 
   onForgotPassword() {
     this.router.navigate(['/auth/forgot-password']);

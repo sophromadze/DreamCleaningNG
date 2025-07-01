@@ -10,7 +10,6 @@ import {
   SocialLoginModule, 
   SocialAuthServiceConfig,
   GoogleLoginProvider,
-  FacebookLoginProvider,
   GoogleSigninButtonModule 
 } from '@abacritt/angularx-social-login';
 import { environment } from '../environments/environment';
@@ -31,10 +30,6 @@ const getSocialAuthConfig = (platformId: Object): SocialAuthServiceConfig => {
               prompt: 'select_account'
             }
           )
-        },
-        {
-          id: FacebookLoginProvider.PROVIDER_ID,
-          provider: new FacebookLoginProvider(environment.facebookAppId)
         }
       ],
       onError: (err) => {

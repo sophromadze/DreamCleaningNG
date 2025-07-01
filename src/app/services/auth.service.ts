@@ -7,8 +7,6 @@ import { isPlatformBrowser } from '@angular/common';
 import { environment } from '../../environments/environment';
 import { 
   SocialAuthService, 
-  GoogleLoginProvider, 
-  FacebookLoginProvider,
   SocialUser 
 } from '@abacritt/angularx-social-login';
 
@@ -249,64 +247,6 @@ export class AuthService {
   //   }
   // }
 
-  // Updated Facebook login with proper error handling
-  async facebookLogin(): Promise<void> {
-    console.log('facebookLogin called');
-    
-    if (!this.isBrowser) {
-      throw new Error('Social login is only available in browser');
-    }
-
-    try {
-      // Check if social auth service is available
-      if (!this.socialAuthService) {
-        throw new Error('Social auth service not available');
-      }
-
-      console.log('Calling socialAuthService.signIn for Facebook');
-      const user = await this.socialAuthService.signIn(FacebookLoginProvider.PROVIDER_ID);
-      console.log('Facebook user received:', user);
-      
-      if (!user || !user.authToken) {
-        throw new Error('No auth token received from Facebook');
-      }
-      
-      // Send the access token to your backend
-      console.log('Sending token to backend');
-      return new Promise((resolve, reject) => {
-        this.http.post<AuthResponse>(`${this.apiUrl}/auth/facebook-login`, { 
-          accessToken: user.authToken 
-        }).subscribe({
-          next: (response) => {
-            console.log('Backend response received:', response);
-            this.isSocialLogin = true;
-            if (this.isBrowser) {
-              localStorage.setItem('isSocialLogin', 'true');
-            }
-            this.handleAuthResponse(response);
-            resolve();
-          },
-          error: (error) => {
-            console.error('Backend error:', error);
-            reject(error);
-          }
-        });
-      });
-    } catch (error: any) {
-      console.error('Facebook sign-in failed:', error);
-      // Provide more specific error messages
-      if (error.error === 'popup_closed_by_user') {
-        throw new Error('Login cancelled by user');
-      } else if (error.error === 'access_denied') {
-        throw new Error('Access denied. Please try again.');
-      } else if (error.message?.includes('app not active')) {
-        throw new Error('Facebook login is temporarily unavailable');
-      } else {
-        throw error;
-      }
-    }
-  }
-
   // Social logout
   async socialSignOut(): Promise<void> {
     // Only sign out from social providers if it was a social login
@@ -481,5 +421,16 @@ export class AuthService {
         this.currentUserSubject.next(response.user);
         return response;
       }));
+  }
+
+  initiateEmailChange(newEmail: string, currentPassword: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/initiate-email-change`, {
+      newEmail,
+      currentPassword
+    });
+  }
+  
+  confirmEmailChange(token: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/confirm-email-change`, { token });
   }
 }
