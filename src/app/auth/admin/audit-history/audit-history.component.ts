@@ -1,8 +1,9 @@
+// Enhanced audit-history.component.ts with improved cleaner assignment display
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, AuditLog, UserPermissions } from '../../../services/admin.service';
-
 
 @Component({
   selector: 'app-audit-history',
@@ -43,11 +44,12 @@ export class AuditHistoryComponent implements OnInit {
     }
   };
   
-  // Available entity types
+  // Available entity types - UPDATED to include CleanerAssignment
   entityTypes = [
     { value: 'all', label: 'All Changes' },
     { value: 'User', label: 'Users' },
     { value: 'Order', label: 'Orders' },
+    { value: 'CleanerAssignment', label: 'Cleaner Assignments' }, // NEW
     { value: 'ServiceType', label: 'Service Types' },
     { value: 'Service', label: 'Services' },
     { value: 'ExtraService', label: 'Extra Services' },
@@ -67,7 +69,6 @@ export class AuditHistoryComponent implements OnInit {
       next: (response) => {
         this.userRole = response.role;
         this.userPermissions = response;
-        // Load logs after permissions are loaded
         this.loadRecentLogs();
       },
       error: (error) => {
@@ -111,6 +112,7 @@ export class AuditHistoryComponent implements OnInit {
       'OriginalAmount': 'Original Amount',
       'IsPaid': 'Payment Status',
       'CancellationReason': 'Cancellation Reason',
+      'CleanerEmail': 'Cleaner Email', // NEW for cleaner assignments
     };
     
     return fieldMap[field] || field;
@@ -118,10 +120,8 @@ export class AuditHistoryComponent implements OnInit {
 
   processAuditLogs(logs: any[]): any[] {   
     return logs.map((log, index) => {    
-      // Create a new log object with proper property names
       const processedLog = {
         ...log,
-        // Map PascalCase to camelCase
         oldValues: log.oldValues || log.OldValues,
         newValues: log.newValues || log.NewValues,
         changedFields: log.changedFields || log.ChangedFields,
@@ -204,6 +204,8 @@ export class AuditHistoryComponent implements OnInit {
       case 'create': return 'action-create';
       case 'update': return 'action-update';
       case 'delete': return 'action-delete';
+      case 'assigned': return 'action-assigned'; // NEW
+      case 'removed': return 'action-removed'; // NEW
       default: return '';
     }
   }
@@ -218,7 +220,13 @@ export class AuditHistoryComponent implements OnInit {
     return value.toString();
   }
 
+  // UPDATED: Special handling for CleanerAssignment logs
   showChangedFields(log: AuditLog): boolean {
+    // For CleanerAssignment logs, we want to show details differently
+    if (log.entityType === 'CleanerAssignment') {
+      return true; // Always show details for cleaner assignments
+    }
+    
     return log.action === 'Update' && 
            !!log.changedFields && 
            Array.isArray(log.changedFields) &&
@@ -227,7 +235,23 @@ export class AuditHistoryComponent implements OnInit {
            !!log.newValues;
   }
 
+  // NEW: Get cleaner assignment details for display
+  getCleanerAssignmentDetails(log: AuditLog): { cleanerEmail: string; orderId: number } | null {
+    if (log.entityType !== 'CleanerAssignment' || !log.newValues) {
+      return null;
+    }
 
+    try {
+      const details = typeof log.newValues === 'string' ? JSON.parse(log.newValues) : log.newValues;
+      return {
+        cleanerEmail: details.CleanerEmail || 'Unknown',
+        orderId: details.OrderId || log.entityId
+      };
+    } catch (e) {
+      console.error('Failed to parse cleaner assignment details:', e);
+      return null;
+    }
+  }
 
   getFieldDisplayValue(value: any, fieldName?: string): string {   
     // Handle null/undefined
@@ -305,6 +329,7 @@ export class AuditHistoryComponent implements OnInit {
       'Orders',
       'Subscription',
       'CreatedAt',
+      'UpdatedAt', // Hide UpdatedAt since it's already in Date column
       'Id' 
     ];
     
@@ -315,6 +340,7 @@ export class AuditHistoryComponent implements OnInit {
     const typeMap: { [key: string]: string } = {
       'User': 'User ID',
       'Order': 'Order',
+      'CleanerAssignment': 'Order', // NEW - show as Order for cleaner assignments
       'GiftCard': 'Gift Card',
       'GiftCardUsage': 'Gift Card Usage',
       'ServiceType': 'Service Type',
@@ -374,24 +400,20 @@ export class AuditHistoryComponent implements OnInit {
 
   getVisiblePages(): number[] {
     const pages: number[] = [];
-    const maxVisiblePages = 3; // Number of pages to show in the middle
+    const maxVisiblePages = 3;
 
     if (this.totalPages <= 5) {
-      // If total pages is 5 or less, show all pages
       for (let i = 2; i < this.totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Calculate the range of pages to show
       let start = Math.max(2, this.currentPage - 1);
       let end = Math.min(this.totalPages - 1, start + maxVisiblePages - 1);
 
-      // Adjust start if we're near the end
       if (end === this.totalPages - 1) {
         start = Math.max(2, end - maxVisiblePages + 1);
       }
 
-      // Add pages to the array
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
@@ -399,6 +421,4 @@ export class AuditHistoryComponent implements OnInit {
 
     return pages;
   }
-
-
 }

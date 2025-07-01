@@ -238,8 +238,30 @@
         background-color: #f8d7da;
         color: #721c24;
       }
+
+      &.action-assigned {
+        background-color: #d4edda;
+        color: #155724;
+      }
+
+      &.action-removed {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
     }
   
+    // Detail Sections - just add padding
+    .changed-fields,
+    .created-values,
+    .deleted-values,
+    .cleaner-assignment-details {
+      padding: 0.5rem;
+    }
+
+    .detail-item {
+      padding: 0.25rem 0;
+    }
+
     // Changed Fields
     .changed-fields {
       .field-changes {
@@ -252,6 +274,7 @@
           align-items: center;
           gap: 0.5rem;
           font-size: 0.875rem;
+          padding: 0.25rem 0;
   
           .field-name {
             font-weight: 600;
@@ -271,6 +294,16 @@
             color: #6c757d;
             font-size: 0.75rem;
           }
+        }
+      }
+    }
+
+    // Created and Deleted Values
+    .created-values,
+    .deleted-values {
+      .field-values-list {
+        .value-item {
+          padding: 0.25rem 0;
         }
       }
     }
