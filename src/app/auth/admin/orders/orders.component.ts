@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminService, UserPermissions } from '../../../services/admin.service';
 import { OrderService, Order, OrderList } from '../../../services/order.service';
 import { CleanerService, AvailableCleaner } from '../../../services/cleaner.service';
+import { forkJoin, of } from 'rxjs';
+import { catchError, finalize } from 'rxjs/operators';
 
 // Extended interface for admin orders with additional properties
 export interface AdminOrderList extends OrderList {
@@ -11,6 +13,11 @@ export interface AdminOrderList extends OrderList {
   contactEmail: string;
   contactFirstName: string;
   contactLastName: string;
+}
+
+interface AssignedCleaner {
+  id: number;
+  name: string;
 }
 
 @Component({
@@ -48,9 +55,8 @@ export class OrdersComponent implements OnInit {
   errorMessage = '';
   successMessage = '';
   
-  // Store customer names
+  // Store customer names and details
   customerNames: Map<number, string> = new Map();
-  // Store customer details
   customerDetails: Map<number, {id: number, email: string}> = new Map();
   
   // Pagination
@@ -64,17 +70,25 @@ export class OrdersComponent implements OnInit {
   selectedCleaners: number[] = [];
   tipsForCleaner = '';
   assigningOrderId: number | null = null;
-  assignedCleanersMap: Map<number, {id: number, name: string}[]> = new Map();
+  assignedCleanersCache: Map<number, AssignedCleaner[]> = new Map();
+
+  loadingStates = {
+    orders: false,
+    orderDetails: false,
+    assignedCleaners: false,
+    assigningCleaners: false,
+    removingCleaner: false
+  };
 
   constructor(
     private adminService: AdminService,
     private orderService: OrderService,
-    private cleanerService: CleanerService
+    private cleanerService: CleanerService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
     this.loadUserPermissions();
-    // Wait for permissions to load before loading orders
   }
 
   loadUserPermissions() {
@@ -82,7 +96,6 @@ export class OrdersComponent implements OnInit {
       next: (response) => {
         this.userRole = response.role;
         this.userPermissions = response;
-        // Load orders after permissions are loaded
         this.loadOrders();
       },
       error: (error) => {
@@ -93,20 +106,25 @@ export class OrdersComponent implements OnInit {
   }
 
   loadOrders() {
-    // Use AdminService to get all orders for admin users
+    this.loadingStates.orders = true;
+    this.clearMessages();
+
     if (this.userRole && this.userRole !== 'Customer') {
-      // For admin roles, get ALL orders
       this.adminService.getAllOrders().subscribe({
         next: (orders) => {
           this.orders = orders as AdminOrderList[];
+          // Preload assigned cleaners for all orders
+          this.preloadAssignedCleaners();
         },
         error: (error) => {
           console.error('Error loading orders:', error);
           this.errorMessage = 'Failed to load orders. Please try again.';
+        },
+        complete: () => {
+          this.loadingStates.orders = false;
         }
       });
     } else {
-      // For customers, get only their orders
       this.orderService.getUserOrders().subscribe({
         next: (orders) => {
           this.orders = orders as AdminOrderList[];
@@ -114,9 +132,58 @@ export class OrdersComponent implements OnInit {
         error: (error) => {
           console.error('Error loading orders:', error);
           this.errorMessage = 'Failed to load orders. Please try again.';
+        },
+        complete: () => {
+          this.loadingStates.orders = false;
         }
       });
     }
+  }
+
+  private preloadAssignedCleaners() {
+    if (this.orders.length === 0) return;
+    
+    this.loadingStates.assignedCleaners = true;
+    
+    // Create observables for all orders
+    const cleanerRequests = this.orders.map(order => 
+      this.adminService.getAssignedCleanersWithIds(order.id).pipe(
+        catchError((error) => {
+          return of([]); // Return empty array on error
+        })
+      )
+    );
+
+    // Execute all requests in parallel
+    forkJoin(cleanerRequests).subscribe({
+      next: (allCleaners) => {
+        // Update cache with all results
+        this.orders.forEach((order, index) => {
+          this.assignedCleanersCache.set(order.id, allCleaners[index] || []);
+        });
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error preloading assigned cleaners:', error);
+      },
+      complete: () => {
+        this.loadingStates.assignedCleaners = false;
+      }
+    });
+  }
+
+  // Helper method to refresh a single order's assigned cleaners
+  private refreshOrderCleaners(orderId: number): void {
+    this.adminService.getAssignedCleanersWithIds(orderId).subscribe({
+      next: (cleaners) => {
+        this.assignedCleanersCache.set(orderId, cleaners);
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error(`Error refreshing cleaners for order ${orderId}:`, error);
+        this.assignedCleanersCache.set(orderId, []);
+      }
+    });
   }
 
   viewOrderDetails(orderId: number) {
@@ -127,29 +194,32 @@ export class OrdersComponent implements OnInit {
     }
     
     this.viewingOrderId = orderId;
+    this.loadingStates.orderDetails = true;
     
-    // Use admin endpoint for admin users, regular endpoint for customers
     if (this.userRole && this.userRole !== 'Customer') {
-      // Admin users - use admin endpoint
       this.adminService.getOrderDetails(orderId).subscribe({
         next: (order) => {
           this.selectedOrder = order;
-          // Store customer name for display in the list
           this.customerNames.set(orderId, `${order.contactFirstName} ${order.contactLastName}`);
-          // Store customer details
           this.customerDetails.set(orderId, {
             id: order.userId,
             email: order.contactEmail
           });
-          this.loadAssignedCleaners(orderId);
+          
+          // Only load assigned cleaners if not already cached
+          if (!this.assignedCleanersCache.has(orderId)) {
+            this.loadSingleOrderCleaners(orderId);
+          }
         },
         error: (error) => {
           console.error('Error loading order details:', error);
           this.errorMessage = 'Failed to load order details.';
+        },
+        complete: () => {
+          this.loadingStates.orderDetails = false;
         }
       });
     } else {
-      // Regular customers - use their own endpoint
       this.orderService.getOrderById(orderId).subscribe({
         next: (order) => {
           this.selectedOrder = order;
@@ -157,19 +227,23 @@ export class OrdersComponent implements OnInit {
         error: (error) => {
           console.error('Error loading order details:', error);
           this.errorMessage = 'Failed to load order details.';
+        },
+        complete: () => {
+          this.loadingStates.orderDetails = false;
         }
       });
     }
   }
 
-  loadAssignedCleaners(orderId: number) {
+  // Separate method for loading individual order cleaners
+  private loadSingleOrderCleaners(orderId: number) {
     this.adminService.getAssignedCleanersWithIds(orderId).subscribe({
       next: (cleaners) => {
-        this.assignedCleanersMap.set(orderId, cleaners);
+        this.assignedCleanersCache.set(orderId, cleaners);
+        this.cdr.detectChanges();
       },
       error: (error) => {
-        console.log('No cleaners assigned or error loading cleaners');
-        this.assignedCleanersMap.set(orderId, []);
+        this.assignedCleanersCache.set(orderId, []);
       }
     });
   }
@@ -178,26 +252,153 @@ export class OrdersComponent implements OnInit {
     const confirmMessage = `Are you sure you want to remove ${cleanerName} from this order? They will receive an email notification about the removal.`;
     
     if (confirm(confirmMessage)) {
+      this.loadingStates.removingCleaner = true;
+      
       this.cleanerService.removeCleanerFromOrder(orderId, cleanerId).subscribe({
         next: () => {
           this.successMessage = `${cleanerName} has been removed from the order and notified via email.`;
           
-          // Update the local list
-          const currentCleaners = this.assignedCleanersMap.get(orderId) || [];
-          const updatedCleaners = currentCleaners.filter(c => c.id !== cleanerId);
-          this.assignedCleanersMap.set(orderId, updatedCleaners);
+          // Refresh assigned cleaners from server after removal
+          this.adminService.getAssignedCleanersWithIds(orderId).subscribe({
+            next: (updatedCleaners) => {
+              // Update cache with fresh data from server
+              this.assignedCleanersCache.set(orderId, updatedCleaners);
+              
+              // Force change detection
+              this.cdr.detectChanges();
+            },
+            error: (error) => {
+              console.error('Error refreshing assigned cleaners after removal:', error);
+              // Fallback: update cache manually
+              const currentCleaners = this.assignedCleanersCache.get(orderId) || [];
+              const updatedCleaners = currentCleaners.filter(c => c.id !== cleanerId);
+              this.assignedCleanersCache.set(orderId, updatedCleaners);
+              this.cdr.detectChanges();
+            }
+          });
           
-          // Clear success message after 5 seconds
-          setTimeout(() => {
-            this.successMessage = '';
-          }, 5000);
+          this.clearMessagesAfterDelay();
         },
         error: (error) => {
           console.error('Error removing cleaner:', error);
           this.errorMessage = 'Failed to remove cleaner from order.';
+        },
+        complete: () => {
+          this.loadingStates.removingCleaner = false;
         }
       });
     }
+  }
+
+  openCleanerAssignmentModal(orderId: number) {
+    this.assigningOrderId = orderId;
+    this.selectedCleaners = [];
+    this.tipsForCleaner = '';
+    
+    this.cleanerService.getAvailableCleaners(orderId).subscribe({
+      next: (cleaners) => {
+        this.availableCleaners = cleaners;
+        this.showCleanerModal = true;
+      },
+      error: (error) => {
+        console.error('Error loading available cleaners:', error);
+        this.errorMessage = 'Failed to load available cleaners.';
+      }
+    });
+  }
+
+  closeCleanerModal() {
+    this.showCleanerModal = false;
+    this.assigningOrderId = null;
+    this.selectedCleaners = [];
+    this.tipsForCleaner = '';
+    this.availableCleaners = [];
+  }
+
+  // Method to force refresh all assigned cleaners (for debugging)
+  refreshAllAssignedCleaners() {
+    this.preloadAssignedCleaners();
+  }
+
+  toggleCleanerSelection(cleanerId: number) {
+    const index = this.selectedCleaners.indexOf(cleanerId);
+    if (index > -1) {
+      this.selectedCleaners.splice(index, 1);
+    } else {
+      this.selectedCleaners.push(cleanerId);
+    }
+  }
+
+  isCleanerSelected(cleanerId: number): boolean {
+    return this.selectedCleaners.includes(cleanerId);
+  }
+
+  assignCleanersToOrder() {
+    if (!this.assigningOrderId || this.selectedCleaners.length === 0) {
+      this.errorMessage = 'Please select at least one cleaner.';
+      return;
+    }
+
+    this.loadingStates.assigningCleaners = true;
+
+    // Store the order ID before it gets cleared by modal close
+    const orderIdToRefresh = this.assigningOrderId;
+    const selectedCleanersToAssign = [...this.selectedCleaners];
+  
+    this.cleanerService.assignCleaners(
+      orderIdToRefresh, 
+      selectedCleanersToAssign, 
+      this.tipsForCleaner || undefined
+    ).subscribe({
+      next: (response) => {
+        this.successMessage = 'Cleaners assigned successfully! They will receive email notifications.';
+        this.closeCleanerModal();
+        
+        // Refresh assigned cleaners from server to get accurate current state
+        setTimeout(() => {
+          this.adminService.getAssignedCleanersWithIds(orderIdToRefresh).subscribe({
+            next: (updatedCleaners) => {
+              // Update cache with fresh data from server
+              this.assignedCleanersCache.set(orderIdToRefresh, updatedCleaners);
+              
+              // Force change detection
+              this.cdr.detectChanges();
+            },
+            error: (error) => {
+              console.error('Error refreshing assigned cleaners after assignment:', error);
+              // Fallback: try to update cache manually using stored data
+              const newCleanerData = selectedCleanersToAssign.map(cleanerId => {
+                const cleaner = this.availableCleaners.find(c => c.id === cleanerId);
+                return {
+                  id: cleanerId,
+                  name: cleaner ? `${cleaner.firstName} ${cleaner.lastName}` : ''
+                };
+              }).filter(cleaner => cleaner.name !== '');
+              
+              const existingCleaners = this.assignedCleanersCache.get(orderIdToRefresh) || [];
+              const allCleaners = [...existingCleaners];
+              newCleanerData.forEach(newCleaner => {
+                if (!allCleaners.some(existing => existing.id === newCleaner.id)) {
+                  allCleaners.push(newCleaner);
+                }
+              });
+              
+              this.assignedCleanersCache.set(orderIdToRefresh, allCleaners);
+              this.cdr.detectChanges();
+            }
+          });
+        }, 500); // Wait 500ms for server to process
+        
+        this.clearMessagesAfterDelay();
+      },
+      error: (error) => {
+        console.error('Error assigning cleaners:', error);
+        this.errorMessage = 'Failed to assign cleaners. Please try again.';
+      },
+      complete: () => {
+        this.loadingStates.assigningCleaners = false;
+      }
+    });
   }
 
   getCustomerName(orderId: number): string {
@@ -214,11 +415,22 @@ export class OrdersComponent implements OnInit {
     return order && 'contactEmail' in order ? order.contactEmail : 'N/A';
   }
 
+  // OPTIMIZATION: Getter methods for template (with caching) - REMOVED CONSOLE LOGS TO PREVENT INFINITE LOGGING
+  getAssignedCleaners(orderId: number): string[] {
+    const cleaners = this.assignedCleanersCache.get(orderId) || [];
+    return cleaners.map(c => c.name);
+  }
+
+  getAssignedCleanersWithIds(orderId: number): AssignedCleaner[] {
+    return this.assignedCleanersCache.get(orderId) || [];
+  }
+
   updateOrderStatus(order: AdminOrderList, newStatus: string) {
     this.adminService.updateOrderStatus(order.id, newStatus).subscribe({
       next: () => {
         order.status = newStatus;
         this.successMessage = `Order #${order.id} status updated to ${newStatus}`;
+        this.clearMessagesAfterDelay();
       },
       error: (error) => {
         console.error('Error updating order status:', error);
@@ -242,7 +454,6 @@ export class OrdersComponent implements OnInit {
 
   cancelOrder(order: AdminOrderList) {
     if (confirm(`Are you sure you want to cancel order #${order.id}?`)) {
-      // Check if user has permission to cancel (Update permission)
       if (!this.userPermissions.permissions.canUpdate) {
         this.errorMessage = 'You do not have permission to cancel orders.';
         return;
@@ -250,8 +461,9 @@ export class OrdersComponent implements OnInit {
       
       this.adminService.cancelOrder(order.id, 'Cancelled by admin').subscribe({
         next: () => {
-          order.status = 'Cancelled';  // Use capital C to match backend enum
+          order.status = 'Cancelled';
           this.successMessage = `Order #${order.id} has been cancelled.`;
+          this.clearMessagesAfterDelay();
         },
         error: (error) => {
           console.error('Error cancelling order:', error);
@@ -342,14 +554,12 @@ export class OrdersComponent implements OnInit {
 
   formatDateTime(date: Date | string, time?: string): string {
     const dateObj = new Date(date);
-    // Format date as MM/DD/YY (two-digit year)
     const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
     const day = dateObj.getDate().toString().padStart(2, '0');
-    const year = dateObj.getFullYear().toString().slice(-2); // last two digits
+    const year = dateObj.getFullYear().toString().slice(-2);
     const dateStr = `${month}/${day}/${year}`;
     let timeStr = '';
     if (time) {
-      // If time is provided as a string (e.g., '14:30:00'), format it to 12-hour with AM/PM
       const [h, m] = time.split(":");
       const hour = parseInt(h, 10);
       const minute = parseInt(m, 10);
@@ -363,7 +573,6 @@ export class OrdersComponent implements OnInit {
       }
       timeStr = `${hour12}:${minute.toString().padStart(2, '0')} ${period}`;
     } else {
-      // Use the date object's time, but format to 12-hour with AM/PM and no seconds
       let hours = dateObj.getHours();
       let minutes = dateObj.getMinutes();
       let period = hours >= 12 ? 'PM' : 'AM';
@@ -377,7 +586,6 @@ export class OrdersComponent implements OnInit {
   formatDuration(minutes: number): string {
     const hours = Math.floor(minutes / 60);
     let mins = minutes % 60;
-    // Rounding logic: if mins >= 15, round to 30; if less, round to 0
     if (mins >= 15) {
       mins = 30;
     } else {
@@ -416,126 +624,37 @@ export class OrdersComponent implements OnInit {
     this.successMessage = '';
   }
 
+  private clearMessagesAfterDelay() {
+    setTimeout(() => {
+      this.clearMessages();
+    }, 5000);
+  }
+
   hasCleanersService(): boolean {
     return this.selectedOrder?.services?.some(s => s.serviceName && s.serviceName.toLowerCase().includes('cleaner')) ?? false;
   }
 
   getVisiblePages(): number[] {
     const pages: number[] = [];
-    const maxVisiblePages = 3; // Number of pages to show in the middle
+    const maxVisiblePages = 3;
 
     if (this.totalPages <= 5) {
-      // If total pages is 5 or less, show all pages
       for (let i = 2; i < this.totalPages; i++) {
         pages.push(i);
       }
     } else {
-      // Calculate the range of pages to show
       let start = Math.max(2, this.currentPage - 1);
       let end = Math.min(this.totalPages - 1, start + maxVisiblePages - 1);
 
-      // Adjust start if we're near the end
       if (end === this.totalPages - 1) {
         start = Math.max(2, end - maxVisiblePages + 1);
       }
 
-      // Add pages to the array
       for (let i = start; i <= end; i++) {
         pages.push(i);
       }
     }
 
     return pages;
-  }
-
-  getAssignedCleaners(orderId: number): string[] {
-    const cleaners = this.assignedCleanersMap.get(orderId) || [];
-    return cleaners.map(c => c.name);
-  }
-
-  getAssignedCleanersWithIds(orderId: number): {id: number, name: string}[] {
-    return this.assignedCleanersMap.get(orderId) || [];
-  }
-
-  openCleanerAssignmentModal(orderId: number) {
-    this.assigningOrderId = orderId;
-    this.selectedCleaners = [];
-    this.tipsForCleaner = '';
-    
-    this.cleanerService.getAvailableCleaners(orderId).subscribe({
-      next: (cleaners) => {
-        this.availableCleaners = cleaners;
-        this.showCleanerModal = true;
-      },
-      error: (error) => {
-        console.error('Error loading available cleaners:', error);
-        this.errorMessage = 'Failed to load available cleaners.';
-      }
-    });
-  }
-
-  closeCleanerModal() {
-    this.showCleanerModal = false;
-    this.assigningOrderId = null;
-    this.selectedCleaners = [];
-    this.tipsForCleaner = '';
-    this.availableCleaners = [];
-  }
-
-  toggleCleanerSelection(cleanerId: number) {
-    const index = this.selectedCleaners.indexOf(cleanerId);
-    if (index > -1) {
-      this.selectedCleaners.splice(index, 1);
-    } else {
-      this.selectedCleaners.push(cleanerId);
-    }
-  }
-
-  isCleanerSelected(cleanerId: number): boolean {
-    return this.selectedCleaners.includes(cleanerId);
-  }
-
-  assignCleanersToOrder() {
-    if (!this.assigningOrderId || this.selectedCleaners.length === 0) {
-      this.errorMessage = 'Please select at least one cleaner.';
-      return;
-    }
-  
-    this.cleanerService.assignCleaners(
-      this.assigningOrderId, 
-      this.selectedCleaners, 
-      this.tipsForCleaner || undefined
-    ).subscribe({
-      next: () => {
-        this.successMessage = 'Cleaners assigned successfully! They will receive email notifications.';
-        this.closeCleanerModal();
-        
-        // FIX: Immediately update the assigned cleaners list
-        if (this.assigningOrderId) {
-          // Create the cleaner names from selected cleaners
-          const assignedCleanerNames = this.selectedCleaners.map(cleanerId => {
-            const cleaner = this.availableCleaners.find(c => c.id === cleanerId);
-            return cleaner ? `${cleaner.firstName} ${cleaner.lastName}` : '';
-          }).filter(name => name !== '');
-          
-          // Update the map immediately
-          this.assignedCleanersMap.set(this.assigningOrderId, 
-            assignedCleanerNames.map((name, index) => ({
-              id: this.selectedCleaners[index],
-              name: name
-            }))
-          );
-        }
-        
-        // Clear success message after 5 seconds
-        setTimeout(() => {
-          this.successMessage = '';
-        }, 5000);
-      },
-      error: (error) => {
-        console.error('Error assigning cleaners:', error);
-        this.errorMessage = 'Failed to assign cleaners. Please try again.';
-      }
-    });
   }
 }

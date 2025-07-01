@@ -378,6 +378,18 @@
       background-color: #d4edda;
       color: #155724;
     }
+
+    // Order detail specific messages
+    .order-detail-message {
+      margin: 1rem 0;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      
+      .close-btn {
+        font-size: 1.2rem;
+        margin-left: 0.5rem;
+      }
+    }
   }
 
   .instructions-section {
@@ -748,5 +760,203 @@
     .btn-primary, .btn-secondary {
       width: 100%;
     }
+  }
+}
+
+/* Loading Indicators */
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.loading-small {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 15px;
+  color: #666;
+  font-size: 14px;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 10px;
+}
+
+.spinner-small {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Assigned Cleaners Column Styles */
+.assigned-cleaners {
+  min-width: 150px;
+  max-width: 200px;
+}
+
+.cleaners-count {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.cleaners-names {
+  color: #666;
+  font-size: 12px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.no-cleaners {
+  color: #dc3545;
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* Enhanced Assigned Cleaners Section */
+.assigned-cleaners-section {
+  margin-top: 30px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.assigned-cleaners-section h5 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cleaners-content {
+  min-height: 60px;
+}
+
+.cleaners-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cleaner-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.cleaner-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.remove-cleaner-btn {
+  background: #dc3545;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.remove-cleaner-btn:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.remove-cleaner-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.no-cleaners-message {
+  color: #666;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+  background: white;
+  border-radius: 4px;
+  margin: 0;
+}
+
+/* Button Loading States */
+.action-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.action-btn.assign-cleaners:disabled {
+  background: #6c757d;
+}
+
+/* Modal Button Loading States */
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #6c757d;
+}
+
+/* Table Column Adjustments */
+.data-table table {
+  table-layout: auto;
+  width: 100%;
+}
+
+.data-table th:nth-child(7) { /* Assigned Cleaners column */
+  width: 180px;
+}
+
+/* Responsive Improvements */
+@media (max-width: 1200px) {
+  .cleaners-names {
+    max-width: 120px;
+  }
+  
+  .assigned-cleaners {
+    min-width: 120px;
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .assigned-cleaners {
+    min-width: 100px;
+    max-width: 120px;
+  }
+  
+  .cleaners-names {
+    font-size: 11px;
+    max-width: 100px;
+  }
+  
+  .cleaners-count {
+    font-size: 12px;
   }
 }
