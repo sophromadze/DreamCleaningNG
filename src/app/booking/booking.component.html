@@ -124,7 +124,14 @@
                   <h4>{{ extra.name }}</h4>
                   <p>{{ extra.description }}</p>
                   <div class="extra-details">
-                    <div class="extra-price">${{ extra.price }}</div>
+                    <div class="extra-price">
+                      <ng-container *ngIf="extra.name === 'Extra Cleaners'">
+                        ${{ getCleanerPricePerHour() }}/hour per cleaner
+                      </ng-container>
+                      <ng-container *ngIf="extra.name !== 'Extra Cleaners'">
+                        ${{ extra.price }}
+                      </ng-container>
+                    </div>
                     <div class="extra-duration" *ngIf="extra.duration">
                       <span class="duration-icon">⏱️</span>
                       {{ formatServiceDuration(extra.duration * (isExtraServiceSelected(extra) ? getExtraServiceQuantity(extra) : 1)) }}
@@ -144,6 +151,10 @@
                           [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
                   <span>{{ getExtraServiceQuantity(extra) }}</span>
                   <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1); $event.stopPropagation()">+</button>
+                </div>
+                <!-- Special note for Extra Cleaners -->
+                <div class="extra-cleaners-note" *ngIf="isExtraServiceSelected(extra) && extra.name === 'Extra Cleaners'">
+                  <small>Each extra cleaner reduces service duration and adds 1 maid to your team.</small>
                 </div>
                 
                 <!-- Hours Control -->

@@ -602,6 +602,20 @@ export class OrderEditComponent implements OnInit {
             totalDuration += selected.extraService.duration * selected.hours;
             actualTotalDuration += selected.extraService.duration * selected.hours;
           }
+        } else if (selected.extraService.name === 'Extra Cleaners' && selected.extraService.hasQuantity) {
+          // Extra Cleaners: fixed cost per cleaner (not based on hours)
+          let baseCostPerCleaner = 40; // Base cost per extra cleaner
+          
+          // Adjust cost based on cleaning type
+          if (superDeepCleaning) {
+            baseCostPerCleaner = 80; // Super deep cleaning
+          } else if (deepCleaning) {
+            baseCostPerCleaner = 60; // Deep cleaning
+          }
+          
+          const cost = baseCostPerCleaner * selected.quantity;
+          subtotal += cost;
+          
         } else if (selected.extraService.hasQuantity) {
           subtotal += selected.extraService.price * selected.quantity * currentMultiplier;
           if (!useExplicitHours) {
@@ -624,37 +638,41 @@ export class OrderEditComponent implements OnInit {
       }
     });
   
-    // Calculate maids count
-    this.calculatedMaidsCount = 1;
-    
+    // Calculate extra cleaners FIRST
+    const extraCleaners = this.getExtraCleanersCount();
+      
+    // Calculate base maids count (without extra cleaners)
+    let baseMaidsCount = 1;
+      
     if (hasCleanerService) {
-      // Use the selected cleaner count
       const cleanerService = this.selectedServices.find(s => 
         s.service.serviceRelationType === 'cleaner'
       );
       if (cleanerService) {
-        this.calculatedMaidsCount = cleanerService.quantity;
+        baseMaidsCount = cleanerService.quantity;
       }
-  
-      // When cleaners are explicitly selected, always use the actual duration
       displayDuration = actualTotalDuration;
     } else {
-      // Calculate based on duration (every 6 hours = 1 maid)
       const totalHours = totalDuration / 60;
-      
-      // Always start with 1 maid
       if (totalHours <= 6) {
-        this.calculatedMaidsCount = 1;
+        baseMaidsCount = 1;
         displayDuration = totalDuration;
       } else {
-        // For duration > 6 hours, calculate number of maids needed
-        this.calculatedMaidsCount = Math.ceil(totalHours / 6);
-        
-        // Divide the total duration by number of maids to get display duration
-        displayDuration = Math.ceil(totalDuration / this.calculatedMaidsCount);
+        baseMaidsCount = Math.ceil(totalHours / 6);
+        displayDuration = totalDuration; // Don't divide yet
       }
     }
-  
+    
+    // NOW add extra cleaners to get total maid count
+    this.calculatedMaidsCount = baseMaidsCount + extraCleaners;
+    
+    // FINALLY divide duration by TOTAL maid count (including extra cleaners)
+    if (this.calculatedMaidsCount > 1 && !hasCleanerService) {
+      displayDuration = Math.ceil(totalDuration / this.calculatedMaidsCount);
+    } else if (hasCleanerService && this.calculatedMaidsCount > baseMaidsCount) {
+      displayDuration = Math.ceil(actualTotalDuration / this.calculatedMaidsCount);
+    }
+
     // Store both durations
     this.totalDuration = displayDuration; // For UI display
     this.actualTotalDuration = actualTotalDuration; // For backend
@@ -967,6 +985,25 @@ export class OrderEditComponent implements OnInit {
       return 'deep';
     }
     return 'normal';
+  }
+
+  getExtraCleanersCount(): number {
+    const extraCleanersService = this.selectedExtraServices.find(s => 
+      s.extraService.name === 'Extra Cleaners' && s.extraService.hasQuantity
+    );
+    return extraCleanersService ? extraCleanersService.quantity : 0;
+  }
+
+  getCleanerPricePerHour(): number {
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+    
+    if (superDeepCleaning) {
+      return 80;
+    } else if (deepCleaning) {
+      return 60;
+    }
+    return 40;
   }
 
   get cleaningType() {

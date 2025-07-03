@@ -901,26 +901,42 @@ export class BookingComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Calculate maids count
-    this.calculatedMaidsCount = 1;
+    // Calculate extra cleaners FIRST
+    const extraCleaners = this.getExtraCleanersCount();
+
+    // Calculate base maids count (without extra cleaners)
+    let baseMaidsCount = 1;
 
     if (hasCleanerService) {
       const cleanerService = this.selectedServices.find(s => 
         s.service.serviceRelationType === 'cleaner'
       );
       if (cleanerService) {
-        this.calculatedMaidsCount = cleanerService.quantity;
+        baseMaidsCount = cleanerService.quantity;
       }
+      // When cleaners are explicitly selected, use actual duration without division initially
       displayDuration = actualTotalDuration;
     } else {
       const totalHours = totalDuration / 60;
       if (totalHours <= 6) {
-        this.calculatedMaidsCount = 1;
+        baseMaidsCount = 1;
         displayDuration = totalDuration;
       } else {
-        this.calculatedMaidsCount = Math.ceil(totalHours / 6);
-        displayDuration = Math.ceil(totalDuration / this.calculatedMaidsCount);
+        baseMaidsCount = Math.ceil(totalHours / 6);
+        displayDuration = totalDuration; // Don't divide yet
       }
+    }
+
+    // NOW add extra cleaners to get total maid count
+    this.calculatedMaidsCount = baseMaidsCount + extraCleaners;
+      
+    // FINALLY divide duration by TOTAL maid count (including extra cleaners)
+    if (this.calculatedMaidsCount > 1 && !hasCleanerService) {
+      // Only divide duration when we have multiple maids and no explicit cleaner service
+      displayDuration = Math.ceil(totalDuration / this.calculatedMaidsCount);
+    } else if (hasCleanerService && this.calculatedMaidsCount > baseMaidsCount) {
+      // If we have explicit cleaners AND extra cleaners, divide by total count
+      displayDuration = Math.ceil(actualTotalDuration / this.calculatedMaidsCount);
     }
 
     // Store the actual total duration for backend
@@ -1065,7 +1081,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   // Get cleaner price per hour based on cleaning type
-  private getCleanerPricePerHour(): number {
+  getCleanerPricePerHour(): number {
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
     
@@ -1075,6 +1091,13 @@ export class BookingComponent implements OnInit, OnDestroy {
       return 60;
     }
     return 40;
+  }
+
+  getExtraCleanersCount(): number {
+    const extraCleanersService = this.selectedExtraServices.find(s => 
+      s.extraService.name === 'Extra Cleaners' && s.extraService.hasQuantity
+    );
+    return extraCleanersService ? extraCleanersService.quantity : 0;
   }
 
   formatDuration(minutes: number): string {
