@@ -63,12 +63,34 @@
                     required></textarea>
         </div>
         <div class="form-group">
-          <label>
-            Has Poll (Custom Quote)
-            <input type="checkbox" [(ngModel)]="newServiceType.hasPoll" name="hasPoll">
-          </label>
+          <label>Service Type Mode:</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" 
+                     name="newServiceTypeMode" 
+                     [checked]="!newServiceType.hasPoll && !newServiceType.isCustom"
+                     (change)="newServiceType.hasPoll = false; newServiceType.isCustom = false">
+              Regular (Services & Extra Services)
+            </label>
+            <label>
+              <input type="radio" 
+                     name="newServiceTypeMode" 
+                     [checked]="newServiceType.hasPoll"
+                     (change)="newServiceType.hasPoll = true; newServiceType.isCustom = false">
+              Poll (Custom Quote)
+            </label>
+            <label>
+              <input type="radio" 
+                     name="newServiceTypeMode" 
+                     [checked]="newServiceType.isCustom"
+                     (change)="newServiceType.hasPoll = false; newServiceType.isCustom = true">
+              Custom Pricing
+            </label>
+          </div>
           <small class="form-note">
-            When checked, this service type will show a questionnaire instead of regular services for custom quotes.
+            Regular: Shows services and extra services<br>
+            Poll: Shows questionnaire for custom quotes<br>
+            Custom: Allows users to enter custom amount, cleaners, and duration
           </small>
         </div>
         <div class="form-actions">
@@ -87,7 +109,7 @@
             <th>Name</th>
             <th>Price</th>
             <th>Time</th>
-            <th>Poll</th>
+            <th>Type</th>
             <th>Description</th>
             <th>Order</th>
             <th>Status</th>
@@ -129,15 +151,33 @@
             </td>
             <td>
               <ng-container *ngIf="!isEditingServiceType || !selectedServiceType || selectedServiceType.id !== type.id">
-                <span *ngIf="type.hasPoll" class="badge badge-info">Yes</span>
-                <span *ngIf="!type.hasPoll">No</span>
+                <span *ngIf="type.isCustom" class="badge badge-warning">Custom</span>
+                <span *ngIf="type.hasPoll && !type.isCustom" class="badge badge-info">Poll</span>
+                <span *ngIf="!type.hasPoll && !type.isCustom" class="badge badge-secondary">Regular</span>
               </ng-container>
-              <label *ngIf="isEditingServiceType && selectedServiceType && selectedServiceType.id === type.id">
-                <input type="checkbox" 
-                       [(ngModel)]="selectedServiceType.hasPoll" 
-                       (click)="$event.stopPropagation()">
-                Poll
-              </label>
+              <div *ngIf="isEditingServiceType && selectedServiceType && selectedServiceType.id === type.id" class="service-type-options">
+                <label>
+                  <input type="radio" 
+                         name="serviceTypeMode"
+                         [checked]="!selectedServiceType.hasPoll && !selectedServiceType.isCustom"
+                         (change)="setServiceTypeMode('regular')">
+                  Regular
+                </label>
+                <label>
+                  <input type="radio" 
+                         name="serviceTypeMode"
+                         [checked]="selectedServiceType.hasPoll"
+                         (change)="setServiceTypeMode('poll')">
+                  Poll
+                </label>
+                <label>
+                  <input type="radio" 
+                         name="serviceTypeMode"
+                         [checked]="selectedServiceType.isCustom"
+                         (change)="setServiceTypeMode('custom')">
+                  Custom
+                </label>
+              </div>
             </td>
             <td>
               <ng-container *ngIf="!isEditingServiceType || selectedServiceType?.id !== type.id">

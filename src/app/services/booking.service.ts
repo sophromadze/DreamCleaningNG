@@ -13,6 +13,7 @@ export interface ServiceType {
   isActive: boolean;
   displayOrder?: number;
   hasPoll: boolean;
+  isCustom?: boolean;
   timeDuration: number;
 }
 

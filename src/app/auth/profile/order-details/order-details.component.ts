@@ -69,6 +69,18 @@ export class OrderDetailsComponent implements OnInit {
     return fallbackDuration;
   }
 
+  isCustomServiceType(): boolean {
+    if (!this.order) return false;
+    
+    // Check if this order has a service with ServiceId = 0 (custom service marker)
+    // OR check if all services arrays are empty (another indicator of custom pricing)
+    const hasCustomServiceMarker = this.order.services.some(s => s.serviceId === 0);
+    const hasNoRegularServices = this.order.services.length === 0 || 
+      (this.order.services.length === 1 && this.order.services[0].serviceId === 0);
+    
+    return hasCustomServiceMarker || hasNoRegularServices;
+  }
+
   openCancelModal() {
     this.showCancelModal = true;
   }
@@ -95,6 +107,10 @@ export class OrderDetailsComponent implements OnInit {
 
   canEditOrder(): boolean {
     if (!this.order) return false;
+
+    // Don't allow editing custom service type orders
+    if (this.isCustomServiceType()) return false;
+
     const serviceDate = new Date(this.order.serviceDate);
     const now = new Date();
     const hoursUntilService = (serviceDate.getTime() - now.getTime()) / (1000 * 60 * 60);

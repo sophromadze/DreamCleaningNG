@@ -36,6 +36,13 @@ interface SelectedExtraService {
 export class BookingComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
+  // Custom pricing properties - initialized with default values
+  showCustomPricing = false;
+  customAmount: FormControl = new FormControl('', [Validators.required, Validators.min(0.01)]);
+  customCleaners: FormControl = new FormControl(1, [Validators.required, Validators.min(1), Validators.max(10)]);
+  customDuration: FormControl = new FormControl(90, [Validators.required, Validators.min(30), Validators.max(480)]);
+
+
   // Data
   serviceTypes: ServiceType[] = [];
   subscriptions: Subscription[] = [];
@@ -215,6 +222,18 @@ export class BookingComponent implements OnInit, OnDestroy {
         }
       }
     });
+
+    if (this.customAmount) {
+      this.customAmount.valueChanges
+        .pipe(
+          takeUntil(this.destroy$)
+        )
+        .subscribe(() => {
+          if (this.showCustomPricing) {
+            this.calculateTotal();
+          }
+        });
+    }
   }
 
   ngOnDestroy() {
@@ -568,9 +587,29 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.selectedServiceType = serviceType;
     this.selectedServices = [];
     this.selectedExtraServices = [];
+
+    // Reset all special modes
+    this.showPollForm = false;
+    this.showCustomPricing = false;
+
+    // Check if this service type has custom pricing
+    if (serviceType.isCustom) {
+      this.showCustomPricing = true;
+
+      // DON'T clear validators for custom pricing - we still need entry method
+      // Only set defaults for custom fields
+      this.customAmount.setValue(serviceType.basePrice);
+      this.customCleaners.setValue(1);
+      this.customDuration.setValue(serviceType.timeDuration);
+
+      // Keep all other fields active and validated
+
+      // Trigger calculation
+      this.calculateTotal();
+    }
     
     // Check if this service type has poll functionality
-    if (serviceType.hasPoll) {
+   else if (serviceType.hasPoll) {
       this.showPollForm = true;
       this.loadPollQuestions(serviceType.id);
       
@@ -842,6 +881,13 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
   }
 
+  debugCustomValues() {
+    console.log('Custom Amount:', this.customAmount.value);
+    console.log('Custom Cleaners:', this.customCleaners.value);
+    console.log('Custom Duration:', this.customDuration.value);
+    console.log('Custom Duration Type:', typeof this.customDuration.value);
+  }
+
   private calculateTotal() {
     let subTotal = 0;
     let totalDuration = 0;
@@ -849,6 +895,107 @@ export class BookingComponent implements OnInit, OnDestroy {
     let deepCleaningFee = 0;
     let displayDuration = 0;
     let useExplicitHours = false;
+
+    // ADD THIS BLOCK FOR CUSTOM PRICING
+    if (this.showCustomPricing && this.customAmount.value) {
+      console.log('Custom Duration Raw Value:', this.customDuration.value);
+      console.log('Custom Duration Type:', typeof this.customDuration.value);
+      // For custom pricing, use the custom values directly
+      subTotal = parseFloat(this.customAmount.value) || 0;
+
+      // Parse and log duration
+      const parsedDuration = parseInt(this.customDuration.value);
+      console.log('Parsed Duration:', parsedDuration);
+
+      // IMPORTANT: Parse duration as integer
+      actualTotalDuration = parsedDuration || 90;
+      totalDuration = actualTotalDuration; // Add this line
+      displayDuration = actualTotalDuration;
+
+      console.log('actualTotalDuration:', actualTotalDuration);
+      console.log('displayDuration:', displayDuration);
+      
+      // Parse cleaners as integer
+      this.calculatedMaidsCount = parseInt(this.customCleaners.value) || 1;
+    
+      // Store the actual total duration for backend
+      this.actualTotalDuration = actualTotalDuration;
+    
+      // Skip all the complex calculations for custom pricing
+      // Jump straight to discount calculations
+    
+      // Reset discount amounts
+      this.subscriptionDiscountAmount = 0;
+      this.promoOrFirstTimeDiscountAmount = 0;
+    
+      // Calculate subscription discount if applicable
+      if (this.hasActiveSubscription && this.userSubscription && this.userSubscription.discountPercentage > 0) {
+        this.subscriptionDiscountAmount = Math.round(subTotal * (this.userSubscription.discountPercentage / 100) * 100) / 100;
+      }
+    
+      // Calculate promo or first-time discount
+      if (this.specialOfferApplied && this.selectedSpecialOffer) {
+        const offer = this.selectedSpecialOffer;
+        if (offer.isPercentage) {
+          this.promoOrFirstTimeDiscountAmount = Math.round(subTotal * (offer.discountValue / 100) * 100) / 100;
+        } else {
+          this.promoOrFirstTimeDiscountAmount = Math.min(offer.discountValue, subTotal);
+        }
+      } else if (this.hasFirstTimeDiscount && this.currentUser?.firstTimeOrder && this.firstTimeDiscountApplied) {
+        this.promoOrFirstTimeDiscountAmount = Math.round(subTotal * (this.firstTimeDiscountPercentage / 100) * 100) / 100;
+      } else if (this.promoCodeApplied && !this.giftCardApplied) {
+        if (this.promoIsPercentage) {
+          this.promoOrFirstTimeDiscountAmount = Math.round(subTotal * (this.promoDiscount / 100) * 100) / 100;
+        } else {
+          this.promoOrFirstTimeDiscountAmount = this.promoDiscount;
+        }
+      }
+    
+      // Total discount is the sum of both
+      const totalDiscountAmount = this.subscriptionDiscountAmount + this.promoOrFirstTimeDiscountAmount;    
+    
+      // Calculate tax on discounted subtotal
+      const discountedSubTotal = subTotal - totalDiscountAmount;
+      const tax = Math.round(discountedSubTotal * this.salesTaxRate * 100) / 100;
+    
+      // Get tips
+      const tips = this.tips.value || 0;
+      const companyDevelopmentTips = this.companyDevelopmentTips.value || 0;
+      const totalTips = tips + companyDevelopmentTips;
+    
+      // Calculate total
+      const total = discountedSubTotal + tax + totalTips;
+    
+      // Apply gift card if applicable
+      let finalTotal = total;
+      if (this.giftCardApplied && this.isGiftCard) {
+        this.giftCardAmountToUse = Math.min(this.giftCardBalance, total);
+        finalTotal = Math.max(0, total - this.giftCardAmountToUse);
+      }
+    
+      this.calculation = {
+        subTotal: Math.round(subTotal * 100) / 100,
+        tax,
+        discountAmount: totalDiscountAmount,
+        tips: totalTips,
+        total: Math.round(finalTotal * 100) / 100,
+        totalDuration: displayDuration
+      };
+    
+      // Calculate next order's total if needed
+      if (this.selectedSubscription && this.selectedSubscription.subscriptionDays > 0 && !this.hasActiveSubscription) {
+        const nextOrderDiscountPercentage = this.selectedSubscription.discountPercentage;
+        this.nextOrderDiscount = Math.round(subTotal * (nextOrderDiscountPercentage / 100) * 100) / 100;
+        const nextOrderDiscountedSubTotal = subTotal - this.nextOrderDiscount;
+        const nextOrderTax = Math.round(nextOrderDiscountedSubTotal * this.salesTaxRate * 100) / 100;
+        this.nextOrderTotal = nextOrderDiscountedSubTotal + nextOrderTax;
+      } else {
+        this.nextOrderDiscount = 0;
+        this.nextOrderTotal = 0;
+      }
+    
+      return; // Exit early for custom pricing
+    }
 
     // Check for deep cleaning multipliers FIRST
     let priceMultiplier = 1;
@@ -1343,7 +1490,11 @@ export class BookingComponent implements OnInit, OnDestroy {
       hasActiveSubscription: this.hasActiveSubscription,
       userSubscriptionId: this.userSubscription?.subscriptionId,
       giftCardCode: this.giftCardApplied && this.isGiftCard ? this.promoCode.value : null,
-      giftCardAmountToUse: this.giftCardApplied ? this.giftCardAmountToUse : 0
+      giftCardAmountToUse: this.giftCardApplied ? this.giftCardAmountToUse : 0,
+      isCustomPricing: this.showCustomPricing,
+      customAmount: this.showCustomPricing ? (this.customAmount.value || 0) : undefined,
+      customCleaners: this.showCustomPricing ? (this.customCleaners.value || 1) : undefined,
+      customDuration: this.showCustomPricing ? (this.customDuration.value || 90) : undefined
     };
 
     // Store booking data in service instead of creating order immediately

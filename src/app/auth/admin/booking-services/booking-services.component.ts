@@ -45,7 +45,8 @@ export class BookingServicesComponent implements OnInit {
     description: '',
     displayOrder: 1,
     timeDuration: 90,
-    hasPoll: false
+    hasPoll: false,
+    isCustom: false
   };
   
   // Services
@@ -271,7 +272,8 @@ export class BookingServicesComponent implements OnInit {
       description: '',
       displayOrder: this.serviceTypes.length + 1,
       timeDuration: 90,
-      hasPoll: false
+      hasPoll: false,
+      isCustom: false
     };
   }
 
@@ -283,7 +285,8 @@ export class BookingServicesComponent implements OnInit {
       description: '',
       displayOrder: 1,
       timeDuration: 90,
-      hasPoll: false
+      hasPoll: false,
+      isCustom: false
     };
   }
 
@@ -298,7 +301,8 @@ export class BookingServicesComponent implements OnInit {
           description: '',
           displayOrder: 1,
           timeDuration: 90,
-          hasPoll: false
+          hasPoll: false,
+          isCustom: false
         };
         this.serviceTypeMessage.success = 'Service type added successfully.';
       },
@@ -317,6 +321,25 @@ export class BookingServicesComponent implements OnInit {
     this.isEditingServiceType = false;
   }
 
+  setServiceTypeMode(mode: 'regular' | 'poll' | 'custom') {
+    if (!this.selectedServiceType) return;
+    
+    switch(mode) {
+      case 'regular':
+        this.selectedServiceType.hasPoll = false;
+        this.selectedServiceType.isCustom = false;
+        break;
+      case 'poll':
+        this.selectedServiceType.hasPoll = true;
+        this.selectedServiceType.isCustom = false;
+        break;
+      case 'custom':
+        this.selectedServiceType.hasPoll = false;
+        this.selectedServiceType.isCustom = true;
+        break;
+    }
+  }
+
   saveServiceType() {
     if (this.selectedServiceType) {
       const updateData = {
@@ -325,7 +348,8 @@ export class BookingServicesComponent implements OnInit {
         description: this.selectedServiceType.description,
         displayOrder: this.selectedServiceType.displayOrder || 1,
         timeDuration: this.selectedServiceType.timeDuration,
-        hasPoll: this.selectedServiceType.hasPoll 
+        hasPoll: this.selectedServiceType.hasPoll,
+        isCustom: this.selectedServiceType.isCustom
       };
       this.adminService.updateServiceType(this.selectedServiceType.id, updateData).subscribe({
         next: (response) => {

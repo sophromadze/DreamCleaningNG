@@ -112,6 +112,7 @@ export interface CreateServiceType {
   displayOrder: number;
   timeDuration: number;
   hasPoll?: boolean; 
+  isCustom?: boolean;
 }
 
 export interface UpdateServiceType {
@@ -121,6 +122,7 @@ export interface UpdateServiceType {
   displayOrder: number;
   timeDuration: number;
   hasPoll?: boolean; 
+  isCustom?: boolean;
 }
 
 export interface CreateService {

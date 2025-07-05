@@ -33,7 +33,8 @@
           </div>
           <div class="info-row">
             <span class="label">Duration:</span>
-            <span class="value">{{ formatDuration(getServiceDuration()) }}</span>
+            <span class="value" *ngIf="!isCustomServiceType()">{{ formatDuration(getServiceDuration()) }}</span>
+            <span class="value" *ngIf="isCustomServiceType()">{{ formatDuration(order.totalDuration) }}</span>
           </div>
           <div class="info-row">
             <span class="label">Subscription:</span>
@@ -206,12 +207,15 @@
   
       <!-- Action Buttons -->
       <div class="action-buttons">
-        <a [routerLink]="canEditOrder() ? ['/order', order.id, 'edit'] : null" 
+        <!-- Only show edit button if not custom service type -->
+        <a *ngIf="!isCustomServiceType()"
+           [routerLink]="canEditOrder() ? ['/order', order.id, 'edit'] : null" 
            class="edit-btn" 
            [class.disabled]="!canEditOrder()"
            [attr.data-tooltip]="!canEditOrder() ? (order.status === 'Done' ? 'Order is completed' : order.status === 'Cancelled' ? 'Order is cancelled' : 'Service date has passed') : null">
           Edit Order
         </a>
+        
         <button class="cancel-btn" 
                 (click)="canCancelOrder() ? openCancelModal() : null"
                 [class.disabled]="!canCancelOrder()"
