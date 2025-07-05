@@ -881,13 +881,6 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
   }
 
-  debugCustomValues() {
-    console.log('Custom Amount:', this.customAmount.value);
-    console.log('Custom Cleaners:', this.customCleaners.value);
-    console.log('Custom Duration:', this.customDuration.value);
-    console.log('Custom Duration Type:', typeof this.customDuration.value);
-  }
-
   private calculateTotal() {
     let subTotal = 0;
     let totalDuration = 0;
@@ -898,22 +891,17 @@ export class BookingComponent implements OnInit, OnDestroy {
 
     // ADD THIS BLOCK FOR CUSTOM PRICING
     if (this.showCustomPricing && this.customAmount.value) {
-      console.log('Custom Duration Raw Value:', this.customDuration.value);
-      console.log('Custom Duration Type:', typeof this.customDuration.value);
       // For custom pricing, use the custom values directly
       subTotal = parseFloat(this.customAmount.value) || 0;
 
       // Parse and log duration
       const parsedDuration = parseInt(this.customDuration.value);
-      console.log('Parsed Duration:', parsedDuration);
 
       // IMPORTANT: Parse duration as integer
       actualTotalDuration = parsedDuration || 90;
       totalDuration = actualTotalDuration; // Add this line
       displayDuration = actualTotalDuration;
-
-      console.log('actualTotalDuration:', actualTotalDuration);
-      console.log('displayDuration:', displayDuration);
+      
       
       // Parse cleaners as integer
       this.calculatedMaidsCount = parseInt(this.customCleaners.value) || 1;
