@@ -533,7 +533,7 @@ export class AdminService {
 
   // Poll Question Methods
   getPollQuestions(serviceTypeId: number): Observable<PollQuestion[]> {
-    return this.http.get<PollQuestion[]>(`${this.apiUrl}/poll/questions/${serviceTypeId}`);
+    return this.http.get<PollQuestion[]>(`${environment.apiUrl}/poll/questions/${serviceTypeId}`);
   }
   
   createPollQuestion(pollQuestion: CreatePollQuestion): Observable<PollQuestion> {

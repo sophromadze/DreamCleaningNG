@@ -573,27 +573,65 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (serviceType.hasPoll) {
       this.showPollForm = true;
       this.loadPollQuestions(serviceType.id);
+      
+      // DISABLE validation for fields not needed in poll forms
+      this.entryMethod.clearValidators();
+      this.entryMethod.updateValueAndValidity();
+      
+      // Set default values to prevent validation errors but disable validators
+      this.entryMethod.setValue('N/A'); // Set a default value
+      
+      // Initialize subscription and cleaning type for consistency
+      if (!this.selectedSubscription && this.subscriptions && this.subscriptions.length > 0) {
+        if (!this.hasActiveSubscription) {
+          this.selectedSubscription = this.subscriptions[0];
+        } else {
+          this.updateSelectedSubscription();
+        }
+      }
+      
+      if (!this.cleaningType.value) {
+        this.cleaningType.setValue('normal');
+      }
     } else {
       this.showPollForm = false;
       
+      // RESTORE validation for regular booking forms
+      this.entryMethod.setValidators([Validators.required]);
+      this.entryMethod.updateValueAndValidity();
+      
+      // Reset entry method value when switching back to regular booking
+      this.entryMethod.setValue('');
+      
       // Initialize services based on type (your existing logic)
       if (serviceType.services) {
-        // Sort services by displayOrder before processing
         const sortedServices = [...serviceType.services].sort((a, b) => 
           (a.displayOrder || 999) - (b.displayOrder || 999)
         );
         
         sortedServices.forEach(service => {
           if (service.isActive !== false) {
-            // Use minValue as default for all services
-            const defaultQuantity = service.minValue ?? 1;
-            
+            const defaultQuantity = service.minValue ?? 0;
             this.selectedServices.push({
               service: service,
               quantity: defaultQuantity
             });
           }
         });
+      }
+      
+      this.selectedExtraServices = [];
+      
+      if (!this.selectedSubscription && this.subscriptions && this.subscriptions.length > 0) {
+        if (!this.hasActiveSubscription) {
+          this.selectedSubscription = this.subscriptions[0];
+        } else {
+          this.updateSelectedSubscription();
+        }
+      }
+      
+      if (!this.cleaningType.value) {
+        this.cleaningType.setValue('normal');
       }
     }
     
