@@ -64,8 +64,8 @@
         </div>
         <div class="form-group">
           <label>
-            <input type="checkbox" [(ngModel)]="newServiceType.hasPoll" name="hasPoll">
             Has Poll (Custom Quote)
+            <input type="checkbox" [(ngModel)]="newServiceType.hasPoll" name="hasPoll">
           </label>
           <small class="form-note">
             When checked, this service type will show a questionnaire instead of regular services for custom quotes.
@@ -79,7 +79,7 @@
     </div>
 
     <!-- Service Types List -->
-    <div class="data-table">
+    <div class="data-table service-types-table">
       <table>
         <thead>
           <tr>
@@ -87,6 +87,7 @@
             <th>Name</th>
             <th>Price</th>
             <th>Time</th>
+            <th>Poll</th>
             <th>Description</th>
             <th>Order</th>
             <th>Status</th>
@@ -125,6 +126,18 @@
                      type="number" 
                      [(ngModel)]="type.timeDuration"
                      class="edit-input">
+            </td>
+            <td>
+              <ng-container *ngIf="!isEditingServiceType || !selectedServiceType || selectedServiceType.id !== type.id">
+                <span *ngIf="type.hasPoll" class="badge badge-info">Yes</span>
+                <span *ngIf="!type.hasPoll">No</span>
+              </ng-container>
+              <label *ngIf="isEditingServiceType && selectedServiceType && selectedServiceType.id === type.id">
+                <input type="checkbox" 
+                       [(ngModel)]="selectedServiceType.hasPoll" 
+                       (click)="$event.stopPropagation()">
+                Poll
+              </label>
             </td>
             <td>
               <ng-container *ngIf="!isEditingServiceType || selectedServiceType?.id !== type.id">

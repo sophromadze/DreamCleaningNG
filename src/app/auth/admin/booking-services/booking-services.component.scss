@@ -84,6 +84,9 @@
       }
 
       tbody tr {
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        
         &:hover {
           background-color: #f8f9fa;
         }
@@ -234,10 +237,6 @@
   
   tbody {
     tr {
-      &:hover {
-        background: #f8f9fa;
-      }
-      
       td {
         padding: 5px;
         color: #6c757d;
@@ -265,6 +264,24 @@
             outline: 0 !important;
             box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
           }
+        }
+      }
+    }
+  }
+}
+
+// Service Types Table specific styling
+.service-types-table {
+  tbody {
+    tr {
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      
+      &:hover {
+        background: #f8f9fa !important;
+        
+        td {
+          background: #f8f9fa !important;
         }
       }
     }
@@ -410,6 +427,15 @@
         outline: none;
         border-color: #007bff;
       }
+    }
+
+    input[type="checkbox"] {
+      width: auto;
+      cursor: pointer;
+    }
+
+    label:has(input[type="checkbox"]) {
+      cursor: pointer;
     }
 
     textarea {
@@ -690,10 +716,6 @@
   
   tbody {
     tr {
-      &:hover {
-        background: #f8f9fa;
-      }
-      
       td {
         padding: 8px;
         background-color: #fff;
@@ -872,20 +894,12 @@
 } 
 
 .poll-questions-section {
-  margin-top: 2rem;
-  
   .subsection {
-    background: #f8f9fa;
     border-radius: 8px;
     padding: 1.5rem;
     margin-bottom: 2rem;
     
     .subsection-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      
       h3 {
         color: #495057;
         margin: 0;
@@ -965,36 +979,49 @@
     border-collapse: separate;
     border-spacing: 0;
     border: 1px solid #e9ecef;
-    border-radius: 8px;
-    overflow: hidden;
-    background: white;
+    border-bottom: none;
+    margin-top: 1rem;
+    
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
     
     thead {
       th {
-        background: #f8f9fa;
-        padding: 0.75rem;
-        text-align: left;
+        text-align: center;
+        padding: 5px;
         font-weight: 600;
         color: #495057;
         border-bottom: 1px solid #e9ecef;
-        font-size: 0.875rem;
+        border-right: 1px solid #e9ecef;
+        white-space: nowrap;
+        background: #f8f9fa;
+        
+        &:last-child {
+          border-right: none;
+        }
       }
     }
     
     tbody {
       td {
-        padding: 0.75rem;
-        border-bottom: 1px solid #f1f3f4;
+        padding: 5px;
+        color: #6c757d;
         font-size: 0.875rem;
-        vertical-align: top;
+        border-bottom: 1px solid #e9ecef;
+        border-right: 1px solid #e9ecef;
+        vertical-align: middle;
         
         &:last-child {
-          border-bottom: none;
+          border-right: none;
+          text-align: center;
+
+          .action-btn{
+            margin:2px 3px;
+          }
         }
-      }
-      
-      tr:hover {
-        background: #f8f9fa;
       }
     }
   }

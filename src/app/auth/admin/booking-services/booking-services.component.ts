@@ -324,7 +324,8 @@ export class BookingServicesComponent implements OnInit {
         basePrice: this.selectedServiceType.basePrice,
         description: this.selectedServiceType.description,
         displayOrder: this.selectedServiceType.displayOrder || 1,
-        timeDuration: this.selectedServiceType.timeDuration
+        timeDuration: this.selectedServiceType.timeDuration,
+        hasPoll: this.selectedServiceType.hasPoll 
       };
       this.adminService.updateServiceType(this.selectedServiceType.id, updateData).subscribe({
         next: (response) => {
