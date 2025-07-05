@@ -12,6 +12,7 @@ export interface ServiceType {
   extraServices: ExtraService[];
   isActive: boolean;
   displayOrder?: number;
+  hasPoll: boolean;
   timeDuration: number;
 }
 

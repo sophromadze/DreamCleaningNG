@@ -4,6 +4,26 @@ import { FormsModule } from '@angular/forms';
 import { AdminService, CreateService, CreateExtraService, UserPermissions } from '../../../services/admin.service';
 import { ServiceType, Service, ExtraService } from '../../../services/booking.service';
 
+export interface PollQuestion {
+  id: number;
+  question: string;
+  questionType: string;
+  options?: string;
+  isRequired: boolean;
+  displayOrder: number;
+  isActive: boolean;
+  serviceTypeId: number;
+}
+
+export interface CreatePollQuestion {
+  question: string;
+  questionType: string;
+  options?: string;
+  isRequired: boolean;
+  displayOrder: number;
+  serviceTypeId: number;
+}
+
 @Component({
   selector: 'app-booking-services',
   standalone: true,
@@ -24,7 +44,8 @@ export class BookingServicesComponent implements OnInit {
     basePrice: 0,
     description: '',
     displayOrder: 1,
-    timeDuration: 90
+    timeDuration: 90,
+    hasPoll: false
   };
   
   // Services
@@ -88,6 +109,30 @@ export class BookingServicesComponent implements OnInit {
   serviceTypeMessage = { error: '', success: '' };
   serviceMessage = { error: '', success: '' };
   extraServiceMessage = { error: '', success: '' };
+
+  // Poll Questions
+  pollQuestions: PollQuestion[] = [];
+  isAddingPollQuestion = false;
+  editingPollQuestionId: number | null = null;
+  newPollQuestion: CreatePollQuestion = {
+    question: '',
+    questionType: 'text',
+    options: '',
+    isRequired: false,
+    displayOrder: 1,
+    serviceTypeId: 0
+  };
+
+  // Question types
+  questionTypes = [
+    { value: 'text', label: 'Text Input' },
+    { value: 'textarea', label: 'Textarea' },
+    { value: 'dropdown', label: 'Dropdown' },
+    { value: 'radio', label: 'Radio Buttons' }
+  ];
+
+  // Messages for poll questions
+  pollQuestionMessage = { success: '', error: '' };
 
   constructor(
     private adminService: AdminService,
@@ -208,6 +253,12 @@ export class BookingServicesComponent implements OnInit {
     this.isAddingServiceType = false;
     this.isAddingService = false;
     this.isAddingExtraService = false;
+    this.isAddingPollQuestion = false;
+    this.editingPollQuestionId = null;
+
+    if (type.hasPoll) {
+      this.loadPollQuestions();
+    }
   }
 
   startAddingServiceType() {
@@ -219,7 +270,8 @@ export class BookingServicesComponent implements OnInit {
       basePrice: 0,
       description: '',
       displayOrder: this.serviceTypes.length + 1,
-      timeDuration: 90
+      timeDuration: 90,
+      hasPoll: false
     };
   }
 
@@ -230,7 +282,8 @@ export class BookingServicesComponent implements OnInit {
       basePrice: 0,
       description: '',
       displayOrder: 1,
-      timeDuration: 90
+      timeDuration: 90,
+      hasPoll: false
     };
   }
 
@@ -244,7 +297,8 @@ export class BookingServicesComponent implements OnInit {
           basePrice: 0,
           description: '',
           displayOrder: 1,
-          timeDuration: 90
+          timeDuration: 90,
+          hasPoll: false
         };
         this.serviceTypeMessage.success = 'Service type added successfully.';
       },
@@ -790,5 +844,162 @@ export class BookingServicesComponent implements OnInit {
         this.extraServiceMessage.error = 'Failed to activate extra service. Please try again.';
       }
     });
+  }
+
+  getQuestionTypeLabel(questionType: string): string {
+    const type = this.questionTypes.find(t => t.value === questionType);
+    return type ? type.label : questionType;
+  }
+
+  // Poll Question Methods
+  loadPollQuestions() {
+    if (!this.selectedServiceType) return;
+
+    this.adminService.getPollQuestions(this.selectedServiceType.id).subscribe({
+      next: (questions) => {
+        this.pollQuestions = questions;
+      },
+      error: (error) => {
+        console.error('Error loading poll questions:', error);
+        this.pollQuestionMessage.error = 'Failed to load poll questions';
+      }
+    });
+  }
+
+  startAddingPollQuestion() {
+    if (!this.userPermissions.permissions.canCreate) {
+      this.pollQuestionMessage.error = 'You do not have permission to create poll questions';
+      return;
+    }
+    if (!this.selectedServiceType) return;
+
+    this.isAddingPollQuestion = true;
+    this.editingPollQuestionId = null;
+    this.newPollQuestion = {
+      question: '',
+      questionType: 'text',
+      options: '',
+      isRequired: false,
+      displayOrder: this.getNextPollQuestionDisplayOrder(),
+      serviceTypeId: this.selectedServiceType.id
+    };
+  }
+
+  cancelAddPollQuestion() {
+    this.isAddingPollQuestion = false;
+    this.newPollQuestion = {
+      question: '',
+      questionType: 'text',
+      options: '',
+      isRequired: false,
+      displayOrder: 1,
+      serviceTypeId: 0
+    };
+    this.clearPollQuestionMessages();
+  }
+
+  addPollQuestion() {
+    if (!this.newPollQuestion.question) {
+      this.pollQuestionMessage.error = 'Please enter a question';
+      return;
+    }
+
+    if ((this.newPollQuestion.questionType === 'dropdown' || this.newPollQuestion.questionType === 'radio') && !this.newPollQuestion.options) {
+      this.pollQuestionMessage.error = 'Please enter options for dropdown/radio questions (comma-separated)';
+      return;
+    }
+
+    this.adminService.createPollQuestion(this.newPollQuestion).subscribe({
+      next: (question) => {
+        this.pollQuestions.push(question);
+        this.pollQuestions.sort((a, b) => a.displayOrder - b.displayOrder);
+        this.isAddingPollQuestion = false;
+        this.newPollQuestion = {
+          question: '',
+          questionType: 'text',
+          options: '',
+          isRequired: false,
+          displayOrder: 1,
+          serviceTypeId: 0
+        };
+        this.pollQuestionMessage.success = 'Question added successfully';
+        this.clearPollQuestionMessagesAfterDelay();
+      },
+      error: (error) => {
+        console.error('Error adding poll question:', error);
+        this.pollQuestionMessage.error = 'Failed to add question';
+      }
+    });
+  }
+
+  editPollQuestion(question: PollQuestion) {
+    this.editingPollQuestionId = question.id;
+    this.isAddingPollQuestion = false;
+  }
+
+  cancelEditPollQuestion() {
+    this.editingPollQuestionId = null;
+  }
+
+  savePollQuestion(question: PollQuestion) {
+    if (!question.question) {
+      this.pollQuestionMessage.error = 'Please enter a question';
+      return;
+    }
+
+    if ((question.questionType === 'dropdown' || question.questionType === 'radio') && !question.options) {
+      this.pollQuestionMessage.error = 'Please enter options for dropdown/radio questions (comma-separated)';
+      return;
+    }
+
+    this.adminService.updatePollQuestion(question.id, question).subscribe({
+      next: () => {
+        this.editingPollQuestionId = null;
+        this.pollQuestionMessage.success = 'Question updated successfully';
+        this.clearPollQuestionMessagesAfterDelay();
+      },
+      error: (error) => {
+        console.error('Error updating poll question:', error);
+        this.pollQuestionMessage.error = 'Failed to update question';
+      }
+    });
+  }
+
+  deletePollQuestion(questionId: number) {
+    if (!this.userPermissions.permissions.canDelete) {
+      this.pollQuestionMessage.error = 'You do not have permission to delete poll questions';
+      return;
+    }
+
+    if (!confirm('Are you sure you want to delete this question?')) {
+      return;
+    }
+
+    this.adminService.deletePollQuestion(questionId).subscribe({
+      next: () => {
+        this.pollQuestions = this.pollQuestions.filter(q => q.id !== questionId);
+        this.pollQuestionMessage.success = 'Question deleted successfully';
+        this.clearPollQuestionMessagesAfterDelay();
+      },
+      error: (error) => {
+        console.error('Error deleting poll question:', error);
+        this.pollQuestionMessage.error = 'Failed to delete question';
+      }
+    });
+  }
+
+  getNextPollQuestionDisplayOrder(): number {
+    if (this.pollQuestions.length === 0) return 1;
+    return Math.max(...this.pollQuestions.map(q => q.displayOrder)) + 1;
+  }
+
+  clearPollQuestionMessages() {
+    this.pollQuestionMessage = { success: '', error: '' };
+  }
+
+  clearPollQuestionMessagesAfterDelay() {
+    setTimeout(() => {
+      this.clearPollQuestionMessages();
+    }, 3000);
   }
 }

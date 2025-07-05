@@ -110,6 +110,8 @@ export interface CreateServiceType {
   basePrice: number;
   description?: string;
   displayOrder: number;
+  timeDuration: number;
+  hasPoll?: boolean; 
 }
 
 export interface UpdateServiceType {
@@ -117,6 +119,8 @@ export interface UpdateServiceType {
   basePrice: number;
   description?: string;
   displayOrder: number;
+  timeDuration: number;
+  hasPoll?: boolean; 
 }
 
 export interface CreateService {
@@ -131,7 +135,7 @@ export interface CreateService {
   stepValue?: number;
   isRangeInput: boolean;
   unit?: string;
-  serviceRelationType?: string; // Make sure this is included
+  serviceRelationType?: string;
   displayOrder: number;
 }
 
@@ -238,6 +242,26 @@ export interface UserProfile {
   totalOrders: number;
   totalSpent: number;
   lastOrderDate?: Date;
+}
+
+export interface PollQuestion {
+  id: number;
+  question: string;
+  questionType: string;
+  options?: string;
+  isRequired: boolean;
+  displayOrder: number;
+  isActive: boolean;
+  serviceTypeId: number;
+}
+
+export interface CreatePollQuestion {
+  question: string;
+  questionType: string;
+  options?: string;
+  isRequired: boolean;
+  displayOrder: number;
+  serviceTypeId: number;
 }
 
 @Injectable({
@@ -505,5 +529,22 @@ export class AdminService {
   
   getAssignedCleaners(orderId: number): Observable<string[]> {
     return this.http.get<string[]>(`${this.apiUrl}/orders/${orderId}/assigned-cleaners`);
+  }
+
+  // Poll Question Methods
+  getPollQuestions(serviceTypeId: number): Observable<PollQuestion[]> {
+    return this.http.get<PollQuestion[]>(`${this.apiUrl}/poll/questions/${serviceTypeId}`);
+  }
+  
+  createPollQuestion(pollQuestion: CreatePollQuestion): Observable<PollQuestion> {
+    return this.http.post<PollQuestion>(`${this.apiUrl}/poll-questions`, pollQuestion);
+  }
+  
+  updatePollQuestion(id: number, pollQuestion: Partial<PollQuestion>): Observable<any> {
+    return this.http.put(`${this.apiUrl}/poll-questions/${id}`, pollQuestion);
+  }
+  
+  deletePollQuestion(id: number): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/poll-questions/${id}`);
   }
 }

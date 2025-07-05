@@ -12,6 +12,7 @@ import { DurationUtils } from '../utils/duration.utils';
 import { SpecialOfferService, UserSpecialOffer } from '../services/special-offer.service';
 import { FormPersistenceService, BookingFormData } from '../services/form-persistence.service';
 import { Subject, takeUntil, debounceTime } from 'rxjs';
+import { PollService, PollQuestion, PollAnswer, PollSubmission } from '../services/poll.service';
 
 interface SelectedService {
   service: Service;
@@ -107,7 +108,10 @@ export class BookingComponent implements OnInit, OnDestroy {
     'Office reception',
     'Other'
   ];
-  
+
+  pollQuestions: PollQuestion[] = [];
+  pollAnswers: { [key: number]: string } = {};
+  showPollForm = false;
   
   // States and Cities - will be loaded from backend
   states: string[] = [];
@@ -122,7 +126,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     private router: Router,
     private bookingDataService: BookingDataService,
     private specialOfferService: SpecialOfferService,
-    public formPersistenceService: FormPersistenceService
+    public formPersistenceService: FormPersistenceService,
+    private pollService: PollService
   ) {
     this.bookingForm = this.fb.group({
       serviceDate: [{value: '', disabled: false}, Validators.required],
@@ -564,24 +569,32 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.selectedServices = [];
     this.selectedExtraServices = [];
     
-    // Initialize services based on type
-    if (serviceType.services) {
-      // Sort services by displayOrder before processing
-      const sortedServices = [...serviceType.services].sort((a, b) => 
-        (a.displayOrder || 999) - (b.displayOrder || 999)
-      );
+    // Check if this service type has poll functionality
+    if (serviceType.hasPoll) {
+      this.showPollForm = true;
+      this.loadPollQuestions(serviceType.id);
+    } else {
+      this.showPollForm = false;
       
-      sortedServices.forEach(service => {
-        if (service.isActive !== false) {
-          // Use minValue as default for all services
-          const defaultQuantity = service.minValue ?? 1;
-          
-          this.selectedServices.push({
-            service: service,
-            quantity: defaultQuantity
-          });
-        }
-      });
+      // Initialize services based on type (your existing logic)
+      if (serviceType.services) {
+        // Sort services by displayOrder before processing
+        const sortedServices = [...serviceType.services].sort((a, b) => 
+          (a.displayOrder || 999) - (b.displayOrder || 999)
+        );
+        
+        sortedServices.forEach(service => {
+          if (service.isActive !== false) {
+            // Use minValue as default for all services
+            const defaultQuantity = service.minValue ?? 1;
+            
+            this.selectedServices.push({
+              service: service,
+              quantity: defaultQuantity
+            });
+          }
+        });
+      }
     }
     
     this.calculateTotal();
@@ -1158,6 +1171,10 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   isFormValid(): boolean {
+    if (this.showPollForm) {
+      return this.isPollFormValid();
+    }
+    
     return this.bookingForm.valid && 
            this.selectedServiceType !== null && 
            this.selectedSubscription !== null && 
@@ -1165,6 +1182,10 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   onSubmit() {
+    if (this.showPollForm) {
+      this.submitPollForm();
+      return;
+    }
 
     if (!this.authService.isLoggedIn()) {
       // Store the current booking state if needed
@@ -1235,8 +1256,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
 
     const shouldApplySubscriptionDiscount = this.hasActiveSubscription && 
-  this.userSubscription && 
-  this.userSubscription.discountPercentage > 0;
+    this.userSubscription && 
+    this.userSubscription.discountPercentage > 0;
 
     
     const bookingData = {
@@ -1414,6 +1435,98 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     
     this.calculateTotal();
+  }
+  
+  loadPollQuestions(serviceTypeId: number) {
+    this.pollService.getPollQuestions(serviceTypeId).subscribe({
+      next: (questions) => {
+        this.pollQuestions = questions;
+        this.pollAnswers = {};
+      },
+      error: (error) => {
+        console.error('Error loading poll questions:', error);
+      }
+    });
+  }
+
+  initializeRegularServices(serviceType: ServiceType) {
+    // Initialize services based on type
+    if (serviceType.services) {
+      // Sort services by displayOrder before processing
+      const sortedServices = [...serviceType.services].sort((a, b) => 
+        (a.displayOrder || 999) - (b.displayOrder || 999)
+      );
+      
+      sortedServices.forEach(service => {
+        if (service.isActive !== false) {
+          // Use minValue as default for all services
+          const defaultQuantity = service.minValue ?? 0;
+          this.selectedServices.push({
+            service: service,
+            quantity: defaultQuantity
+          });
+        }
+      });
+    }
+    
+    // Clear any previously selected extra services
+    this.selectedExtraServices = [];
+  }
+  
+  isPollFormValid(): boolean {
+    if (!this.showPollForm) return true;
+    
+    // Check required questions
+    for (const question of this.pollQuestions) {
+      if (question.isRequired && (!this.pollAnswers[question.id] || this.pollAnswers[question.id].trim() === '')) {
+        return false;
+      }
+    }
+    
+    // Check contact information and address
+    return this.bookingForm.valid;
+  }
+  
+  submitPollForm() {
+    if (!this.isPollFormValid()) {
+      this.errorMessage = 'Please fill in all required fields';
+      return;
+    }
+  
+    this.isLoading = true;
+    const formValue = this.bookingForm.getRawValue();
+  
+    const answers: PollAnswer[] = this.pollQuestions.map(question => ({
+      pollQuestionId: question.id,
+      answer: this.pollAnswers[question.id] || ''
+    })).filter(answer => answer.answer.trim() !== '');
+  
+    const submission: PollSubmission = {
+      serviceTypeId: this.selectedServiceType!.id,
+      contactFirstName: formValue.contactFirstName,
+      contactLastName: formValue.contactLastName,
+      contactEmail: formValue.contactEmail,
+      contactPhone: formValue.contactPhone,
+      serviceAddress: formValue.serviceAddress,
+      aptSuite: formValue.aptSuite,
+      city: formValue.city,
+      state: formValue.state,
+      postalCode: formValue.zipCode,
+      answers: answers
+    };
+  
+    this.pollService.submitPoll(submission).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.router.navigate(['/poll-success'], { 
+          queryParams: { serviceType: this.selectedServiceType!.name } 
+        });
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = error.error?.message || 'Failed to submit poll. Please try again.';
+      }
+    });
   }
 
   // Form control getters for type safety

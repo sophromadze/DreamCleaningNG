@@ -14,13 +14,14 @@
             Clear All
           </button>
         </div>
-        <!-- Step 1: Service Type -->
+        
+        <!-- Step 1: Service Type Selection - ALWAYS VISIBLE -->
         <section class="booking-section">
           <h2>1. Select Service Type</h2>
           <div class="service-types">
             <div class="service-type-card" 
                  *ngFor="let type of serviceTypes"
-                 [class.selected]="selectedServiceType?.id === type.id"
+                 [class.selected]="selectedServiceType && selectedServiceType.id === type.id"
                  (click)="selectServiceType(type)">
               <div class="service-icon">{{ getServiceTypeIcon(type) }}</div>
               <h3>{{ type.name }}</h3>
@@ -30,477 +31,542 @@
           </div>
         </section>
 
-        <!-- Step 2: Services -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>2. Customize Your Service</h2>
+        <!-- Poll Form Section (when service type has poll) -->
+        <section class="booking-section" *ngIf="selectedServiceType && showPollForm">
+          <h2>Tell us about your cleaning needs</h2>
+          <p class="poll-description">
+            Please answer the following questions so we can provide you with a customized quote.
+          </p>
           
-          <!-- Office Cleaning Pricing Text -->
-          <div class="service-pricing-info" *ngIf="hasCleanerServices()">
-            <p class="pricing-text" [innerHTML]="getCleanerPricingText()"></p>
-          </div>
-          
-          <div class="services">
-            <div class="service-item" *ngFor="let selected of selectedServices">
-              <label>{{ selected.service.name }}</label>
+          <div class="poll-questions">
+            <div class="poll-question" *ngFor="let question of pollQuestions">
+              <label class="question-label">
+                {{ question.question }}
+                <span class="required" *ngIf="question.isRequired">*</span>
+              </label>
               
-              <!-- Dropdown Input -->
-              <div class="service-input" *ngIf="selected.service.inputType === 'dropdown'">
-                <select [(ngModel)]="selected.quantity" 
-                        (change)="updateServiceQuantity(selected.service, +selected.quantity)">
-                  <option *ngFor="let option of getServiceOptions(selected.service)"
-                          [value]="option">
-                    <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
-                    <ng-container *ngIf="!(selected.service.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
-                  </option>
-                </select>
-                <span class="service-duration" *ngIf="selected.service.timeDuration">
-                  <span class="duration-icon">⏱️</span>
-                  {{ formatServiceDuration(getServiceDuration(selected.service)) }}
-                </span>
-                <span class="service-cost">
-                  <!-- Bedrooms -->
-                  <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity === 0">
-                    +$20 (Studio)
-                  </ng-container>
-                  <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity !== 0">
-                    +${{ selected.service.cost * selected.quantity }}
-                  </ng-container>
-                  
-                  <!-- Bathrooms -->
-                  <ng-container *ngIf="selected.service.serviceKey === 'bathrooms'">
-                    +${{ selected.service.cost * selected.quantity }}
-                  </ng-container>
-                  
-                  <!-- Cleaners (with serviceRelationType) -->
-                  <ng-container *ngIf="selected.service.serviceRelationType === 'cleaner'">
-                    {{ getCleanerCostDisplay(selected.quantity) }}
-                  </ng-container>
-                  
-                  <!-- Hours (with serviceRelationType) -->
-                  <ng-container *ngIf="selected.service.serviceRelationType === 'hours'">
-                    {{ getHoursCostDisplay(selected.quantity) }}
-                  </ng-container>
-                </span>
-              </div>
-
-              <!-- Slider Input for Square Feet -->
-              <div class="service-input slider-input" *ngIf="selected.service.isRangeInput">
-                <input type="range" 
-                       [(ngModel)]="selected.quantity"
-                       [min]="selected.service.minValue"
-                       [max]="selected.service.maxValue"
-                       [step]="selected.service.stepValue"
-                       (input)="updateServiceQuantity(selected.service, +selected.quantity)">
-                <div class="slider-value">
-                  <span>{{ selected.quantity }} sq ft</span>
-                  <span class="service-cost">+${{ (selected.service.cost * selected.quantity).toFixed(2) }}</span>
+              <!-- Text Input -->
+              <input 
+                *ngIf="question.questionType === 'text'"
+                type="text" 
+                [(ngModel)]="pollAnswers[question.id]"
+                [required]="question.isRequired"
+                class="poll-input">
+              
+              <!-- Textarea -->
+              <textarea 
+                *ngIf="question.questionType === 'textarea'"
+                [(ngModel)]="pollAnswers[question.id]"
+                [required]="question.isRequired"
+                rows="3"
+                class="poll-textarea"></textarea>
+              
+              <!-- Dropdown -->
+              <select 
+                *ngIf="question.questionType === 'dropdown'"
+                [(ngModel)]="pollAnswers[question.id]"
+                [required]="question.isRequired"
+                class="poll-select">
+                <option value="">Select an option</option>
+                <option *ngFor="let option of question.options?.split(',') || []" [value]="option.trim()">
+                  {{ option.trim() }}
+                </option>
+              </select>
+              
+              <!-- Radio buttons -->
+              <div *ngIf="question.questionType === 'radio'" class="radio-group">
+                <div *ngFor="let option of question.options?.split(',') || []; let i = index" class="radio-option">
+                  <input 
+                    type="radio" 
+                    [name]="'question_' + question.id"
+                    [id]="'question_' + question.id + '_' + i"
+                    [value]="option.trim()"
+                    [(ngModel)]="pollAnswers[question.id]"
+                    [required]="question.isRequired">
+                  <label [for]="'question_' + question.id + '_' + i">{{ option.trim() }}</label>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- Step 3: Extra Services -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>3. Add Extra Services</h2>
-          
-          <!-- Cleaning Type Selection -->
-          <div class="cleaning-type-selection">
-            <label>Cleaning Type *</label>
-            <select [formControl]="cleaningType" (change)="onCleaningTypeChange(cleaningType.value)">
-              <option value="normal">Normal Cleaning</option>
-              <option value="deep">Deep Cleaning</option>
-              <option value="super-deep">Super Deep Cleaning</option>
-            </select>
-          </div>
+        <!-- Regular Booking Sections (when service type doesn't have poll) -->
+        <ng-container *ngIf="selectedServiceType && !showPollForm">
+          <!-- Step 2: Services -->
+          <section class="booking-section">
+            <h2>2. Customize Your Service</h2>
+            
+            <!-- Office Cleaning Pricing Text -->
+            <div class="service-pricing-info" *ngIf="hasCleanerServices()">
+              <p class="pricing-text" [innerHTML]="getCleanerPricingText()"></p>
+            </div>
+            
+            <div class="services">
+              <div class="service-item" *ngFor="let selected of selectedServices">
+                <label>{{ selected.service.name }}</label>
+                
+                <!-- Dropdown Input -->
+                <div class="service-input" *ngIf="selected.service.inputType === 'dropdown'">
+                  <select [(ngModel)]="selected.quantity" 
+                          (change)="updateServiceQuantity(selected.service, +selected.quantity)">
+                    <option *ngFor="let option of getServiceOptions(selected.service)"
+                            [value]="option">
+                      <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
+                      <ng-container *ngIf="!(selected.service.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
+                    </option>
+                  </select>
+                  <span class="service-duration" *ngIf="selected.service.timeDuration">
+                    <span class="duration-icon">⏱️</span>
+                    {{ formatServiceDuration(getServiceDuration(selected.service)) }}
+                  </span>
+                  <span class="service-cost">
+                    <!-- Bedrooms -->
+                    <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity === 0">
+                      +$20 (Studio)
+                    </ng-container>
+                    <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity !== 0">
+                      +${{ selected.service.cost * selected.quantity }}
+                    </ng-container>
+                    
+                    <!-- Bathrooms -->
+                    <ng-container *ngIf="selected.service.serviceKey === 'bathrooms'">
+                      +${{ selected.service.cost * selected.quantity }}
+                    </ng-container>
+                    
+                    <!-- Cleaners (with serviceRelationType) -->
+                    <ng-container *ngIf="selected.service.serviceRelationType === 'cleaner'">
+                      {{ getCleanerCostDisplay(selected.quantity) }}
+                    </ng-container>
+                    
+                    <!-- Hours (with serviceRelationType) -->
+                    <ng-container *ngIf="selected.service.serviceRelationType === 'hours'">
+                      {{ getHoursCostDisplay(selected.quantity) }}
+                    </ng-container>
+                  </span>
+                </div>
 
-          <div class="extra-services">
-            <div class="extra-service-card" 
-                 *ngFor="let extra of getFilteredExtraServices()"
-                 [class.selected]="isExtraServiceSelected(extra)"
-                 (click)="toggleExtraService(extra)">
-              <div class="extra-header">
-                <div class="extra-info">
-                  <h4>{{ extra.name }}</h4>
-                  <p>{{ extra.description }}</p>
-                  <div class="extra-details">
-                    <div class="extra-price">
-                      <ng-container *ngIf="extra.name === 'Extra Cleaners'">
-                        ${{ getCleanerPricePerHour() }}/hour per cleaner
-                      </ng-container>
-                      <ng-container *ngIf="extra.name !== 'Extra Cleaners'">
-                        ${{ extra.price }}
-                      </ng-container>
-                    </div>
-                    <div class="extra-duration" *ngIf="extra.duration">
-                      <span class="duration-icon">⏱️</span>
-                      {{ formatServiceDuration(extra.duration * (isExtraServiceSelected(extra) ? getExtraServiceQuantity(extra) : 1)) }}
-                    </div>
+                <!-- Slider Input for Square Feet -->
+                <div class="service-input slider-input" *ngIf="selected.service.isRangeInput">
+                  <input type="range" 
+                         [(ngModel)]="selected.quantity"
+                         [min]="selected.service.minValue"
+                         [max]="selected.service.maxValue"
+                         [step]="selected.service.stepValue"
+                         (input)="updateServiceQuantity(selected.service, +selected.quantity)">
+                  <div class="slider-value">
+                    <span>{{ selected.quantity }} sq ft</span>
+                    <span class="service-cost">+${{ (selected.service.cost * selected.quantity).toFixed(2) }}</span>
                   </div>
                 </div>
-                <div class="checkbox">
-                  <input type="checkbox" [checked]="isExtraServiceSelected(extra)" style="pointer-events: none; cursor: default;">
-                </div>
-              </div>
-              
-              <!-- Quantity Control -->
-              <div class="extra-controls" *ngIf="isExtraServiceSelected(extra)">
-                <div class="quantity-control" *ngIf="extra.hasQuantity">
-                  <label>Quantity:</label>
-                  <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
-                          [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
-                  <span>{{ getExtraServiceQuantity(extra) }}</span>
-                  <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1); $event.stopPropagation()">+</button>
-                </div>
-                <!-- Special note for Extra Cleaners -->
-                <div class="extra-cleaners-note" *ngIf="isExtraServiceSelected(extra) && extra.name === 'Extra Cleaners'">
-                  <small>Each extra cleaner reduces service duration and adds 1 maid to your team.</small>
-                </div>
-                
-                <!-- Hours Control -->
-                <div class="hours-control" *ngIf="extra.hasHours">
-                  <label>Hours:</label>
-                  <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) - 0.5); $event.stopPropagation()" 
-                          [disabled]="getExtraServiceHours(extra) <= 0.5">-</button>
-                  <span>{{ getExtraServiceHours(extra) }}</span>
-                  <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) + 0.5); $event.stopPropagation()">+</button>
-                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Step 4: Date & Time -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>4. Select Date & Time</h2>
-          <div class="date-time-selection">
-            <div class="form-group">
-              <label>Service Date</label>
-              <input type="date" 
-                     [formControl]="serviceDate"
-                     [min]="minDate.toISOString().split('T')[0]">
-            </div>
-            <div class="form-group">
-              <label>Service Time</label>
-              <select [formControl]="serviceTime">
-                <option value="">Select time</option>
-                <option value="08:00">8:00 AM</option>
-                <option value="09:00">9:00 AM</option>
-                <option value="10:00">10:00 AM</option>
-                <option value="11:00">11:00 AM</option>
-                <option value="12:00">12:00 PM</option>
-                <option value="13:00">1:00 PM</option>
-                <option value="14:00">2:00 PM</option>
-                <option value="15:00">3:00 PM</option>
-                <option value="16:00">4:00 PM</option>
+          <!-- Step 3: Extra Services -->
+          <section class="booking-section">
+            <h2>3. Add Extra Services</h2>
+            
+            <!-- Cleaning Type Selection -->
+            <div class="cleaning-type-selection">
+              <label>Cleaning Type *</label>
+              <select [formControl]="cleaningType" (change)="onCleaningTypeChange(cleaningType.value)">
+                <option value="normal">Normal Cleaning</option>
+                <option value="deep">Deep Cleaning</option>
+                <option value="super-deep">Super Deep Cleaning</option>
               </select>
             </div>
-          </div>
-        </section>
 
-        <!-- Step 5: Subscription -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>5. Select Subscription</h2>
-          <div class="active-subscription-notice" *ngIf="hasActiveSubscription && userSubscription">
-            <i class="fas fa-info-circle"></i>
-            <span>You have an active {{ userSubscription?.subscriptionName }} subscription 
-                  ({{ userSubscription?.discountPercentage }}% discount)</span>
-          </div>
-          <div class="subscription-options">
-            <div class="subscription-card" 
-                *ngFor="let subscription of subscriptions"
-                [class.selected]="selectedSubscription?.id === subscription.id"
-                [class.user-subscription]="hasActiveSubscription && userSubscription?.subscriptionId === subscription.id"
-                (click)="selectSubscription(subscription)">
-              <h4>{{ subscription.name }}</h4>
-              <p>{{ subscription.description }}</p>
-              <div class="discount" *ngIf="subscription.discountPercentage > 0">
-                Save {{ subscription.discountPercentage }}%
-              </div>
-              <div class="current-subscription" 
-                *ngIf="hasActiveSubscription && userSubscription?.subscriptionId === subscription.id">
-                Your Current Plan
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Step 6: Discounts -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>6. Apply Discounts</h2>
-        
-          <!-- Show error message if there is one -->
-          <div class="discount-error" *ngIf="errorMessage">
-            <p class="error-message">{{ errorMessage }}</p>
-          </div>
-        
-          <div class="discounts">
-            <!-- Special Offers Section -->
-            <div class="special-offers-section" *ngIf="userSpecialOffers.length > 0">
-              <h3>Available Special Offers</h3>
-              <div class="special-offers-grid">
-                <div class="special-offer-card" 
-                     *ngFor="let offer of userSpecialOffers"
-                     [class.applied]="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
-                  <div class="offer-info">
-                    <span class="offer-badge" [style.background-color]="offer.badgeColor || '#28a745'">
-                      <i class="fas fa-gift"></i>
-                    </span>
-                    <div class="offer-content">
-                      <h4>{{ offer.name }}</h4>
-                      <div class="offer-details">
-                        <p *ngIf="offer.description">{{ offer.description }}</p>
-                        <span class="offer-expiry" *ngIf="offer.expiresAt">
-                          Expires: {{ offer.expiresAt | date: 'MMM d, y' }}
-                        </span>
-                        <span class="offer-minimum" *ngIf="offer.minimumOrderAmount">
-                          Min. order: ${{ offer.minimumOrderAmount }}
-                        </span>
+            <div class="extra-services">
+              <div class="extra-service-card" 
+                   *ngFor="let extra of getFilteredExtraServices()"
+                   [class.selected]="isExtraServiceSelected(extra)"
+                   (click)="toggleExtraService(extra)">
+                <div class="extra-header">
+                  <div class="extra-info">
+                    <h4>{{ extra.name }}</h4>
+                    <p>{{ extra.description }}</p>
+                    <div class="extra-details">
+                      <div class="extra-price">
+                        <ng-container *ngIf="extra.name === 'Extra Cleaners'">
+                          ${{ getCleanerPricePerHour() }}/hour per cleaner
+                        </ng-container>
+                        <ng-container *ngIf="extra.name !== 'Extra Cleaners'">
+                          ${{ extra.price }}
+                        </ng-container>
+                      </div>
+                      <div class="extra-duration" *ngIf="extra.duration">
+                        <span class="duration-icon">⏱️</span>
+                        {{ formatServiceDuration(extra.duration * (isExtraServiceSelected(extra) ? getExtraServiceQuantity(extra) : 1)) }}
                       </div>
                     </div>
                   </div>
-                  <div class="offer-actions">
+                  <div class="checkbox">
+                    <input type="checkbox" [checked]="isExtraServiceSelected(extra)" style="pointer-events: none; cursor: default;">
+                  </div>
+                </div>
+                
+                <!-- Quantity Control -->
+                <div class="extra-controls" *ngIf="isExtraServiceSelected(extra)">
+                  <div class="quantity-control" *ngIf="extra.hasQuantity">
+                    <label>Quantity:</label>
+                    <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
+                            [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
+                    <span>{{ getExtraServiceQuantity(extra) }}</span>
+                    <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1); $event.stopPropagation()">+</button>
+                  </div>
+                  <!-- Special note for Extra Cleaners -->
+                  <div class="extra-cleaners-note" *ngIf="isExtraServiceSelected(extra) && extra.name === 'Extra Cleaners'">
+                    <small>Each extra cleaner reduces service duration and adds 1 maid to your team.</small>
+                  </div>
+                  
+                  <!-- Hours Control -->
+                  <div class="hours-control" *ngIf="extra.hasHours">
+                    <label>Hours:</label>
+                    <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) - 0.5); $event.stopPropagation()" 
+                            [disabled]="getExtraServiceHours(extra) <= 0.5">-</button>
+                    <span>{{ getExtraServiceHours(extra) }}</span>
+                    <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) + 0.5); $event.stopPropagation()">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Step 4: Date & Time -->
+          <section class="booking-section">
+            <h2>4. Select Date & Time</h2>
+            <div class="date-time-selection">
+              <div class="form-group">
+                <label>Service Date</label>
+                <input type="date" 
+                       [formControl]="serviceDate"
+                       [min]="minDate.toISOString().split('T')[0]">
+              </div>
+              <div class="form-group">
+                <label>Service Time</label>
+                <select [formControl]="serviceTime">
+                  <option value="">Select time</option>
+                  <option value="08:00">8:00 AM</option>
+                  <option value="09:00">9:00 AM</option>
+                  <option value="10:00">10:00 AM</option>
+                  <option value="11:00">11:00 AM</option>
+                  <option value="12:00">12:00 PM</option>
+                  <option value="13:00">1:00 PM</option>
+                  <option value="14:00">2:00 PM</option>
+                  <option value="15:00">3:00 PM</option>
+                  <option value="16:00">4:00 PM</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- Step 5: Subscription -->
+          <section class="booking-section">
+            <h2>5. Select Subscription</h2>
+            <div class="active-subscription-notice" *ngIf="hasActiveSubscription && userSubscription">
+              <i class="fas fa-info-circle"></i>
+              <span>You have an active {{ userSubscription?.subscriptionName }} subscription 
+                    ({{ userSubscription?.discountPercentage }}% discount)</span>
+            </div>
+            <div class="subscription-options">
+              <div class="subscription-card" 
+                  *ngFor="let subscription of subscriptions"
+                  [class.selected]="selectedSubscription?.id === subscription.id"
+                  [class.user-subscription]="hasActiveSubscription && userSubscription?.subscriptionId === subscription.id"
+                  (click)="selectSubscription(subscription)">
+                <h4>{{ subscription.name }}</h4>
+                <p>{{ subscription.description }}</p>
+                <div class="discount" *ngIf="subscription.discountPercentage > 0">
+                  Save {{ subscription.discountPercentage }}%
+                </div>
+                <div class="current-subscription" 
+                  *ngIf="hasActiveSubscription && userSubscription?.subscriptionId === subscription.id">
+                  Your Current Plan
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Step 6: Discounts -->
+          <section class="booking-section">
+            <h2>6. Apply Discounts</h2>
+          
+            <!-- Show error message if there is one -->
+            <div class="discount-error" *ngIf="errorMessage">
+              <p class="error-message">{{ errorMessage }}</p>
+            </div>
+          
+            <div class="discounts">
+              <!-- Special Offers Section -->
+              <div class="special-offers-section" *ngIf="userSpecialOffers.length > 0">
+                <h3>Available Special Offers</h3>
+                <div class="special-offers-grid">
+                  <div class="special-offer-card" 
+                       *ngFor="let offer of userSpecialOffers"
+                       [class.applied]="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
+                    <div class="offer-info">
+                      <span class="offer-badge" [style.background-color]="offer.badgeColor || '#28a745'">
+                        <i class="fas fa-gift"></i>
+                      </span>
+                      <div class="offer-content">
+                        <h4>{{ offer.name }}</h4>
+                        <div class="offer-details">
+                          <p *ngIf="offer.description">{{ offer.description }}</p>
+                          <span class="offer-expiry" *ngIf="offer.expiresAt">
+                            Expires: {{ offer.expiresAt | date: 'MMM d, y' }}
+                          </span>
+                          <span class="offer-minimum" *ngIf="offer.minimumOrderAmount">
+                            Min. order: ${{ offer.minimumOrderAmount }}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="offer-actions">
+                      <button
+                        class="apply-btn"
+                        (click)="applySpecialOffer(offer)"
+                        [disabled]="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
+                        {{ (specialOfferApplied && selectedSpecialOffer?.id === offer.id) ? 'Applied' : 'Apply' }}
+                      </button>
+                      <button
+                        class="remove-btn"
+                        (click)="removeSpecialOffer()"
+                        *ngIf="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          
+              <!-- Promo Code Section -->
+              <div class="promo-code-section">
+                <div class="promo-code">
+                  <label>Promo Code or Gift Card</label>
+                  <div class="promo-input">
+                    <input
+                      type="text"
+                      [formControl]="promoCode"
+                      placeholder="Enter promo code or gift card code">
                     <button
-                      class="apply-btn"
-                      (click)="applySpecialOffer(offer)"
-                      [disabled]="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
-                      {{ (specialOfferApplied && selectedSpecialOffer?.id === offer.id) ? 'Applied' : 'Apply' }}
+                      (click)="applyPromoCode()"
+                      [disabled]="isPromoCodeDisabled()">
+                      Apply
                     </button>
                     <button
                       class="remove-btn"
-                      (click)="removeSpecialOffer()"
-                      *ngIf="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
+                      (click)="removePromoCode()"
+                      *ngIf="promoCodeApplied || giftCardApplied">
                       Remove
                     </button>
                   </div>
+                  <p class="promo-note" *ngIf="specialOfferApplied">
+                    <i class="fas fa-info-circle"></i> Remove special offer to use a promo code
+                  </p>
                 </div>
               </div>
-            </div>
-        
-            <!-- Promo Code Section -->
-            <div class="promo-code-section">
-              <div class="promo-code">
-                <label>Promo Code or Gift Card</label>
-                <div class="promo-input">
-                  <input
-                    type="text"
-                    [formControl]="promoCode"
-                    placeholder="Enter promo code or gift card code">
-                  <button
-                    (click)="applyPromoCode()"
-                    [disabled]="isPromoCodeDisabled()">
-                    Apply
-                  </button>
-                  <button
-                    class="remove-btn"
-                    (click)="removePromoCode()"
-                    *ngIf="promoCodeApplied || giftCardApplied">
-                    Remove
-                  </button>
-                </div>
-                <p class="promo-note" *ngIf="specialOfferApplied">
-                  <i class="fas fa-info-circle"></i> Remove special offer to use a promo code
-                </p>
-              </div>
-            </div>
-        
-            <!-- Gift Card Applied Message - KEEP YOUR EXISTING CODE -->
-            <div class="gift-card-applied" *ngIf="giftCardApplied && isGiftCard">
-              <div class="gift-card-info">
-                <div class="gift-card-icon">🎁</div>
-                <div class="gift-card-details">
-                  <div class="gift-card-title">Gift Card Applied</div>
-                  <div class="gift-card-amounts">
-                    <span class="amount-using">${{ getGiftCardDisplayInfo().amountToUse.toFixed(2) }} will be used</span>
-                    <span class="remaining-balance" *ngIf="getGiftCardDisplayInfo().remainingBalance > 0">
-                      ${{ getGiftCardDisplayInfo().remainingBalance.toFixed(2) }} remaining
-                    </span>
+          
+              <!-- Gift Card Applied Message -->
+              <div class="gift-card-applied" *ngIf="giftCardApplied && isGiftCard">
+                <div class="gift-card-info">
+                  <div class="gift-card-icon">🎁</div>
+                  <div class="gift-card-details">
+                    <div class="gift-card-title">Gift Card Applied</div>
+                    <div class="gift-card-amounts">
+                      <span class="amount-using">${{ getGiftCardDisplayInfo().amountToUse.toFixed(2) }} will be used</span>
+                      <span class="remaining-balance" *ngIf="getGiftCardDisplayInfo().remainingBalance > 0">
+                        ${{ getGiftCardDisplayInfo().remainingBalance.toFixed(2) }} remaining
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Step 7: Tips for Cleaners -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>7. Tips for Cleaners</h2>
-          <div class="tips-section">
-            <p>Your cleaners work hard to make your space shine!</p>
-            <div class="tip-options">
-              <button [class.selected]="tips.value === 0" 
-                      (click)="tips.setValue(0)">$0</button>
-              <button [class.selected]="tips.value === 10" 
-                      (click)="tips.setValue(10)">$10</button>
-              <button [class.selected]="tips.value === 15" 
-                      (click)="tips.setValue(15)">$15</button>
-              <button [class.selected]="tips.value === 20" 
-                      (click)="tips.setValue(20)">$20</button>
-              <button [class.selected]="tips.value === 25" 
-                      (click)="tips.setValue(25)">$25</button>
-              <div class="custom-tip">
-                <input type="number" [formControl]="tips" min="0" placeholder="Custom amount">
-                <div class="error-message" *ngIf="tips.errors?.['minTipAmount']">
-                  Custom tip amount must be at least $10
+          <!-- Step 7: Tips for Cleaners -->
+          <section class="booking-section">
+            <h2>7. Tips for Cleaners</h2>
+            <div class="tips-section">
+              <p>Your cleaners work hard to make your space shine!</p>
+              <div class="tip-options">
+                <button [class.selected]="tips.value === 0" 
+                        (click)="tips.setValue(0)">$0</button>
+                <button [class.selected]="tips.value === 10" 
+                        (click)="tips.setValue(10)">$10</button>
+                <button [class.selected]="tips.value === 15" 
+                        (click)="tips.setValue(15)">$15</button>
+                <button [class.selected]="tips.value === 20" 
+                        (click)="tips.setValue(20)">$20</button>
+                <button [class.selected]="tips.value === 25" 
+                        (click)="tips.setValue(25)">$25</button>
+                <div class="custom-tip">
+                  <input type="number" [formControl]="tips" min="0" placeholder="Custom amount">
+                  <div class="error-message" *ngIf="tips.errors?.['minTipAmount']">
+                    Custom tip amount must be at least $10
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Step 8: Tips for Company Development -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>9. Tips for Company Development</h2>
-          <div class="tips-section">
-            <p>Support our company's growth and improvement initiatives!</p>
-            <div class="tip-options">
-              <button [class.selected]="companyDevelopmentTips.value === 0" 
-                      (click)="companyDevelopmentTips.setValue(0)">$0</button>
-              <button [class.selected]="companyDevelopmentTips.value === 10" 
-                      (click)="companyDevelopmentTips.setValue(10)">$10</button>
-              <button [class.selected]="companyDevelopmentTips.value === 15" 
-                      (click)="companyDevelopmentTips.setValue(15)">$15</button>
-              <button [class.selected]="companyDevelopmentTips.value === 20" 
-                      (click)="companyDevelopmentTips.setValue(20)">$20</button>
-              <button [class.selected]="companyDevelopmentTips.value === 25" 
-                      (click)="companyDevelopmentTips.setValue(25)">$25</button>
-              <div class="custom-tip">
-                <input type="number" [formControl]="companyDevelopmentTips" min="0" placeholder="Custom amount">
-                <div class="error-message" *ngIf="companyDevelopmentTips.errors?.['minCompanyTipAmount']">
-                  Custom tip amount must be at least $10
+          <!-- Step 8: Tips for Company Development -->
+          <section class="booking-section">
+            <h2>8. Tips for Company Development</h2>
+            <div class="tips-section">
+              <p>Support our company's growth and improvement initiatives!</p>
+              <div class="tip-options">
+                <button [class.selected]="companyDevelopmentTips.value === 0" 
+                        (click)="companyDevelopmentTips.setValue(0)">$0</button>
+                <button [class.selected]="companyDevelopmentTips.value === 10" 
+                        (click)="companyDevelopmentTips.setValue(10)">$10</button>
+                <button [class.selected]="companyDevelopmentTips.value === 15" 
+                        (click)="companyDevelopmentTips.setValue(15)">$15</button>
+                <button [class.selected]="companyDevelopmentTips.value === 20" 
+                        (click)="companyDevelopmentTips.setValue(20)">$20</button>
+                <button [class.selected]="companyDevelopmentTips.value === 25" 
+                        (click)="companyDevelopmentTips.setValue(25)">$25</button>
+                <div class="custom-tip">
+                  <input type="number" [formControl]="companyDevelopmentTips" min="0" placeholder="Custom amount">
+                  <div class="error-message" *ngIf="companyDevelopmentTips.errors?.['minCompanyTipAmount']">
+                    Custom tip amount must be at least $10
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Step 8: Entry Method -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>8. Entry Method</h2>
-          <div class="form-group">
-            <select [formControl]="entryMethod">
-              <option value="">Select entry method</option>
-              <option *ngFor="let method of entryMethods" [value]="method">{{ method }}</option>
-            </select>
-            <input type="text" 
-                   [formControl]="customEntryMethod"
-                   placeholder="Please specify"
-                   *ngIf="entryMethod.value === 'Other'">
-          </div>
-        </section>
+          <!-- Step 9: Entry Method -->
+          <section class="booking-section">
+            <h2>9. Entry Method</h2>
+            <div class="form-group">
+              <select [formControl]="entryMethod">
+                <option value="">Select entry method</option>
+                <option *ngFor="let method of entryMethods" [value]="method">{{ method }}</option>
+              </select>
+              <input type="text" 
+                     [formControl]="customEntryMethod"
+                     placeholder="Please specify"
+                     *ngIf="entryMethod.value === 'Other'">
+            </div>
+          </section>
 
-        <!-- Step 9: Special Instructions -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>9. Special Instructions (Optional)</h2>
-          <div class="form-group">
-            <textarea [formControl]="specialInstructions"
-                      rows="4" 
-                      placeholder="Any special instructions for the cleaners..."></textarea>
-          </div>
-        </section>
+          <!-- Step 10: Special Instructions -->
+          <section class="booking-section">
+            <h2>10. Special Instructions (Optional)</h2>
+            <div class="form-group">
+              <textarea [formControl]="specialInstructions"
+                        rows="4" 
+                        placeholder="Any special instructions for the cleaners..."></textarea>
+            </div>
+          </section>
+        </ng-container>
 
-        <!-- Step 10: Contact Information -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>10. Contact Information</h2>
-          <div class="form-grid">
-            <div class="form-group">
-              <label>First Name *</label>
-              <input type="text" [formControl]="contactFirstName">
+        <!-- Contact Information and Address - ALWAYS VISIBLE when service type is selected -->
+        <ng-container *ngIf="selectedServiceType">
+          <!-- Step 11: Contact Information -->
+          <section class="booking-section">
+            <h2>{{ showPollForm ? '' : '11. ' }}Contact Information</h2>
+            <div class="form-grid">
+              <div class="form-group">
+                <label>First Name *</label>
+                <input type="text" [formControl]="contactFirstName">
+              </div>
+              <div class="form-group">
+                <label>Last Name *</label>
+                <input type="text" [formControl]="contactLastName">
+              </div>
+              <div class="form-group">
+                <label>Email *</label>
+                <input type="email" [formControl]="contactEmail">
+              </div>
+              <div class="form-group">
+                <label>Phone *</label>
+                <input type="tel" [formControl]="contactPhone" placeholder="1234567890">
+              </div>
             </div>
-            <div class="form-group">
-              <label>Last Name *</label>
-              <input type="text" [formControl]="contactLastName">
-            </div>
-            <div class="form-group">
-              <label>Email *</label>
-              <input type="email" [formControl]="contactEmail">
-            </div>
-            <div class="form-group">
-              <label>Phone *</label>
-              <input type="tel" [formControl]="contactPhone" placeholder="1234567890">
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Step 11: Service Address -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>11. Service Address</h2>
+          <!-- Step 12: Service Address -->
+          <section class="booking-section">
+            <h2>{{ showPollForm ? '' : '12. ' }}Service Address</h2>
+            
+            <!-- Saved Address Dropdown - Always visible if user has apartments -->
+            <div class="address-options" *ngIf="userApartments.length > 0">
+              <div class="saved-address-container">
+                <label>Saved Addresses</label>
+                <div class="dropdown-with-clear">
+                  <select [formControl]="selectedApartmentId" (change)="onApartmentSelect($event)">
+                    <option value="">Enter new address</option>
+                    <option *ngFor="let apt of userApartments" [value]="apt.id">
+                      {{ apt.name }} - {{ apt.address }}
+                    </option>
+                  </select>
+                  <button type="button" 
+                          class="clear-btn" 
+                          *ngIf="selectedApartmentId.value"
+                          (click)="clearApartmentSelection()">
+                    Clear
+                  </button>
+                </div>
+              </div>
+            </div>
           
-          <!-- Saved Address Dropdown - Always visible if user has apartments -->
-          <div class="address-options" *ngIf="userApartments.length > 0">
-            <div class="saved-address-container">
-              <label>Saved Addresses</label>
-              <div class="dropdown-with-clear">
-                <select [formControl]="selectedApartmentId" (change)="onApartmentSelect($event)">
-                  <option value="">Enter new address</option>
-                  <option *ngFor="let apt of userApartments" [value]="apt.id">
-                    {{ apt.name }} - {{ apt.address }}
-                  </option>
+            <!-- Address Name Field - Only show when entering new address -->
+            <div class="form-group" *ngIf="!selectedApartmentId.value">
+              <label>Address Name * <small>(e.g., Home, Office, Mom's House)</small></label>
+              <input type="text"
+                      [formControl]="apartmentName"
+                      placeholder="Give this address a name"
+                      maxlength="100">
+              <div class="error-message" *ngIf="apartmentName.invalid && apartmentName.touched">
+                Please provide a name for this address
+              </div>
+            </div>
+            
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label>Address *</label>
+                <input type="text" [formControl]="serviceAddress">
+              </div>
+              <div class="form-group">
+                <label>Apt/Suite</label>
+                <input type="text" [formControl]="aptSuite">
+              </div>
+              <div class="form-group">
+                <label>City *</label>
+                <select [formControl]="city">
+                  <option value="">Select city</option>
+                  <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
                 </select>
-                <button type="button" 
-                        class="clear-btn" 
-                        *ngIf="selectedApartmentId.value"
-                        (click)="clearApartmentSelection()">
-                  Clear
-                </button>
+              </div>
+              <div class="form-group">
+                <label>State *</label>
+                <select [formControl]="state" (change)="onStateChange(state.value)">
+                  <option value="">Select state</option>
+                  <option *ngFor="let state of states" [value]="state">{{ state }}</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Zip Code *</label>
+                <input type="text" [formControl]="zipCode" placeholder="12345">
               </div>
             </div>
-          </div>
-        
-          <!-- Address Name Field - Only show when entering new address -->
-          <div class="form-group" *ngIf="!selectedApartmentId.value">
-            <label>Address Name * <small>(e.g., Home, Office, Mom's House)</small></label>
-            <input type="text"
-                    [formControl]="apartmentName"
-                    placeholder="Give this address a name"
-                    maxlength="100">
-            <div class="error-message" *ngIf="apartmentName.invalid && apartmentName.touched">
-              Please provide a name for this address
-            </div>
-          </div>
-          
-          <div class="form-grid">
-            <div class="form-group full-width">
-              <label>Address *</label>
-              <input type="text" [formControl]="serviceAddress">
-            </div>
-            <div class="form-group">
-              <label>Apt/Suite</label>
-              <input type="text" [formControl]="aptSuite">
-            </div>
-            <div class="form-group">
-              <label>City *</label>
-              <select [formControl]="city">
-                <option value="">Select city</option>
-                <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>State *</label>
-              <select [formControl]="state" (change)="onStateChange(state.value)">
-                <option value="">Select state</option>
-                <option *ngFor="let state of states" [value]="state">{{ state }}</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Zip Code *</label>
-              <input type="text" [formControl]="zipCode" placeholder="12345">
-            </div>
-          </div>
-        </section>
+          </section>
+        </ng-container>
 
         <!-- Book Now Button -->
         <div class="book-now-section" *ngIf="selectedServiceType">
           <button class="book-now-btn" 
                   [disabled]="!isFormValid() || isLoading"
                   (click)="onSubmit()">
-            {{ isLoading ? 'Processing...' : 'Book Now' }}
+            {{ isLoading ? 'Processing...' : (showPollForm ? 'Send for Quote' : 'Book Now') }}
           </button>
         </div>
       </div>
 
       <!-- Right Side - Booking Summary (Fixed) -->
-      <div class="booking-summary" *ngIf="selectedServiceType">
+      <div class="booking-summary" *ngIf="selectedServiceType && !showPollForm">
         <div class="summary-card">
           <h3>Booking Summary</h3>
           
@@ -599,6 +665,19 @@
                 <span>Next Order Total:</span>
                 <span>${{ nextOrderTotal.toFixed(2) }}</span>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Poll Summary -->
+      <div class="poll-summary" *ngIf="selectedServiceType && showPollForm">
+        <div class="summary-card">
+          <h3>Quote Request Summary</h3>
+          <div class="summary-details">
+            <div class="summary-item">
+              <span>Service Type:</span>
+              <span>{{ selectedServiceType.name }}</span>
             </div>
           </div>
         </div>

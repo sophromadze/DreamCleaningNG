@@ -107,5 +107,9 @@ export const routes: Routes = [
     path: 'change-email',
     canActivate: [authGuard],
     loadComponent: () => import('./auth/change-email/change-email.component').then(m => m.ChangeEmailComponent)
+  },
+  {
+    path: 'poll-success',
+    loadComponent: () => import('./booking/poll-success/poll-success.component').then(m => m.PollSuccessComponent)
   }
 ];
