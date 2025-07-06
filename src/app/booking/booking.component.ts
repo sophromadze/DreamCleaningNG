@@ -13,6 +13,7 @@ import { SpecialOfferService, UserSpecialOffer } from '../services/special-offer
 import { FormPersistenceService, BookingFormData } from '../services/form-persistence.service';
 import { Subject, takeUntil, debounceTime } from 'rxjs';
 import { PollService, PollQuestion, PollAnswer, PollSubmission } from '../services/poll.service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 interface SelectedService {
   service: Service;
@@ -86,6 +87,18 @@ export class BookingComponent implements OnInit, OnDestroy {
   promoIsPercentage = true;
   calculatedMaidsCount = 1;
   actualTotalDuration: number = 0;
+
+  uploadedPhotos: Array<{
+    file: File;
+    preview: SafeUrl;
+    base64: string;
+  }> = [];
+  maxPhotos = 12;
+  maxFileSize = 15 * 1024 * 1024; // 15MB per photo
+  acceptedFormats = 'image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif';
+  isUploadingPhoto = false;
+  photoUploadError = '';
+  isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
   
   // Subscription-related properties
   userSubscription: any = null;
@@ -134,7 +147,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     private bookingDataService: BookingDataService,
     private specialOfferService: SpecialOfferService,
     public formPersistenceService: FormPersistenceService,
-    private pollService: PollService
+    private pollService: PollService,
+    private sanitizer: DomSanitizer
   ) {
     this.bookingForm = this.fb.group({
       serviceDate: [{value: '', disabled: false}, Validators.required],
@@ -1482,7 +1496,8 @@ export class BookingComponent implements OnInit, OnDestroy {
       isCustomPricing: this.showCustomPricing,
       customAmount: this.showCustomPricing ? (this.customAmount.value || 0) : undefined,
       customCleaners: this.showCustomPricing ? (this.customCleaners.value || 1) : undefined,
-      customDuration: this.showCustomPricing ? (this.customDuration.value || 90) : undefined
+      customDuration: this.showCustomPricing ? (this.customDuration.value || 90) : undefined,
+      uploadedPhotos: this.preparePhotosForSubmission(),
     };
 
     // Store booking data in service instead of creating order immediately
@@ -1689,7 +1704,8 @@ export class BookingComponent implements OnInit, OnDestroy {
       city: formValue.city,
       state: formValue.state,
       postalCode: formValue.zipCode,
-      answers: answers
+      answers: answers,
+      uploadedPhotos: this.preparePhotosForSubmission()
     };
   
     this.pollService.submitPoll(submission).subscribe({
@@ -1846,5 +1862,128 @@ export class BookingComponent implements OnInit, OnDestroy {
       return 'deep';
     }
     return 'normal';
+  }
+
+  // Photo upload methods
+  async onPhotoSelect(event: any) {
+    this.photoUploadError = '';
+    const files = event.target.files;
+    
+    if (!files || files.length === 0) return;
+    
+    // Check if adding these files would exceed the limit
+    if (this.uploadedPhotos.length + files.length > this.maxPhotos) {
+      this.photoUploadError = `You can upload a maximum of ${this.maxPhotos} photos`;
+      return;
+    }
+    
+    this.isUploadingPhoto = true;
+    
+    const fileList = Array.from(files as FileList);
+    for (const file of fileList) {
+      try {
+        // Validate file type
+        if (!file.type.startsWith('image/') && !file.name.toLowerCase().match(/\.(heic|heif)$/)) {
+          this.photoUploadError = 'Only image files are allowed';
+          this.isUploadingPhoto = false;
+          return;
+        }
+        
+        // Validate file size (15MB limit)
+        if (file.size > this.maxFileSize) {
+          this.photoUploadError = `File ${file.name} is too large. Maximum size is 15MB`;
+          this.isUploadingPhoto = false;
+          return;
+        }
+        
+        // Compress and convert to base64
+        const result = await this.compressAndConvertToBase64(file);
+        this.uploadedPhotos.push({
+          file: file,
+          preview: this.sanitizer.bypassSecurityTrustUrl(result.preview),
+          base64: result.base64
+        });
+        
+        this.isUploadingPhoto = false;
+        
+        // Clear the input to allow re-selection of the same file
+        event.target.value = '';
+      } catch (error) {
+        console.error('Error processing photo:', error);
+        this.photoUploadError = 'Error processing photo';
+        this.isUploadingPhoto = false;
+      }
+    }
+  }
+
+  private compressAndConvertToBase64(file: File): Promise<{preview: string, base64: string}> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e: any) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d')!;
+          
+          // Calculate new dimensions
+          let width = img.width;
+          let height = img.height;
+          const maxDimension = 1200;
+          
+          // Only resize if image is larger than maxDimension
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = (height * maxDimension) / width;
+              width = maxDimension;
+            } else {
+              width = (width * maxDimension) / height;
+              height = maxDimension;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Enable image smoothing for better quality
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Convert to base64 with good quality
+          const base64 = canvas.toDataURL('image/jpeg', 0.85);
+          const base64Data = base64.split(',')[1];
+          
+          resolve({
+            preview: base64,
+            base64: base64Data
+          });
+        };
+        
+        img.onerror = () => {
+          reject(new Error('Failed to load image'));
+        };
+        img.src = e.target.result;
+      };
+      
+      reader.onerror = () => {
+        reject(new Error('Failed to read file'));
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  removePhoto(index: number) {
+    this.uploadedPhotos.splice(index, 1);
+  }
+
+  private preparePhotosForSubmission(): any[] {
+    return this.uploadedPhotos.map(photo => ({
+      fileName: photo.file.name,
+      base64Data: photo.base64,
+      contentType: photo.file.type
+    }));
   }
 }

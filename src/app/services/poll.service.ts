@@ -32,6 +32,11 @@ export interface PollSubmission {
   state: string;
   postalCode: string;
   answers: PollAnswer[];
+  uploadedPhotos?: Array<{
+    fileName: string;
+    base64Data: string;
+    contentType: string;
+  }>;
 }
 
 @Injectable({
