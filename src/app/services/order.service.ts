@@ -6,6 +6,7 @@ import { environment } from '../../environments/environment';
 export interface OrderList {
   id: number;
   serviceTypeName: string;
+  isCustomServiceType: boolean;
   serviceDate: Date;
   serviceTime: string;
   status: string;

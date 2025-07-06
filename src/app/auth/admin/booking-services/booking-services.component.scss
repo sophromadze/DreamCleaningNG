@@ -429,6 +429,12 @@
       }
     }
 
+    // Override width for radio and checkbox inputs
+    input[type="radio"], input[type="checkbox"] {
+      width: auto;
+      margin-right: 0.5rem;
+    }
+
     input[type="checkbox"] {
       width: auto;
       cursor: pointer;
@@ -436,6 +442,33 @@
 
     label:has(input[type="checkbox"]) {
       cursor: pointer;
+    }
+
+    // Radio group styling
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+
+      label {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+        margin: 0;
+
+        &:hover {
+          background-color: rgba(0, 123, 255, 0.1);
+        }
+
+        input[type="radio"] {
+          margin-right: 0.75rem;
+          cursor: pointer;
+        }
+      }
     }
 
     textarea {
@@ -1119,10 +1152,8 @@
 // No Questions State
 .no-questions {
   text-align: center;
-  padding: 3rem 2rem;
+  padding: 10px;
   background: white;
-  border-radius: 8px;
-  border: 2px dashed #e9ecef;
   
   p {
     color: #6c757d;
@@ -1131,6 +1162,16 @@
   }
 }
 
+.service-type-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+
+  label {
+    padding: 5px;
+    cursor: pointer;
+  }
+}
 // Action Buttons
 .action-buttons {
   display: flex;
@@ -1177,6 +1218,29 @@
       
       &:hover {
         background: #5a6268;
+      }
+    }
+  }
+}
+
+.custom-service-message {
+  margin-top: 20px;
+
+  .info-message {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 15px;
+
+    p {
+      margin: 0 0 10px 0;
+      color: #495057;
+      font-size: 14px;
+      line-height: 1.5;
+
+      &:last-child {
+        margin-bottom: 0;
       }
     }
   }

@@ -407,8 +407,21 @@
       </div>
     </div>
 
+     <!-- Show Custom Service Type Message if service type is custom -->
+    <div *ngIf="selectedServiceType.isCustom" class="custom-service-message">
+      <div class="subsection">
+        <div class="subsection-header">
+          <h3>Custom Service Type</h3>
+        </div>
+        <div class="info-message">
+          <p>This is a custom service type. Users can set their own pricing, number of cleaners, and duration when booking this service.</p>
+          <p>No services or extra services are needed for custom service types.</p>
+        </div>
+      </div>
+    </div>
+
     <!-- Show Services and Extra Services if service type doesn't have poll -->
-    <div *ngIf="!selectedServiceType.hasPoll">
+    <div *ngIf="!selectedServiceType.hasPoll && !selectedServiceType.isCustom">
       <!-- Services Subsection -->
       <div class="subsection">
         <div class="subsection-header">
@@ -418,7 +431,7 @@
                   (click)="startAddingService()">
             Add Service
           </button>
-        </div>
+        </div>  
 
         <!-- Services Messages -->
         <div *ngIf="serviceMessage.error" class="alert alert-danger">
