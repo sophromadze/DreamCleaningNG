@@ -175,6 +175,26 @@
   </div>
 </form>
 
+<div *ngIf="showPaymentForm && previewGiftCard" class="payment-modal">
+  <div class="modal-backdrop" (click)="showPaymentForm = false"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>Complete Payment</h2>
+      <button class="close-btn" (click)="showPaymentForm = false">×</button>
+    </div>
+    <div class="modal-body">
+      <p class="payment-amount">Amount: {{ formatCurrency(previewGiftCard.amount) }}</p>
+      <app-payment
+        [amount]="previewGiftCard.amount"
+        [clientSecret]="previewGiftCard.paymentClientSecret"
+        [billingDetails]="billingDetails"
+        (paymentComplete)="onPaymentComplete($event)"
+        (paymentError)="onPaymentError($event)">
+      </app-payment>
+    </div>
+  </div>
+</div>
+
 <!-- User's Gift Cards -->
 <div class="user-gift-cards" *ngIf="userGiftCards.length > 0">
   <h2>Your Gift Cards</h2>

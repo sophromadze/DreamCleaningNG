@@ -37,6 +37,7 @@ export interface GiftCardPurchaseResponse {
   amount: number;
   status: string;
   paymentIntentId: string;
+  paymentClientSecret: string;
 }
 
 export interface GiftCardValidation {
@@ -108,6 +109,14 @@ export class GiftCardService {
     return this.http.post(
       `${this.apiUrl}/giftcard/simulate-payment/${giftCardId}`,
       {},
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  confirmGiftCardPayment(giftCardId: number, paymentIntentId: string): Observable<any> {
+    return this.http.post(
+      `${this.apiUrl}/giftcard/confirm-payment/${giftCardId}`,
+      { paymentIntentId },
       { headers: this.getAuthHeaders() }
     );
   }

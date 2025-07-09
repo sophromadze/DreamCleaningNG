@@ -5,11 +5,12 @@ import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { GiftCardService, CreateGiftCard, GiftCard } from '../services/gift-card.service';
 import { AuthService } from '../services/auth.service';
+import { PaymentComponent } from '../booking/payment/payment.component';
 
 @Component({
   selector: 'app-gift-cards',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PaymentComponent],
   templateUrl: './gift-cards.component.html',
   styleUrls: ['./gift-cards.component.scss']
 })
@@ -26,6 +27,14 @@ export class GiftCardsComponent implements OnInit {
   giftCardBackgroundPath: string = '';
   isLoadingBackground: boolean = true;
 
+  showPaymentForm = false;
+  // Add billing details getter
+  get billingDetails() {
+    return {
+      name: this.giftCardForm.get('senderName')?.value,
+      email: this.giftCardForm.get('senderEmail')?.value
+    };
+  }
   // Predefined amounts for selection
   predefinedAmounts = [100, 200, 300, 400, 500, 1000];
 
@@ -104,19 +113,20 @@ export class GiftCardsComponent implements OnInit {
       this.errorMessage = 'Please fill in all required fields correctly.';
       return;
     }
-
+  
     this.isLoading = true;
     this.errorMessage = '';
-
+  
     const giftCardData: CreateGiftCard = this.giftCardForm.getRawValue();
-
+  
     this.giftCardService.createGiftCard(giftCardData).subscribe({
       next: (response) => {
         this.previewGiftCard = {
           ...giftCardData,
           code: response.code,
           id: response.giftCardId,
-          paymentIntentId: response.paymentIntentId
+          paymentIntentId: response.paymentIntentId,
+          paymentClientSecret: response.paymentClientSecret // ADD THIS
         };
         this.isLoading = false;
         
@@ -132,16 +142,24 @@ export class GiftCardsComponent implements OnInit {
   }
 
   processPayment() {
+    if (!this.previewGiftCard || !this.previewGiftCard.paymentClientSecret) return;
+    
     this.isProcessingPayment = true;
     this.errorMessage = '';
+  
+    // Show payment modal or inline payment form
+    this.showPaymentForm = true; // Add this property to your component
+  }
 
-    // Simulate payment processing (replace with actual payment integration)
-    this.giftCardService.simulateGiftCardPayment(this.previewGiftCard.id).subscribe({
+  onPaymentComplete(paymentIntent: any) {
+    // Confirm the payment with backend
+    this.giftCardService.confirmGiftCardPayment(this.previewGiftCard.id, paymentIntent.id).subscribe({
       next: (response) => {
         this.isProcessingPayment = false;
+        this.showPaymentForm = false;
         this.successMessage = 'Gift card created and paid successfully! The recipient will receive an email notification.';
         
-        // Reset form and reload gift cards
+        // Reset form and reload gift cards - KEEP ALL OF THIS!
         this.giftCardForm.reset();
         this.previewGiftCard = null;
         this.prefillUserData();
@@ -151,11 +169,18 @@ export class GiftCardsComponent implements OnInit {
         window.scrollTo(0, 0);
       },
       error: (error) => {
-        console.error('Error processing payment:', error);
-        this.errorMessage = error.error?.message || 'Failed to process payment. Please try again.';
+        console.error('Error confirming payment:', error);
+        this.errorMessage = error.error?.message || 'Failed to confirm payment. Please try again.';
         this.isProcessingPayment = false;
+        this.showPaymentForm = false;
       }
     });
+  }
+  
+  onPaymentError(error: any) {
+    this.errorMessage = error.message || 'Payment failed. Please try again.';
+    this.isProcessingPayment = false;
+    this.showPaymentForm = false;
   }
 
   formatCurrency(amount: number): string {

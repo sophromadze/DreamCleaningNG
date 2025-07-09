@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
+import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 export interface ServiceType {
   id: number;
@@ -117,7 +119,16 @@ export interface BookingCalculation {
 export class BookingService {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private router: Router,
+    private authService: AuthService) { }
+
+    private getAuthHeaders(): HttpHeaders {
+      const token = this.authService.getToken();
+      return new HttpHeaders({
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      });
+    }
 
   getServiceTypes(): Observable<ServiceType[]> {
     return this.http.get<ServiceType[]>(`${this.apiUrl}/booking/service-types`);
@@ -138,12 +149,24 @@ export class BookingService {
     );
   }
 
+  confirmPayment(orderId: number, paymentIntentId: string): Observable<any> {
+    return this.http.post(
+      `${this.apiUrl}/booking/confirm-payment/${orderId}`,
+      { paymentIntentId },
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
   calculateBooking(bookingData: Partial<BookingData>): Observable<BookingCalculation> {
     return this.http.post<BookingCalculation>(`${this.apiUrl}/booking/calculate`, bookingData);
   }
 
-  createBooking(bookingData: BookingData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/booking/create`, bookingData);
+  createBooking(bookingData: any): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/booking/create`,
+      bookingData,
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   getAvailableTimeSlots(date: Date, serviceTypeId: number): Observable<string[]> {

@@ -100,8 +100,51 @@
     background-color: #f8d7da;
     color: #721c24;
     padding: 1rem;
-    border-radius: 4px;
-    margin-top: 1rem;
+    border-radius: 8px;
+    margin: 1rem 0;
+    border: 1px solid #f5c6cb;
+    
+    .retry-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background-color 0.3s;
+      
+      &:hover {
+        background-color: #c82333;
+      }
+    }
+  }
+  
+  .cancel-action {
+    margin-top: 2rem;
+    
+    .cancel-btn {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 0.75rem 2rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      
+      &:hover:not(:disabled) {
+        background-color: #5a6268;
+      }
+      
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
   }
   
   .success-content {
@@ -154,6 +197,12 @@
       flex-direction: column;
       
       button {
+        width: 100%;
+      }
+    }
+    
+    .cancel-action {
+      .cancel-btn {
         width: 100%;
       }
     }
