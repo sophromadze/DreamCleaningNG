@@ -31,6 +31,10 @@ export const routes: Routes = [
     loadComponent: () => import('./privacy-policy/privacy-policy.component').then(m => m.PrivacyPolicyComponent)
   },
   {
+    path: 'terms-and-conditions',
+    loadComponent: () => import('./terms-and-conditions/terms-and-conditions.component').then(m => m.TermsAndConditionsComponent)
+  },
+  {
     path: 'login',
     canActivate: [noAuthGuard],
     loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)

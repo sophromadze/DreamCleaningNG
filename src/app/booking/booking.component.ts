@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { BookingService, ServiceType, Service, ExtraService, Subscription, BookingCalculation } from '../services/booking.service';
 import { AuthService } from '../services/auth.service';
@@ -29,13 +29,16 @@ interface SelectedExtraService {
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, HttpClientModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, HttpClientModule, RouterModule],
   providers: [BookingService],
   templateUrl: './booking.component.html',
   styleUrl: './booking.component.scss'
 })
 export class BookingComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  
+  // Make Math available in template
+  Math = Math;
 
   // Custom pricing properties - initialized with default values
   showCustomPricing = false;
@@ -132,6 +135,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   pollQuestions: PollQuestion[] = [];
   pollAnswers: { [key: number]: string } = {};
   showPollForm = false;
+  pollFormSubmitted = false;
   
   // States and Cities - will be loaded from backend
   states: string[] = [];
@@ -185,7 +189,8 @@ export class BookingComponent implements OnInit, OnDestroy {
           return value >= this.minCompanyTipAmount ? null : { minCompanyTipAmount: true };
         }
       ]],
-      cleaningType: ['normal', Validators.required] // Add new form control for cleaning type
+      cleaningType: ['normal', Validators.required], // Add new form control for cleaning type
+      smsConsent: [false, [Validators.requiredTrue]]
     });
   }
 
@@ -206,6 +211,12 @@ export class BookingComponent implements OnInit, OnDestroy {
     // Set default values
     this.serviceDate.setValue(formattedDate);
     this.serviceTime.setValue('08:00');
+
+    // Ensure custom pricing FormControls have proper default values
+    this.initializeCustomPricingDefaults();
+    
+    // Initialize entry method to empty to show "Select entry method"
+    this.entryMethod.setValue('');
 
     // Load saved form data if exists
     this.loadSavedFormData();
@@ -253,6 +264,19 @@ export class BookingComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private initializeCustomPricingDefaults() {
+    // Ensure custom pricing FormControls have proper default values
+    if (!this.customAmount.value) {
+      this.customAmount.patchValue('');
+    }
+    if (!this.customCleaners.value) {
+      this.customCleaners.patchValue(1);
+    }
+    if (!this.customDuration.value) {
+      this.customDuration.patchValue(60);
+    }
   }
 
   private loadSavedFormData() {
@@ -610,13 +634,23 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (serviceType.isCustom) {
       this.showCustomPricing = true;
 
-      // DON'T clear validators for custom pricing - we still need entry method
-      // Only set defaults for custom fields
+      // Set defaults for custom fields
       this.customAmount.setValue(serviceType.basePrice);
       this.customCleaners.setValue(1);
-      this.customDuration.setValue(serviceType.timeDuration);
+      // Always set duration to 60 (1 hour) as default for custom pricing
+      this.customDuration.patchValue(60);
 
-      // Keep all other fields active and validated
+      // Force Angular to detect changes for the duration dropdown
+      setTimeout(() => {
+        this.customDuration.patchValue(60);
+      }, 0);
+
+      // Ensure entry method is required for custom pricing
+      this.entryMethod.setValidators([Validators.required]);
+      this.entryMethod.updateValueAndValidity();
+      
+      // Reset entry method to empty to show "Select entry method"
+      this.entryMethod.setValue('');
 
       // Trigger calculation
       this.calculateTotal();
@@ -1336,10 +1370,19 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   getServiceDuration(service: Service): number {
-    if (service.serviceKey === 'bedrooms' && this.getServiceQuantity(service) === 0) {
+    const quantity = this.getServiceQuantity(service);
+    
+    if (service.serviceKey === 'bedrooms' && quantity === 0) {
       return 20; // 20 minutes for studio apartment
     }
-    return service.timeDuration;
+    
+    // For most services, duration should be multiplied by quantity
+    // But for cleaner and hours services, we don't multiply as they have special logic
+    if (service.serviceRelationType === 'cleaner' || service.serviceRelationType === 'hours') {
+      return service.timeDuration;
+    }
+    
+    return service.timeDuration * quantity;
   }
 
   getServiceQuantity(service: Service): number {
@@ -1387,7 +1430,13 @@ export class BookingComponent implements OnInit, OnDestroy {
 
     // Check if the form is valid
     if (!this.bookingForm.valid || !this.selectedServiceType || !this.selectedSubscription || !this.cleaningType.value) {
-      this.errorMessage = 'Please fill in all required fields';
+      this.scrollToFirstError();
+      return;
+    }
+    
+    // Also check custom pricing fields if applicable
+    if (this.showCustomPricing && (!this.customAmount.valid || !this.customCleaners.valid || !this.customDuration.valid || !this.entryMethod.value)) {
+      this.scrollToFirstError();
       return;
     }
   
@@ -1497,6 +1546,7 @@ export class BookingComponent implements OnInit, OnDestroy {
       customAmount: this.showCustomPricing ? (this.customAmount.value || 0) : undefined,
       customCleaners: this.showCustomPricing ? (this.customCleaners.value || 1) : undefined,
       customDuration: this.showCustomPricing ? (this.customDuration.value || 90) : undefined,
+      smsConsent: formValue.smsConsent,
       uploadedPhotos: this.preparePhotosForSubmission(),
     };
 
@@ -1506,6 +1556,65 @@ export class BookingComponent implements OnInit, OnDestroy {
     
     // Navigate to booking confirmation without creating the order yet
     this.router.navigate(['/booking-confirmation']);
+  }
+
+  private scrollToFirstError() {
+    // Mark all form controls as touched to trigger validation
+    this.markFormGroupTouched(this.bookingForm);
+    
+    // Also mark custom pricing controls if applicable
+    if (this.showCustomPricing) {
+      this.customAmount.markAsTouched();
+      this.customCleaners.markAsTouched();
+      this.customDuration.markAsTouched();
+    }
+
+    // Find the first invalid field and scroll to it
+    setTimeout(() => {
+      // Try multiple selectors to find the first error
+      let firstErrorElement = document.querySelector('.ng-invalid.ng-touched');
+      
+      if (!firstErrorElement) {
+        // If no touched invalid elements, look for any invalid elements
+        firstErrorElement = document.querySelector('.ng-invalid');
+      }
+      
+      if (!firstErrorElement) {
+        // If still no invalid elements, look for required fields that are empty
+        const requiredInputs = document.querySelectorAll('input[required], select[required], textarea[required]');
+        for (let input of requiredInputs) {
+          if (!(input as HTMLInputElement).value) {
+            firstErrorElement = input;
+            break;
+          }
+        }
+      }
+      
+      if (firstErrorElement) {
+        firstErrorElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        
+        // Focus the element if it's an input
+        if (firstErrorElement instanceof HTMLInputElement || 
+            firstErrorElement instanceof HTMLSelectElement || 
+            firstErrorElement instanceof HTMLTextAreaElement) {
+          firstErrorElement.focus();
+        }
+      }
+    }, 100);
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      } else {
+        control?.markAsTouched();
+      }
+    });
   }
 
   getServiceOptions(service: Service): number[] {
@@ -1634,6 +1743,13 @@ export class BookingComponent implements OnInit, OnDestroy {
       next: (questions) => {
         this.pollQuestions = questions;
         this.pollAnswers = {};
+        
+        // Initialize dropdown questions with empty string to show "Select an option"
+        questions.forEach(question => {
+          if (question.questionType === 'dropdown') {
+            this.pollAnswers[question.id] = '';
+          }
+        });
       },
       error: (error) => {
         console.error('Error loading poll questions:', error);
@@ -1675,13 +1791,53 @@ export class BookingComponent implements OnInit, OnDestroy {
       }
     }
     
-    // Check contact information and address
-    return this.bookingForm.valid;
+    // Check only the required fields for poll forms: contact info and address
+    const requiredFields = [
+      'contactFirstName',
+      'contactLastName', 
+      'contactEmail',
+      'contactPhone',
+      'serviceAddress',
+      'city',
+      'state',
+      'zipCode'
+    ];
+    
+    // Check if user has selected an apartment (which would fill address fields)
+    if (this.selectedApartmentId.value) {
+      // If apartment is selected, we don't need to validate individual address fields
+      // but we still need contact info
+      const contactFields = ['contactFirstName', 'contactLastName', 'contactEmail', 'contactPhone'];
+      for (const field of contactFields) {
+        const control = this.bookingForm.get(field);
+        if (!control || !control.valid) {
+          return false;
+        }
+      }
+    } else {
+      // If no apartment selected, validate all required fields including address
+      for (const field of requiredFields) {
+        const control = this.bookingForm.get(field);
+        if (!control || !control.valid) {
+          return false;
+        }
+      }
+      
+      // Also check apartment name if entering new address
+      const apartmentNameControl = this.bookingForm.get('apartmentName');
+      if (!apartmentNameControl || !apartmentNameControl.valid) {
+        return false;
+      }
+    }
+    
+    return true;
   }
   
   submitPollForm() {
+    this.pollFormSubmitted = true;
+    
     if (!this.isPollFormValid()) {
-      this.errorMessage = 'Please fill in all required fields';
+      this.scrollToFirstError();
       return;
     }
   
@@ -1743,6 +1899,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   get tips() { return this.bookingForm.get('tips') as FormControl; }
   get companyDevelopmentTips() { return this.bookingForm.get('companyDevelopmentTips') as FormControl; }
   get cleaningType() { return this.bookingForm.get('cleaningType') as FormControl; }
+  get smsConsent() { return this.bookingForm.get('smsConsent') as FormControl; }
 
   // Check if promo code should be disabled
   isPromoCodeDisabled(): boolean {

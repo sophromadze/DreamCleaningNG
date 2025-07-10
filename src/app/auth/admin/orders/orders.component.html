@@ -148,7 +148,7 @@
                           {{formatDuration(selectedOrder.totalDuration / (selectedOrder.maidsCount || 1))}}
                         </ng-template>
                       </p>
-                      <p><strong>Maids Count:</strong> {{selectedOrder.maidsCount}}</p>
+                      <p><strong>Cleaners Count:</strong> {{selectedOrder.maidsCount}}</p>
                       <p *ngIf="selectedOrder.entryMethod"><strong>Entry Method:</strong> {{selectedOrder.entryMethod}}</p>
                     </div>
                     
@@ -378,7 +378,7 @@
             </div>
             
             <div class="selection-indicator" *ngIf="isCleanerSelected(cleaner.id)">
-              ✓
+                              <i class="fas fa-check"></i>
             </div>
           </div>
         </div>

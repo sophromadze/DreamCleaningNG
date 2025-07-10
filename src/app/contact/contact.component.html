@@ -5,13 +5,13 @@
   
       <!-- Success Message -->
       <div class="alert alert-success" *ngIf="showSuccess">
-        <i class="success-icon">✓</i>
+        <i class="fas fa-check-circle success-icon"></i>
         <span>Your message has been sent successfully! We'll get back to you soon.</span>
       </div>
   
       <!-- Error Message -->
       <div class="alert alert-error" *ngIf="showError">
-        <i class="error-icon">✕</i>
+        <i class="fas fa-times-circle error-icon"></i>
         <span>{{ errorMessage }}</span>
       </div>
   
@@ -80,6 +80,26 @@
             {{ getErrorMessage('message') }}
           </span>
         </div>
+
+        <!-- SMS Consent Checkbox -->
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input 
+              type="checkbox" 
+              id="smsConsent" 
+              formControlName="smsConsent" 
+              class="form-checkbox"
+              [class.error]="hasError('smsConsent')">
+            <label for="smsConsent" class="checkbox-label">
+              I consent to receive Customer care text messages from Dream Cleaning. Reply STOP to opt-out; Reply HELP for support; Message and data rates apply; Messaging frequency may vary. Visit 
+              <a routerLink="/privacy-policy" target="_blank">Privacy Policy</a> and 
+              <a routerLink="/terms-and-conditions" target="_blank">Terms of Service</a>.
+            </label>
+          </div>
+          <span class="error-message" *ngIf="hasError('smsConsent')">
+            {{ getErrorMessage('smsConsent') }}
+          </span>
+        </div>
   
         <!-- Submit Button -->
         <div class="form-actions">
@@ -100,19 +120,30 @@
         <h2>Other Ways to Reach Us</h2>
         <div class="info-grid">
           <div class="info-item">
-            <i class="icon">📧</i>
+            <a href="mailto:hello@dreamcleaningnearme.com">
+              <i class="fas fa-envelope icon"></i>
+            </a>
             <h3>Email</h3>
-            <p>info&#64;dreamcleaning.com</p>
+            <p>hello&#64;dreamcleaningnearme.com</p>
           </div>
           <div class="info-item">
-            <i class="icon">📱</i>
+            <a href="tel:+19299301525">
+              <i class="fas fa-phone icon"></i>
+            </a>
             <h3>Phone</h3>
             <p>(929) 930-1525</p>
           </div>
           <div class="info-item">
-            <i class="icon">📍</i>
-            <h3>Address</h3>
-            <p>123 Cleaning Street<br>City, State 12345</p>
+            <div class="social-icons">
+              <a href="https://facebook.com/dreamcleaning" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-facebook icon"></i>
+              </a>
+              <a href="https://instagram.com/dreamcleaning" target="_blank" rel="noopener noreferrer">
+                <i class="fab fa-instagram icon"></i>
+              </a>
+            </div>
+            <h3>Meta</h3>
+            <p>Follow Us</p>
           </div>
         </div>
       </div>

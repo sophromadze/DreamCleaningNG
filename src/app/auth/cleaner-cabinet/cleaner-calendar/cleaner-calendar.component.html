@@ -26,7 +26,7 @@
               <div class="client-name">{{ order.clientName }}</div>
               <div class="order-time">{{ formatTime(order.serviceTime) }}</div>
               <div class="service-type">{{ order.serviceTypeName }}</div>
-              <div class="assignment-status" *ngIf="order.isAssignedToCleaner">✓ Assigned to You</div>
+              <div class="assignment-status" *ngIf="order.isAssignedToCleaner"><i class="fas fa-check"></i> Assigned to You</div>
             </div>
           </div>
       </div>

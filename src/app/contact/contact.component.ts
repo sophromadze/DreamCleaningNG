@@ -2,13 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './contact.component.html',
   styleUrl: './contact.component.scss'
 })
@@ -34,7 +35,8 @@ export class ContactComponent implements OnInit {
         Validators.minLength(10),
         Validators.maxLength(10)
       ]],
-      message: ['', [Validators.required]]
+      message: ['', [Validators.required]],
+      smsConsent: [false, [Validators.requiredTrue]]
     });
   }
 
@@ -88,7 +90,8 @@ export class ContactComponent implements OnInit {
         fullName: this.contactForm.value.fullName,
         email: this.currentUser ? this.currentUser.email : this.contactForm.getRawValue().email,
         phone: this.contactForm.value.phone,
-        message: this.contactForm.value.message
+        message: this.contactForm.value.message,
+        smsConsent: this.contactForm.value.smsConsent
       };
 
       this.http.post(`${environment.apiUrl}/contact`, formData)
@@ -104,12 +107,14 @@ export class ContactComponent implements OnInit {
                 fullName: `${this.currentUser.firstName} ${this.currentUser.lastName}`.trim(),
                 email: this.currentUser.email,
                 phone: this.currentUser.phone || '',
-                message: ''
+                message: '',
+                smsConsent: false
               });
               // Keep email field disabled for logged-in users
               this.contactForm.get('email')?.disable();
               // Only reset the message field's touched state
               this.contactForm.get('message')?.markAsUntouched();
+              this.contactForm.get('smsConsent')?.markAsUntouched();
             } else {
               this.contactForm.reset();
               // Ensure email field is enabled for non-logged-in users
@@ -170,7 +175,8 @@ export class ContactComponent implements OnInit {
       fullName: 'Full name',
       email: 'Email',
       phone: 'Phone number',
-      message: 'Message'
+      message: 'Message',
+      smsConsent: 'SMS consent'
     };
     return labels[fieldName] || fieldName;
   }

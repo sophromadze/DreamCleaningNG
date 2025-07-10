@@ -1,7 +1,6 @@
 .main-content {
     padding-top: 80px; // Same as header height
     min-height: calc(100vh - 80px - 300px); // Subtract header and footer height
-    padding-bottom: 40px;
   }
   
   :host {
@@ -16,7 +15,7 @@
   
   .connection-status {
     position: fixed;
-    bottom: 20px;
+    bottom: 65px;
     right: 20px;
     padding: 8px 15px;
     border-radius: 20px;

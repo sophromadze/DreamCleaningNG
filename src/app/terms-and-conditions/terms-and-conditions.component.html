@@ -1,0 +1,233 @@
+<div class="terms-conditions-container">
+    <h1>Terms & Conditions</h1>
+    <p class="effective-date">Effective Date: {{ effectiveDate }}</p>
+  
+    <p>Welcome to {{ companyName }}! These Terms & Conditions ("Terms") govern your use of our website at <a [href]="websiteUrl">{{ websiteUrl }}</a> (the "Website") and our cleaning services (the "Services"). By accessing our Website or using our Services, you agree to be bound by these Terms.</p>
+  
+    <section>
+      <h2>1. Definitions</h2>
+      <div class="definitions">
+        <dl>
+          <dt>"{{ companyName }}," "we," "us," or "our"</dt>
+          <dd>Refers to {{ companyName }} and its affiliates</dd>
+          
+          <dt>"You" or "User"</dt>
+          <dd>Refers to the individual or entity using our Website or Services</dd>
+          
+          <dt>"Services"</dt>
+          <dd>Refers to all cleaning services offered by {{ companyName }}</dd>
+          
+          <dt>"Booking"</dt>
+          <dd>Refers to a scheduled cleaning service appointment</dd>
+          
+          <dt>"Service Provider"</dt>
+          <dd>Refers to the cleaning professionals who perform the Services</dd>
+        </dl>
+      </div>
+    </section>
+  
+    <section>
+      <h2>2. Acceptance of Terms</h2>
+      <p>By using our Website or Services, you acknowledge that you have read, understood, and agree to be bound by these Terms. If you do not agree to these Terms, please do not use our Website or Services.</p>
+      <p>You must be at least 18 years old to use our Services. By using our Services, you represent and warrant that you are at least 18 years of age.</p>
+    </section>
+  
+    <section class="sms-terms">
+      <h2>3. SMS Terms of Service</h2>
+      <p class="sms-intro"><strong>By opting into SMS from a web form or other medium, you are agreeing to receive SMS messages from {{ companyName }}.</strong></p>
+      
+      <h3>Types of Messages</h3>
+      <p>You may receive the following types of SMS messages:</p>
+      <ul>
+        <li>Appointment reminders</li>
+        <li>Service confirmations and updates</li>
+        <li>Account notifications</li>
+        <li>Customer care messages</li>
+        <li>Promotional offers (only if opted in)</li>
+        <li>Order alerts and status updates</li>
+      </ul>
+      
+      <h3>Important SMS Information:</h3>
+      <ul class="sms-info">
+        <li><strong>Message frequency varies</strong> based on your bookings and preferences</li>
+        <li><strong>Message and data rates may apply</strong> according to your mobile carrier plan</li>
+        <li><strong>To opt out at any time, text STOP</strong> to any message</li>
+        <li><strong>For assistance, text HELP</strong> or visit <a [href]="websiteUrl">{{ websiteUrl }}</a></li>
+        <li>Visit <a [href]="websiteUrl + '/privacy-policy'">{{ websiteUrl }}/privacy-policy</a> for our privacy policy</li>
+        <li>SMS consent is not shared with third parties</li>
+      </ul>
+    </section>
+  
+    <section>
+      <h2>4. Services</h2>
+      
+      <h3>4.1 Service Description</h3>
+      <p>{{ companyName }} provides professional cleaning services for residential and commercial properties. Specific services include but are not limited to:</p>
+      <ul>
+        <li>Regular house cleaning</li>
+        <li>Deep cleaning</li>
+        <li>Move-in/move-out cleaning</li>
+        <li>Office cleaning</li>
+        <li>Post-construction cleaning</li>
+        <li>Special event cleaning</li>
+      </ul>
+  
+      <h3>4.2 Booking and Scheduling</h3>
+      <ul>
+        <li>All bookings are subject to availability</li>
+        <li>Minimum booking duration is 2 hours</li>
+        <li>Bookings must be made at least 24 hours in advance</li>
+        <li>We will confirm your booking via email and/or SMS</li>
+      </ul>
+  
+      <h3>4.3 Service Areas</h3>
+      <p>We currently provide services in {{ state }}, specifically serving <span *ngFor="let city of serviceCities; let last = last">{{ city }}<span *ngIf="!last">, </span></span>.</p>
+    </section>
+  
+    <section>
+      <h2>5. Pricing and Payment</h2>
+      
+      <h3>5.1 Pricing</h3>
+      <ul>
+        <li>Prices are displayed on our Website and are subject to change</li>
+        <li>All prices are in US dollars and include applicable taxes</li>
+        <li>Additional charges may apply for special requests or services</li>
+      </ul>
+  
+      <h3>5.2 Payment Terms</h3>
+      <ul>
+        <li>Payment is due upon completion of Services</li>
+        <li>We accept major credit cards, debit cards, and electronic payments</li>
+        <li>By providing payment information, you authorize us to charge the payment method</li>
+        <li>All payments are processed securely through our payment processor</li>
+      </ul>
+    </section>
+  
+    <section>
+      <h2>6. Cancellation and Rescheduling</h2>
+      
+      <h3>6.1 Customer Cancellations</h3>
+      <ul>
+        <li>Cancellations made 48+ hours before service: No charge</li>
+        <li>Cancellations made 24-48 hours before service: 50% cancellation fee</li>
+        <li>Cancellations made less than 24 hours before service: 100% cancellation fee</li>
+      </ul>
+  
+      <h3>6.2 Rescheduling</h3>
+      <ul>
+        <li>Rescheduling requests made 24+ hours before service: No charge</li>
+        <li>Rescheduling requests made less than 24 hours: Subject to availability and fees</li>
+      </ul>
+  
+      <h3>6.3 Our Right to Cancel</h3>
+      <p>We reserve the right to cancel or reschedule Services due to:</p>
+      <ul>
+        <li>Unsafe working conditions</li>
+        <li>Inclement weather</li>
+        <li>Service Provider unavailability</li>
+        <li>Other circumstances beyond our control</li>
+      </ul>
+    </section>
+  
+    <section>
+      <h2>7. User Responsibilities</h2>
+      <p>When using our Services, you agree to:</p>
+      <ul>
+        <li>Provide accurate and complete information</li>
+        <li>Ensure safe access to the property</li>
+        <li>Secure valuables and fragile items</li>
+        <li>Inform us of any hazards or special requirements</li>
+        <li>Treat our Service Providers with respect</li>
+        <li>Pay for Services in a timely manner</li>
+      </ul>
+    </section>
+  
+    <section>
+      <h2>8. Property Access and Security</h2>
+      <ul>
+        <li>You must provide legal access to the property</li>
+        <li>If providing keys/codes, you agree we may use them to access the property</li>
+        <li>We will take reasonable care to secure your property upon completion</li>
+        <li>You are responsible for securing pets during service</li>
+      </ul>
+    </section>
+  
+    <section>
+      <h2>9. Limitation of Liability</h2>
+      
+      <h3>9.1 Service Liability</h3>
+      <p>While we strive to provide excellent service, we limit our liability as follows:</p>
+      <ul>
+        <li>We are insured for damage to property caused by our negligence</li>
+        <li>Claims must be reported within 24 hours of service completion</li>
+        <li>Our liability is limited to the actual cost of repair or replacement</li>
+        <li>We are not liable for pre-existing damage or normal wear and tear</li>
+      </ul>
+  
+      <h3>9.2 General Limitations</h3>
+      <p>To the maximum extent permitted by law, {{ companyName }} shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of our Services.</p>
+    </section>
+  
+    <section>
+      <h2>10. Intellectual Property</h2>
+      <p>All content on our Website, including text, graphics, logos, images, and software, is the property of {{ companyName }} and is protected by intellectual property laws. You may not use, reproduce, or distribute our content without written permission.</p>
+    </section>
+  
+    <section>
+      <h2>11. Privacy</h2>
+      <p>Your use of our Services is also governed by our Privacy Policy, available at <a [href]="websiteUrl + '/privacy-policy'">{{ websiteUrl }}/privacy-policy</a>. By using our Services, you consent to our collection and use of information as described in our Privacy Policy.</p>
+    </section>
+  
+    <section>
+      <h2>12. Indemnification</h2>
+      <p>You agree to indemnify and hold {{ companyName }} harmless from any claims, damages, losses, or expenses arising from:</p>
+      <ul>
+        <li>Your breach of these Terms</li>
+        <li>Your violation of any laws or regulations</li>
+        <li>Your negligence or willful misconduct</li>
+        <li>Any third-party claims related to your use of our Services</li>
+      </ul>
+    </section>
+  
+    <section>
+      <h2>13. Dispute Resolution</h2>
+      
+      <h3>13.1 Informal Resolution</h3>
+      <p>We prefer to resolve disputes informally. Please contact us first to attempt resolution.</p>
+  
+      <h3>13.2 Arbitration</h3>
+      <p>Any disputes that cannot be resolved informally shall be resolved through binding arbitration in accordance with the rules of the American Arbitration Association.</p>
+    </section>
+  
+    <section>
+      <h2>14. Governing Law</h2>
+      <p>These Terms shall be governed by and construed in accordance with the laws of {{ state }}, without regard to its conflict of law provisions.</p>
+    </section>
+  
+    <section>
+      <h2>15. Changes to Terms</h2>
+      <p>We reserve the right to modify these Terms at any time. Changes will be effective immediately upon posting to our Website. Your continued use of our Services after changes constitutes acceptance of the modified Terms.</p>
+    </section>
+  
+    <section>
+      <h2>16. Severability</h2>
+      <p>If any provision of these Terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain in full effect.</p>
+    </section>
+  
+    <section>
+      <h2>17. Entire Agreement</h2>
+      <p>These Terms, together with our Privacy Policy, constitute the entire agreement between you and {{ companyName }} regarding the use of our Services.</p>
+    </section>
+  
+    <section>
+      <h2>18. Contact Information</h2>
+      <div class="contact-info">
+        <p><strong>{{ companyName }} Customer Service</strong></p>
+        <p>Email: <a [href]="'mailto:' + emailAddress">{{ emailAddress }}</a></p>
+        <p>Phone: {{ phoneNumber }}</p>
+        <p>Website: <a [href]="websiteUrl">{{ websiteUrl }}</a></p>
+      </div>
+  
+      <p>Thank you for choosing {{ companyName }}. We look forward to serving you!</p>
+    </section>
+  </div>
