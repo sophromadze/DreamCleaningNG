@@ -17,7 +17,7 @@
 
   <!-- Main Content -->
   <div class="gift-cards-content">
-    <form [formGroup]="giftCardForm" (ngSubmit)="onCreateGiftCard()" class="gift-card-form">
+    <form [formGroup]="giftCardForm" (ngSubmit)="onCreateGiftCard(); $event.preventDefault()" class="gift-card-form">
       <div class="form-layout">
         <!-- Left Side - Form Fields -->
         <div class="form-fields">
@@ -137,8 +137,8 @@
 
           <!-- Form Actions -->
           <div class="form-actions">
-            <button type="submit" class="btn btn-primary" [disabled]="isLoading || isProcessingPayment">
-              {{ isProcessingPayment ? 'Processing Payment...' : 'Purchase Gift Card' }}
+            <button type="button" class="btn btn-primary" [disabled]="isLoading" (click)="onCreateGiftCard()">
+              {{ isLoading ? 'Processing...' : 'Purchase Gift Card' }}
             </button>
           </div>
         </div>
@@ -175,58 +175,3 @@
   </div>
 </form>
 
-<div *ngIf="showPaymentForm && previewGiftCard" class="payment-modal">
-  <div class="modal-backdrop" (click)="showPaymentForm = false"></div>
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2>Complete Payment</h2>
-      <button class="close-btn" (click)="showPaymentForm = false">×</button>
-    </div>
-    <div class="modal-body">
-      <p class="payment-amount">Amount: {{ formatCurrency(previewGiftCard.amount) }}</p>
-      <app-payment
-        [amount]="previewGiftCard.amount"
-        [clientSecret]="previewGiftCard.paymentClientSecret"
-        [billingDetails]="billingDetails"
-        (paymentComplete)="onPaymentComplete($event)"
-        (paymentError)="onPaymentError($event)">
-      </app-payment>
-    </div>
-  </div>
-</div>
-
-<!-- User's Gift Cards -->
-<div class="user-gift-cards" *ngIf="userGiftCards.length > 0">
-  <h2>Your Gift Cards</h2>
-  
-  <div class="gift-cards-grid">
-    <div class="gift-card-item" *ngFor="let giftCard of userGiftCards">
-      <div class="gift-card" [style.backgroundImage]="'url(' + giftCardBackgroundPath + ')'">
-        <div class="gift-card-header">
-          <h3>Dream Cleaning</h3>
-          <div class="amount">{{ formatCurrency(giftCard.currentBalance) }}</div>
-        </div>
-        
-        <div class="gift-card-body">
-          <div class="left-section">
-            <div class="card-status" [class]="getGiftCardStatusBadge(giftCard)">
-              {{ getGiftCardStatusText(giftCard) }}
-            </div>
-            <button class="btn btn-small" (click)="copyGiftCardCode(giftCard.code)">
-              {{ isCodeCopied(giftCard.code) ? 'Copied!' : 'Copy Code' }}
-            </button>
-          </div>
-          <div class="right-section">
-            <div class="recipient-info">
-              <p class="dear">Dear {{ giftCard.recipientName }},</p>
-              <div class="message" *ngIf="giftCard.message">
-                <p>{{ giftCard.message }}</p>
-              </div>
-            </div>
-            <div class="gift-card-code">{{ giftCard.code }}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>

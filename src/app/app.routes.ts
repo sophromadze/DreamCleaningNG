@@ -111,5 +111,19 @@ export const routes: Routes = [
   {
     path: 'poll-success',
     loadComponent: () => import('./booking/poll-success/poll-success.component').then(m => m.PollSuccessComponent)
+  },
+  {
+    path: 'gift-card-confirmation',
+    canActivate: [authGuard],
+    loadComponent: () => {
+      return import('./gift-cards/gift-card-confirmation/gift-card-confirmation.component')
+        .then(m => {
+          return m.GiftCardConfirmationComponent;
+        })
+        .catch(error => {
+          console.error('Failed to load component:', error);
+          throw error;
+        });
+    }
   }
 ];

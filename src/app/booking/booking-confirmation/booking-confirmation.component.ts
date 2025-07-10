@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -15,6 +15,8 @@ import { StripeService } from '../../services/stripe.service';
   styleUrls: ['./booking-confirmation.component.scss']
 })
 export class BookingConfirmationComponent implements OnInit {
+  @ViewChild('paymentComponent') paymentComponent!: PaymentComponent;
+  
   orderId: number = 0;
   isProcessing = false;
   paymentCompleted = false;
@@ -23,6 +25,9 @@ export class BookingConfirmationComponent implements OnInit {
   paymentClientSecret: string | null = null;
   orderTotal: number = 0;
   currentUser: any;
+
+  // Flag to track if we're preparing for payment
+  isPreparing = true;
 
   constructor(
     private route: ActivatedRoute,
@@ -48,8 +53,44 @@ export class BookingConfirmationComponent implements OnInit {
       this.currentUser = user;
     });
 
-    // Create the booking immediately
-    this.createBooking();
+    // Create payment intent without creating order
+    this.preparePayment();
+  }
+
+  preparePayment() {
+    this.isPreparing = true;
+    this.errorMessage = '';
+    this.paymentClientSecret = null; // Clear previous payment intent
+
+    // Clear payment component errors if it exists
+    if (this.paymentComponent) {
+      this.paymentComponent.clearErrors();
+    }
+
+    // Calculate total from booking data
+    const total = this.bookingData.calculation?.total || 
+                  (this.bookingData.subTotal + (this.bookingData.subTotal * 0.088) + 
+                   this.bookingData.tips + this.bookingData.companyDevelopmentTips - 
+                   this.bookingData.discountAmount - this.bookingData.giftCardAmountToUse);
+    
+    this.orderTotal = total;
+
+    // Create payment intent directly with Stripe service
+    const metadata = {
+      userId: this.currentUser?.id?.toString() || '',
+      type: 'booking_preparation'
+    };
+
+    this.stripeService.createPaymentIntent(total, metadata).subscribe({
+      next: (paymentIntent) => {
+        this.paymentClientSecret = paymentIntent.client_secret;
+        this.isPreparing = false;
+      },
+      error: (error) => {
+        this.errorMessage = 'Failed to prepare payment. Please try again.';
+        this.isPreparing = false;
+      }
+    });
   }
 
   createBooking() {
@@ -81,55 +122,74 @@ export class BookingConfirmationComponent implements OnInit {
   onPaymentComplete(paymentIntent: any) {
     this.isProcessing = true;
     
-    this.bookingService.confirmPayment(this.orderId, paymentIntent.id).subscribe({
+    // Now create the booking after successful payment
+    this.bookingService.createBooking(this.bookingData).subscribe({
       next: (response) => {
-        this.paymentCompleted = true;
-        this.isProcessing = false;
+        this.orderId = response.orderId;
         
-        // Clear the booking data
-        this.bookingDataService.clearBookingData();
-        
-        // Check if user selected a subscription
-        const selectedSubscription = this.bookingData.subscription;
-        if (selectedSubscription && selectedSubscription.subscriptionDays > 0) {
-          // Refresh subscription data
-          this.bookingService.getUserSubscription().subscribe({
-            next: (subscriptionData) => {
-              console.log('Subscription data refreshed:', subscriptionData);
-            },
-            error: (error) => {
-              console.error('Failed to refresh subscription data:', error);
+        // Immediately confirm the payment
+        this.bookingService.confirmPayment(this.orderId, paymentIntent.id).subscribe({
+          next: (confirmResponse) => {
+            this.paymentCompleted = true;
+            this.isProcessing = false;
+            
+            // Clear the booking data
+            this.bookingDataService.clearBookingData();
+            
+            // Check if user selected a subscription
+            const selectedSubscription = this.bookingData.subscription;
+            if (selectedSubscription && selectedSubscription.subscriptionDays > 0) {
+              // Refresh subscription data
+              this.bookingService.getUserSubscription().subscribe({
+                next: (subscriptionData) => {
+                  console.log('Subscription data refreshed:', subscriptionData);
+                },
+                error: (error) => {
+                  console.error('Failed to refresh subscription data:', error);
+                }
+              });
             }
-          });
-        }
-        
-        // Refresh user profile to get updated phone number
-        this.authService.refreshUserProfile().subscribe({
-          next: () => {
-            console.log('User profile refreshed with new phone number');
+            
+            // Refresh user profile to get updated phone number
+            this.authService.refreshUserProfile().subscribe({
+              next: () => {
+                console.log('User profile refreshed with new phone number');
+              },
+              error: (error) => {
+                console.error('Failed to refresh user profile:', error);
+              }
+            });
+            
+            // Redirect to order details after 3 seconds
+            setTimeout(() => {
+              this.router.navigate(['/order', this.orderId], {
+                state: { bookingCompleted: true }
+              });
+            }, 3000);
           },
           error: (error) => {
-            console.error('Failed to refresh user profile:', error);
+            this.errorMessage = error.error?.message || 'Payment confirmation failed';
+            this.isProcessing = false;
+            // TODO: Handle the case where order was created but payment confirmation failed
           }
         });
-        
-        // Redirect to order details after 3 seconds
-        setTimeout(() => {
-          this.router.navigate(['/order', this.orderId], {
-            state: { bookingCompleted: true }
-          });
-        }, 3000);
       },
       error: (error) => {
-        this.errorMessage = error.error?.message || 'Payment confirmation failed';
+        this.errorMessage = error.error?.message || 'Failed to create booking';
         this.isProcessing = false;
       }
     });
   }
 
   onPaymentError(error: any) {
-    this.errorMessage = error.message || 'Payment failed. Please try again.';
+    // Don't set error message here since the payment component will show it
+    // Just reset the processing state
     this.isProcessing = false;
+  }
+
+  retryPayment() {
+    // Clear any existing errors and prepare a new payment
+    this.preparePayment();
   }
 
   cancelBooking() {

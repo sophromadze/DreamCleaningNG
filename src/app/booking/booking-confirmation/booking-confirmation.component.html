@@ -1,11 +1,10 @@
 <div class="booking-confirmation-container">
   <div class="confirmation-content" *ngIf="!paymentCompleted">
     <h1>Complete Your Booking</h1>
-    <p class="order-info" *ngIf="orderId">Order #{{ orderId }} has been created</p>
-    <p class="order-info" *ngIf="!orderId && bookingData">Creating your order...</p>
     
-    <div class="payment-section" *ngIf="paymentClientSecret">
+    <div class="payment-section" *ngIf="paymentClientSecret && !isPreparing">
       <app-payment
+        #paymentComponent
         [amount]="orderTotal"
         [clientSecret]="paymentClientSecret"
         [billingDetails]="billingDetails"
@@ -14,16 +13,17 @@
       </app-payment>
     </div>
 
-    <div class="loading-section" *ngIf="!paymentClientSecret && !errorMessage">
-      <p>Preparing payment...</p>
+    <div class="loading-section" *ngIf="isPreparing && !errorMessage">
+      <div class="spinner"></div>
+      <p>Setting up secure payment...</p>
     </div>
     
     <div class="error-message" *ngIf="errorMessage && !paymentClientSecret">
       {{ errorMessage }}
-      <button class="retry-btn" (click)="createBooking()">Try Again</button>
+      <button class="retry-btn" (click)="retryPayment()">Try Again</button>
     </div>
 
-    <div class="cancel-action">
+    <div class="cancel-action" *ngIf="!isPreparing">
       <button 
         class="cancel-btn" 
         (click)="cancelBooking()"

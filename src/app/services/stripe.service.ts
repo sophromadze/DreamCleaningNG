@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { AuthService } from './auth.service';
 
 declare var Stripe: any;
 
@@ -10,8 +13,9 @@ export class StripeService {
   private stripe: any;
   private elements: any;
   private cardElement: any;
-
-  constructor() {
+  private apiUrl = environment.apiUrl;
+  
+  constructor(private http: HttpClient, private authService: AuthService) {
     this.stripe = Stripe(environment.stripePublishableKey);
   }
 
@@ -42,6 +46,22 @@ export class StripeService {
     return this.cardElement;
   }
 
+  createPaymentIntent(amount: number, metadata?: any): Observable<any> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${this.authService.getToken()}`
+    });
+    
+    const body = {
+      amount: Math.round(amount * 100), // Convert to cents
+      currency: 'usd',
+      metadata: metadata || {}
+    };
+    
+    // Fix: Change URL to match your backend controller route
+    return this.http.post(`${this.apiUrl}/stripewebhook/create-payment-intent`, body, { headers });
+  }
+
   async confirmCardPayment(clientSecret: string, billingDetails?: any) {
     const { error, paymentIntent } = await this.stripe.confirmCardPayment(
       clientSecret,
@@ -58,6 +78,11 @@ export class StripeService {
     }
 
     return paymentIntent;
+  }
+
+  async getPaymentIntentAsync(paymentIntentId: string) {
+    const paymentIntent = await this.stripe.retrievePaymentIntent(paymentIntentId);
+    return paymentIntent.paymentIntent;
   }
 
   destroyCardElement() {

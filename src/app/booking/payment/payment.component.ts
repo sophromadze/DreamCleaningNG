@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { StripeService } from '../../services/stripe.service';
 
@@ -9,7 +9,7 @@ import { StripeService } from '../../services/stripe.service';
   templateUrl: './payment.component.html',
   styleUrls: ['./payment.component.scss']
 })
-export class PaymentComponent implements OnInit, OnDestroy {
+export class PaymentComponent implements OnInit, OnDestroy, OnChanges {
   @Input() amount!: number;
   @Input() clientSecret!: string;
   @Input() billingDetails?: any;
@@ -19,6 +19,7 @@ export class PaymentComponent implements OnInit, OnDestroy {
   isProcessing = false;
   cardError: string | null = null;
   errorMessage: string | null = null;
+  private previousClientSecret: string | null = null;
 
   constructor(private stripeService: StripeService) {}
 
@@ -30,6 +31,13 @@ export class PaymentComponent implements OnInit, OnDestroy {
     this.stripeService.destroyCardElement();
   }
 
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['clientSecret'] && this.clientSecret && this.previousClientSecret !== this.clientSecret) {
+      this.previousClientSecret = this.clientSecret;
+      this.resetPaymentState();
+    }
+  }
+
   private initializeStripeElements() {
     this.stripeService.createElements();
     const cardElement = this.stripeService.createCardElement('card-element');
@@ -39,11 +47,18 @@ export class PaymentComponent implements OnInit, OnDestroy {
     });
   }
 
+  private resetPaymentState() {
+    this.isProcessing = false;
+    this.errorMessage = null;
+    this.cardError = null;
+  }
+
   async processPayment() {
     if (this.isProcessing) return;
 
     this.isProcessing = true;
     this.errorMessage = null;
+    this.cardError = null;
 
     try {
       const paymentIntent = await this.stripeService.confirmCardPayment(
@@ -58,5 +73,11 @@ export class PaymentComponent implements OnInit, OnDestroy {
     } finally {
       this.isProcessing = false;
     }
+  }
+
+  // Method to clear error states
+  clearErrors() {
+    this.errorMessage = null;
+    this.cardError = null;
   }
 }
