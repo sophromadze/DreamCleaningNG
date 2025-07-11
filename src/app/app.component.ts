@@ -36,11 +36,8 @@ export class AppComponent implements OnInit, OnDestroy {
     // Wait for auth to be initialized
     const authInitSub = this.authService.isInitialized$.subscribe(isInit => {
       this.isAuthInitialized = isInit;
-      console.log('Auth service initialized:', isInit);
     });
     this.subscriptions.add(authInitSub);
-
-    console.log('App initialized');
 
     // NEW: Initialize token refresh service
     this.tokenRefreshService.startTokenRefresh();

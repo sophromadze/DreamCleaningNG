@@ -20,7 +20,6 @@ export class NotificationModalComponent implements OnInit, OnDestroy {
   ngOnInit() {
     // Subscribe to notifications
     this.subscription = this.signalRService.notifications$.subscribe(notification => {
-      console.log('Notification received in modal:', notification);
       if (notification) {
         this.currentNotification = notification;
         this.showModal = true;

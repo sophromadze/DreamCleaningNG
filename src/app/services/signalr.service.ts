@@ -102,7 +102,7 @@ export class SignalRService {
         }
       })
       .withAutomaticReconnect([0, 2000, 10000, 30000])
-      .configureLogging(LogLevel.Information)
+      .configureLogging(LogLevel.None)
       .build();
 
     // Set up event handlers
@@ -134,7 +134,6 @@ export class SignalRService {
   
     // Handle user blocked notification
     SignalRService.hubConnection.on('UserBlocked', (data: any) => {
-      console.log('UserBlocked event received:', data);
       
       // Show the notification modal
       SignalRService.globalNotifications.next({
@@ -154,7 +153,6 @@ export class SignalRService {
   
     // Handle user unblocked notification
     SignalRService.hubConnection.on('UserUnblocked', (data: any) => {
-      console.log('UserUnblocked event received:', data);
       
       SignalRService.globalNotifications.next({
         message: data.message || 'Your account has been unblocked.',
@@ -166,7 +164,6 @@ export class SignalRService {
   
     // Handle role changed notification
     SignalRService.hubConnection.on('RoleChanged', (data: any) => {
-      console.log('RoleChanged event received:', data);
       
       // Show notification with the new role
       SignalRService.globalNotifications.next({
@@ -184,7 +181,6 @@ export class SignalRService {
   
     // Handle force logout
     SignalRService.hubConnection.on('ForceLogout', (data: any) => {
-      console.log('ForceLogout event received:', data);
       
       SignalRService.globalNotifications.next({
         message: data.reason || 'Your session has been terminated.',
@@ -201,17 +197,14 @@ export class SignalRService {
   
     // Connection event handlers
     SignalRService.hubConnection.onreconnected(() => {
-      console.log('SignalR reconnected');
       SignalRService.globalConnectionState.next(true);
     });
   
     SignalRService.hubConnection.onreconnecting(() => {
-      console.log('SignalR reconnecting...');
       SignalRService.globalConnectionState.next(false);
     });
   
     SignalRService.hubConnection.onclose(() => {
-      console.log('SignalR connection closed');
       SignalRService.globalConnectionState.next(false);
     });
   }
