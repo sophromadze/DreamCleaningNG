@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { validatePassword } from '../../utils/password-validator';
 
 @Component({
   selector: 'app-change-password',
@@ -35,12 +36,32 @@ import { AuthService } from '../../services/auth.service';
               id="newPassword"
               name="newPassword"
               [(ngModel)]="newPassword"
+              (ngModelChange)="validateNewPassword()"
               required
               minlength="8"
               #newPasswordInput="ngModel"
             />
-            <div class="error" *ngIf="newPasswordInput.invalid && newPasswordInput.touched">
-              New password must be at least 8 characters
+            
+            <div class="password-requirements">
+              <small class="requirement-header">Password must contain:</small>
+              <ul class="requirements-list">
+                <li [class.met]="hasMinLength()">
+                  At least 8 characters
+                </li>
+                <li [class.met]="hasUppercase()">
+                  At least one uppercase letter
+                </li>
+                <li [class.met]="hasLowercase()">
+                  At least one lowercase letter
+                </li>
+                <li [class.met]="hasNumber()">
+                  At least one number
+                </li>
+              </ul>
+            </div>
+            
+            <div class="error" *ngIf="newPasswordInput.touched && passwordErrors.length > 0">
+              <span *ngFor="let error of passwordErrors">{{ error }}<br></span>
             </div>
           </div>
 
@@ -70,7 +91,7 @@ import { AuthService } from '../../services/auth.service';
             {{ errorMessage }}
           </div>
 
-          <button type="submit" [disabled]="!passwordForm.form.valid || confirmPassword !== newPassword || isSubmitting">
+          <button type="submit" [disabled]="!isFormValid() || isSubmitting">
             {{ isSubmitting ? 'Changing Password...' : 'Change Password' }}
           </button>
         </form>
@@ -79,100 +100,167 @@ import { AuthService } from '../../services/auth.service';
   `,
   styles: [`
     .change-password-container {
-      max-width: 500px;
-      margin: 100px auto 0;
       padding: 2rem;
+      max-width: 500px;
+      margin: 0 auto;
     }
 
     h1 {
       margin-bottom: 2rem;
-      color: #333;
-    }
-
-    .change-password-content {
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      padding: 2rem;
     }
 
     .form-group {
       margin-bottom: 1.5rem;
+    }
 
-      label {
-        display: block;
-        margin-bottom: 0.5rem;
-        color: #666;
-      }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
 
-      input {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
+    input {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
 
-        &:focus {
-          outline: none;
-          border-color: #007bff;
-        }
-      }
+    input.ng-invalid.ng-touched {
+      border-color: #f44336;
     }
 
     .error {
-      color: #dc3545;
+      color: #f44336;
       font-size: 0.875rem;
-      margin-top: 0.25rem;
+      margin-top: 0.5rem;
     }
 
     .success {
-      color: #28a745;
+      color: #4CAF50;
       font-size: 0.875rem;
       margin-bottom: 1rem;
-      padding: 0.75rem;
-      background-color: #d4edda;
-      border: 1px solid #c3e6cb;
-      border-radius: 4px;
     }
 
     button {
       width: 100%;
       padding: 0.75rem;
-      background-color: #007bff;
+      background-color: #2196F3;
       color: white;
       border: none;
       border-radius: 4px;
       font-size: 1rem;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+    }
 
-      &:hover:not(:disabled) {
-        background-color: #0056b3;
-      }
+    button:hover:not(:disabled) {
+      background-color: #1976D2;
+    }
 
-      &:disabled {
-        background-color: #ccc;
-        cursor: not-allowed;
-      }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .password-requirements {
+      margin-top: 0.5rem;
+      background-color: #f5f5f5;
+      padding: 0.75rem;
+      border-radius: 4px;
+      font-size: 0.875rem;
+    }
+
+    .requirement-header {
+      color: #666;
+      font-weight: 500;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .requirements-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .requirements-list li {
+      color: #999;
+      margin-bottom: 0.25rem;
+      padding-left: 1.25rem;
+      position: relative;
+    }
+
+    .requirements-list li::before {
+      content: '○';
+      position: absolute;
+      left: 0;
+      top: 0;
+    }
+
+    .requirements-list li.met {
+      color: #4CAF50;
+    }
+
+    .requirements-list li.met::before {
+      content: '✓';
+      color: #4CAF50;
     }
   `]
 })
 export class ChangePasswordComponent {
-  currentPassword: string = '';
-  newPassword: string = '';
-  confirmPassword: string = '';
-  errorMessage: string = '';
-  successMessage: string = '';
-  isSubmitting: boolean = false;
+  currentPassword = '';
+  newPassword = '';
+  confirmPassword = '';
+  errorMessage = '';
+  successMessage = '';
+  isSubmitting = false;
+  passwordErrors: string[] = [];
 
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
+  ngOnChanges() {
+    this.validateNewPassword();
+  }
+
+  validateNewPassword() {
+    if (this.newPassword) {
+      const validation = validatePassword(this.newPassword);
+      this.passwordErrors = validation.errors;
+    } else {
+      this.passwordErrors = [];
+    }
+  }
+
+  isFormValid(): boolean {
+    const validation = validatePassword(this.newPassword);
+    return this.currentPassword.length > 0 && 
+           validation.isValid && 
+           this.newPassword === this.confirmPassword;
+  }
+
+  // Helper methods for template
+  hasMinLength(): boolean {
+    return this.newPassword ? this.newPassword.length >= 8 : false;
+  }
+
+  hasUppercase(): boolean {
+    return this.newPassword ? /[A-Z]/.test(this.newPassword) : false;
+  }
+
+  hasLowercase(): boolean {
+    return this.newPassword ? /[a-z]/.test(this.newPassword) : false;
+  }
+
+  hasNumber(): boolean {
+    return this.newPassword ? /\d/.test(this.newPassword) : false;
+  }
+
   onSubmit() {
-    if (this.newPassword !== this.confirmPassword) {
-      this.errorMessage = 'Passwords do not match';
+    if (!this.isFormValid()) {
       return;
     }
 
@@ -182,15 +270,15 @@ export class ChangePasswordComponent {
 
     this.authService.changePassword(this.currentPassword, this.newPassword).subscribe({
       next: () => {
+        this.successMessage = 'Password changed successfully!';
         this.isSubmitting = false;
-        this.successMessage = 'Password changed successfully! Redirecting...';
         setTimeout(() => {
-          this.router.navigate(['/profile']);
+          this.router.navigate(['/cabinet']);
         }, 2000);
       },
       error: (error) => {
+        this.errorMessage = error.error?.message || 'Failed to change password';
         this.isSubmitting = false;
-        this.errorMessage = error.error?.message || 'Failed to change password. Please try again.';
       }
     });
   }

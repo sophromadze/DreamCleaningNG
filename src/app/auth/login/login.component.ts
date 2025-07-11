@@ -5,6 +5,7 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
 import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
+import { passwordValidator } from '../../utils/password-validator';
 
 @Component({
   selector: 'app-login',
@@ -46,7 +47,7 @@ export class LoginComponent {
       confirmPassword: ['', [Validators.required]]
     });
 
-    // Add password match validation
+    // password match validation
     this.registerForm.get('confirmPassword')?.setValidators([
       Validators.required,
       this.passwordMatchValidator.bind(this)
@@ -63,6 +64,35 @@ export class LoginComponent {
     return null;
   }
 
+  // Add this method to get password error messages
+  getPasswordErrors(): string[] {
+    const passwordControl = this.registerForm.get('password');
+    if (passwordControl?.errors?.['passwordRequirements']) {
+      return passwordControl.errors['passwordRequirements'].errors;
+    }
+    return [];
+  }
+
+  hasMinLength(): boolean {
+    const password = this.registerForm.get('password')?.value;
+    return password ? password.length >= 8 : false;
+  }
+
+  hasUppercase(): boolean {
+    const password = this.registerForm.get('password')?.value;
+    return password ? /[A-Z]/.test(password) : false;
+  }
+
+  hasLowercase(): boolean {
+    const password = this.registerForm.get('password')?.value;
+    return password ? /[a-z]/.test(password) : false;
+  }
+
+  hasNumber(): boolean {
+    const password = this.registerForm.get('password')?.value;
+    return password ? /\d/.test(password) : false;
+  }
+
   ngOnInit() {
     // Listen for Google sign-in success
     if (this.authService.socialAuthService) {
@@ -75,7 +105,6 @@ export class LoginComponent {
   }
 
   private async handleGoogleSignIn(user: any) {
-    console.log('Google sign-in successful:', user);
     this.isLoading = true;
     this.errorMessage = null;
     
@@ -86,32 +115,7 @@ export class LoginComponent {
       this.isLoading = false;
       this.errorMessage = error?.error?.message || 'Google login failed. Please try again.';
     }
-  }
-
-  // Social login methods
-  // async onGoogleLogin() {
-  //   console.log('Google login button clicked');
-  //   this.isLoading = true;
-  //   this.errorMessage = null;
-    
-  //   try {
-  //     console.log('Calling authService.googleLogin()');
-  //     await this.authService.googleLogin();
-  //     console.log('Google login successful');
-  //   } catch (error: any) {
-  //     console.error('Google login error:', error);
-  //     this.isLoading = false;
-      
-  //     if (error.message?.includes('popup_closed_by_user')) {
-  //       this.errorMessage = 'Login cancelled';
-  //     } else if (error.message?.includes('Social auth service not initialized')) {
-  //       this.errorMessage = 'Social login is initializing. Please try again in a moment.';
-  //     } else {
-  //       this.errorMessage = error?.error?.message || 'Google login failed. Please try again.';
-  //     }
-  //   }
-  // }
-  
+  }  
 
   onForgotPassword() {
     this.router.navigate(['/auth/forgot-password']);

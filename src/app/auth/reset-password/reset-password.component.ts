@@ -1,9 +1,9 @@
-// src/app/auth/reset-password/reset-password.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
+import { passwordValidator } from '../../utils/password-validator';
 
 @Component({
   selector: 'app-reset-password',
@@ -12,7 +12,6 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss']
 })
-
 export class ResetPasswordComponent implements OnInit {
   resetForm: FormGroup;
   isLoading = false;
@@ -27,7 +26,7 @@ export class ResetPasswordComponent implements OnInit {
     private router: Router
   ) {
     this.resetForm = this.fb.group({
-      password: ['', [Validators.required, Validators.minLength(8)]],
+      password: ['', [Validators.required, passwordValidator()]],
       confirmPassword: ['', Validators.required]
     }, { validators: this.passwordMatchValidator });
   }
@@ -50,6 +49,35 @@ export class ResetPasswordComponent implements OnInit {
     }
     
     return null;
+  }
+
+  getPasswordErrors(): string[] {
+    const passwordControl = this.resetForm.get('password');
+    if (passwordControl?.errors?.['passwordRequirements']) {
+      return passwordControl.errors['passwordRequirements'].errors;
+    }
+    return [];
+  }
+
+  // Helper methods for template validation checks
+  hasMinLength(): boolean {
+    const password = this.resetForm.get('password')?.value;
+    return password ? password.length >= 8 : false;
+  }
+
+  hasUppercase(): boolean {
+    const password = this.resetForm.get('password')?.value;
+    return password ? /[A-Z]/.test(password) : false;
+  }
+
+  hasLowercase(): boolean {
+    const password = this.resetForm.get('password')?.value;
+    return password ? /[a-z]/.test(password) : false;
+  }
+
+  hasNumber(): boolean {
+    const password = this.resetForm.get('password')?.value;
+    return password ? /\d/.test(password) : false;
   }
 
   onSubmit() {
