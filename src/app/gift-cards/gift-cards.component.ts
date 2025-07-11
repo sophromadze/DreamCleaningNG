@@ -157,7 +157,7 @@ export class GiftCardsComponent implements OnInit {
     // Step 2: Fetch latest from API to check for updates
     this.http.get<any>('/api/admin/gift-card-config').subscribe({
       next: (response) => {
-        const newPath = response.backgroundImagePath || '/images/mainImage.png';
+        const newPath = response.backgroundImagePath || '/images/mainImage.webp';
         
         // If path changed or no cache, preload the new image
         if (newPath !== this.giftCardBackgroundPath || !cachedPath) {
@@ -172,7 +172,7 @@ export class GiftCardsComponent implements OnInit {
         
         // If no cached version, use fallback
         if (!this.giftCardBackgroundPath) {
-          this.giftCardBackgroundPath = '/images/mainImage.png';
+          this.giftCardBackgroundPath = '/images/mainImage.webp';
           this.isLoadingBackground = false;
         }
       }
@@ -194,7 +194,7 @@ export class GiftCardsComponent implements OnInit {
     img.onerror = () => {
       // Image failed to load, use fallback
       console.error('Failed to load gift card background:', imagePath);
-      this.giftCardBackgroundPath = '/images/mainImage.png';
+      this.giftCardBackgroundPath = '/images/mainImage.webp';
       this.isLoadingBackground = false;
       
       // Don't cache failed image
