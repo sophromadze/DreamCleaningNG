@@ -14,6 +14,9 @@ import { FormPersistenceService, BookingFormData } from '../services/form-persis
 import { Subject, takeUntil, debounceTime } from 'rxjs';
 import { PollService, PollQuestion, PollAnswer, PollSubmission } from '../services/poll.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { DurationSelectorComponent } from './duration-selector/duration-selector.component';
+import { TimeSelectorComponent } from './time-selector/time-selector.component';
+import { DateSelectorComponent } from './date-selector/date-selector.component';
 
 interface SelectedService {
   service: Service;
@@ -29,7 +32,7 @@ interface SelectedExtraService {
 @Component({
   selector: 'app-booking',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, HttpClientModule, RouterModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, HttpClientModule, RouterModule, DurationSelectorComponent, TimeSelectorComponent, DateSelectorComponent],
   providers: [BookingService],
   templateUrl: './booking.component.html',
   styleUrl: './booking.component.scss'
@@ -548,7 +551,8 @@ export class BookingComponent implements OnInit, OnDestroy {
           // Find and remove the same day service
           const sameDayService = this.selectedExtraServices.find(s => s.extraService.isSameDayService);
           if (sameDayService) {
-            this.toggleExtraService(sameDayService.extraService);
+            // Use skipDateChange=true to preserve the user's selected date
+            this.toggleExtraService(sameDayService.extraService, true);
           }
         }
       }
@@ -741,7 +745,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.saveFormData();
   }
 
-  toggleExtraService(extraService: ExtraService) {
+  toggleExtraService(extraService: ExtraService, skipDateChange: boolean = false) {
     const index = this.selectedExtraServices.findIndex(s => s.extraService.id === extraService.id);
     
     if (index > -1) {
@@ -750,7 +754,17 @@ export class BookingComponent implements OnInit, OnDestroy {
       
       if (extraService.isSameDayService) {
         this.isSameDaySelected = false;
-        this.updateDateRestrictions();
+        // Only set date to tomorrow if this is a manual uncheck (not from date selection)
+        if (!skipDateChange) {
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const year = tomorrow.getFullYear();
+          const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+          const day = String(tomorrow.getDate()).padStart(2, '0');
+          const formattedDate = `${year}-${month}-${day}`;
+          
+          this.serviceDate.setValue(formattedDate);
+        }
       }
     } else {
       // If selecting a cleaning type, remove other cleaning types
@@ -890,18 +904,9 @@ export class BookingComponent implements OnInit, OnDestroy {
       const formattedDate = `${year}-${month}-${day}`;
       
       this.serviceDate.setValue(formattedDate);
-    } else {
-      // Set date to tomorrow
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const year = tomorrow.getFullYear();
-      const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
-      const day = String(tomorrow.getDate()).padStart(2, '0');
-      const formattedDate = `${year}-${month}-${day}`;
-      
-      this.serviceDate.setValue(formattedDate);
-      this.serviceDate.enable();
     }
+    // Don't automatically change the date when same day service is unchecked
+    // Let the user manually select a date or uncheck the service
   }
 
   private fillApartmentAddress(apartmentId: string) {
@@ -1533,19 +1538,19 @@ export class BookingComponent implements OnInit, OnDestroy {
       userSpecialOfferId: this.specialOfferApplied && this.selectedSpecialOffer ? this.selectedSpecialOffer.id : undefined,
       tips: formValue.tips,
       companyDevelopmentTips: formValue.companyDevelopmentTips,
-      maidsCount: this.calculatedMaidsCount,
+      maidsCount: this.showCustomPricing ? parseInt(this.customCleaners.value) : this.calculatedMaidsCount,
       discountAmount: this.promoOrFirstTimeDiscountAmount,
       subscriptionDiscountAmount: shouldApplySubscriptionDiscount ? this.subscriptionDiscountAmount : 0,
       subTotal: this.calculation.subTotal,
-      totalDuration: this.actualTotalDuration,
+      totalDuration: this.showCustomPricing ? parseInt(this.customDuration.value) : this.actualTotalDuration,
       hasActiveSubscription: this.hasActiveSubscription,
       userSubscriptionId: this.userSubscription?.subscriptionId,
       giftCardCode: this.giftCardApplied && this.isGiftCard ? this.promoCode.value : null,
       giftCardAmountToUse: this.giftCardApplied ? this.giftCardAmountToUse : 0,
       isCustomPricing: this.showCustomPricing,
-      customAmount: this.showCustomPricing ? (this.customAmount.value || 0) : undefined,
-      customCleaners: this.showCustomPricing ? (this.customCleaners.value || 1) : undefined,
-      customDuration: this.showCustomPricing ? (this.customDuration.value || 90) : undefined,
+      customAmount: this.showCustomPricing ? parseFloat(this.customAmount.value) : undefined,
+      customCleaners: this.showCustomPricing ? parseInt(this.customCleaners.value) : undefined,
+      customDuration: this.showCustomPricing ? parseInt(this.customDuration.value) : undefined,
       smsConsent: formValue.smsConsent,
       uploadedPhotos: this.preparePhotosForSubmission(),
     };
@@ -2006,6 +2011,70 @@ export class BookingComponent implements OnInit, OnDestroy {
 
     this.calculateTotal();
     this.saveFormData();
+  }
+
+  onDurationChange(duration: number) {
+    this.customDuration.setValue(duration);
+    this.calculateTotal();
+    this.saveFormData();
+  }
+
+  getAvailableTimeSlots(): string[] {
+    const selectedDate = this.serviceDate.value;
+    if (!selectedDate) return [];
+
+    // Time slots from 8:00 AM to 6:00 PM (30-minute intervals) for all days
+    const timeSlots = [
+      '08:00', '08:30', '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+      '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30',
+      '16:00', '16:30', '17:00', '17:30', '18:00'
+    ];
+
+    return timeSlots;
+  }
+
+  formatTimeSlot(timeSlot: string): string {
+    const [hour, minute] = timeSlot.split(':').map(Number);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${displayHour}:${minute.toString().padStart(2, '0')} ${period}`;
+  }
+
+  onDateChange() {
+    // Reset time selection when date changes
+    const availableSlots = this.getAvailableTimeSlots();
+    if (availableSlots.length > 0) {
+      // Set to first available time slot
+      this.serviceTime.setValue(availableSlots[0]);
+    } else {
+      this.serviceTime.setValue('');
+    }
+    this.saveFormData();
+  }
+
+  onTimeChange(time: string) {
+    this.serviceTime.setValue(time);
+    this.saveFormData();
+  }
+
+  onDateSelectorChange(date: string) {
+    this.serviceDate.setValue(date);
+    
+    // Check if the selected date is not today (same day service)
+    const selectedDate = new Date(date);
+    const today = new Date();
+    const isToday = selectedDate.toDateString() === today.toDateString();
+    
+    // If user selected a date that's not today, uncheck same day service
+    if (!isToday) {
+      // Find and uncheck the same day service
+      const sameDayService = this.selectedExtraServices.find(s => s.extraService.isSameDayService);
+      if (sameDayService) {
+        this.toggleExtraService(sameDayService.extraService, true); // Skip date change since user selected a specific date
+      }
+    }
+    
+    this.onDateChange();
   }
 
   // Get current cleaning type from form

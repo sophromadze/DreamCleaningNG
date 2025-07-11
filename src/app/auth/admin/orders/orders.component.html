@@ -96,13 +96,13 @@
                         class="action-btn complete" 
                         (click)="markOrderAsDone(order); $event.stopPropagation()"
                         title="Mark as Done">
-                  <i class="fas fa-check-double"></i> Done
+                  Done
                 </button>
                 <button *ngIf="userPermissions.permissions.canUpdate && order.status.toLowerCase() !== 'cancelled' && order.status.toLowerCase() !== 'done'" 
                         class="action-btn cancel" 
                         (click)="cancelOrder(order); $event.stopPropagation()"
                         title="Cancel Order">
-                  <i class="fas fa-times"></i> Cancel
+                  Cancel
                 </button>                
                 <button *ngIf="userPermissions.permissions.canUpdate && (order.status.toLowerCase() === 'done' || order.status.toLowerCase() === 'cancelled')" 
                         class="action-btn reactivate" 
