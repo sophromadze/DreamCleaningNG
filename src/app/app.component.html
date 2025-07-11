@@ -6,11 +6,3 @@
     
 <!-- Add the notification modal -->
 <app-notification-modal></app-notification-modal>
-
-<!-- Connection status indicator (optional) -->
-<div class="connection-status" 
-     *ngIf="showConnectionStatus && isConnected" 
-     [class.connected]="isConnected">
-  <span class="status-dot"></span>
-  Connected
-</div>

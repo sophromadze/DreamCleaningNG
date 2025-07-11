@@ -4,10 +4,9 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
 import { NotificationModalComponent } from './notification-modal/notification-modal.component';
-import { SignalRService } from './services/signalr.service';
 import { AuthService } from './services/auth.service';
 import { TokenRefreshService } from './services/token-refresh.service';
-import { combineLatest, Subscription } from 'rxjs';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -24,41 +23,24 @@ import { combineLatest, Subscription } from 'rxjs';
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'DreamCleaning';
-  isConnected = false;
-  showConnectionStatus = false;
   isAuthInitialized = false;
   private subscriptions: Subscription = new Subscription();
 
   constructor(
-    private signalRService: SignalRService,
     private authService: AuthService,
     private tokenRefreshService: TokenRefreshService
   ) {}
 
   ngOnInit() {
     // Preserve all existing logic
-    // Wait for auth to be initialized before showing connection status
-    const connectionSub = combineLatest([
-      this.authService.isInitialized$,
-      this.authService.currentUser,
-      this.signalRService.getConnectionState()
-    ]).subscribe(([isAuthInitialized, user, connected]) => {
-      this.isAuthInitialized = isAuthInitialized;
-      this.isConnected = connected;
-      
-      // Only show connection status if:
-      // 1. Auth is initialized
-      // 2. User is logged in
-      this.showConnectionStatus = isAuthInitialized && !!user;
-    });
-    this.subscriptions.add(connectionSub);
-
-    console.log('App initialized');
-    
+    // Wait for auth to be initialized
     const authInitSub = this.authService.isInitialized$.subscribe(isInit => {
+      this.isAuthInitialized = isInit;
       console.log('Auth service initialized:', isInit);
     });
     this.subscriptions.add(authInitSub);
+
+    console.log('App initialized');
 
     // NEW: Initialize token refresh service
     this.tokenRefreshService.startTokenRefresh();
