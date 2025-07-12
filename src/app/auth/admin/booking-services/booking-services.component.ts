@@ -450,6 +450,15 @@ export class BookingServicesComponent implements OnInit {
     this.showExistingServices = !this.showExistingServices;
   }
 
+  onServiceSelectionChange(event: any) {
+    // Convert string to number if needed
+    if (event.target.value && event.target.value !== '') {
+      this.selectedExistingServiceId = parseInt(event.target.value);
+    } else {
+      this.selectedExistingServiceId = null;
+    }
+  }
+
   copyExistingService() {
     if (!this.userPermissions.permissions.canCreate) {
       this.serviceMessage.error = 'You do not have permission to copy services';
@@ -655,33 +664,64 @@ export class BookingServicesComponent implements OnInit {
     this.showExistingExtraServices = !this.showExistingExtraServices;
   }
 
+  onExtraServiceSelectionChange(event: any) {
+    // Convert string to number if needed
+    if (event.target.value && event.target.value !== '') {
+      this.selectedExistingExtraServiceId = parseInt(event.target.value);
+    } else {
+      this.selectedExistingExtraServiceId = null;
+    }
+  }
+
+  getAvailableExtraServicesForCopy(): ExtraService[] {
+    if (!this.selectedServiceType || !this.allExtraServices) {
+      return [];
+    }
+
+    // Get the names of extra services that are already in the selected service type
+    const existingServiceNames = this.selectedServiceType.extraServices.map(service => service.name);
+
+    // Filter out extra services that already exist in the selected service type
+    return this.allExtraServices.filter(service => !existingServiceNames.includes(service.name));
+  }
+
   copyExistingExtraService() {
     if (!this.userPermissions.permissions.canCreate) {
       this.extraServiceMessage.error = 'You do not have permission to copy extra services';
       return;
     }
-    if (!this.selectedExistingExtraServiceId || !this.selectedServiceType) return;
-    
-    const existingService = this.allExtraServices.find(s => s.id === this.selectedExistingExtraServiceId);
-    if (existingService) {
-      this.newExtraService = {
-        name: existingService.name,
-        description: existingService.description,
-        price: existingService.price,
-        duration: existingService.duration,
-        icon: existingService.icon,
-        hasQuantity: existingService.hasQuantity,
-        hasHours: existingService.hasHours,
-        isDeepCleaning: existingService.isDeepCleaning,
-        isSuperDeepCleaning: existingService.isSuperDeepCleaning,
-        isSameDayService: existingService.isSameDayService,
-        priceMultiplier: existingService.priceMultiplier,
-        serviceTypeId: this.selectedServiceType.id,
-        isAvailableForAll: existingService.isAvailableForAll,
-        displayOrder: this.selectedServiceType.extraServices.length + 1
-      };
-      this.showExistingExtraServices = false;
+    if (!this.selectedExistingExtraServiceId || !this.selectedServiceType) {
+      return;
     }
+    
+    // Use the API to copy the extra service (like the regular service copy)
+    this.adminService.copyExtraService({
+      sourceExtraServiceId: this.selectedExistingExtraServiceId,
+      targetServiceTypeId: this.selectedServiceType.id
+    }).subscribe({
+      next: (response) => {
+        // Add the copied service to the selected service type
+        if (this.selectedServiceType) {
+          this.selectedServiceType.extraServices.push(response);
+        }
+        
+        // Reset the form
+        this.isAddingExtraService = false;
+        this.showExistingExtraServices = false;
+        this.selectedExistingExtraServiceId = null;
+        
+        // Show success message
+        this.extraServiceMessage.success = 'Extra service copied successfully';
+        
+        // Reload data to ensure consistency
+        this.loadServiceTypes();
+        this.loadAllExtraServices();
+      },
+      error: (error) => {
+        console.error('Error copying extra service:', error);
+        this.extraServiceMessage.error = 'Failed to copy extra service. Please try again.';
+      }
+    });
   }
 
   cancelAddExtraService() {

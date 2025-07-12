@@ -1089,7 +1089,7 @@ export class BookingComponent implements OnInit, OnDestroy {
           subTotal += cost;
         }
       } else if (selected.service.serviceKey === 'bedrooms' && selected.quantity === 0) {
-        const cost = 20 * priceMultiplier;
+        const cost = 10 * priceMultiplier;
         subTotal += cost;
         if (!useExplicitHours) {
           totalDuration += 20;
@@ -1329,6 +1329,14 @@ export class BookingComponent implements OnInit, OnDestroy {
     } else if (deepCleaning) {
       return 60;
     }
+    
+    // Get the actual cleaner service cost from the selected services
+    const cleanerService = this.selectedServices.find(s => s.service.serviceRelationType === 'cleaner');
+    if (cleanerService) {
+      return cleanerService.service.cost;
+    }
+    
+    // Fallback to default if no cleaner service found
     return 40;
   }
 
@@ -1399,8 +1407,11 @@ export class BookingComponent implements OnInit, OnDestroy {
     // Map service types to icons
     const iconMap: { [key: string]: string } = {
       'Residential Cleaning': '🏠',
+      'Move in/out Cleaning': '📦',
       'Office Cleaning': '🏢',
-      'Commercial Cleaning': '🏪'
+      'Custom Cleaning': '🧹',
+      'Filthy Cleaning': '🧽',
+      'Post Construction Cleaning': '🏗️'
     };
     return iconMap[serviceType.name] || '🧹';
   }

@@ -453,7 +453,7 @@
             </label>
             
             <div *ngIf="showExistingServices" class="existing-services-select">
-              <select [(ngModel)]="selectedExistingServiceId">
+              <select [(ngModel)]="selectedExistingServiceId" (change)="onServiceSelectionChange($event)">
                 <option value="">Select a service to copy</option>
                 <option *ngFor="let service of allServices" [value]="service.id">
                   {{ service.name }} ({{ getServiceTypeNameById(service.serviceTypeId) }})
@@ -678,9 +678,9 @@
             </label>
             
             <div *ngIf="showExistingExtraServices" class="existing-services-select">
-              <select [(ngModel)]="selectedExistingExtraServiceId">
+              <select [(ngModel)]="selectedExistingExtraServiceId" (change)="onExtraServiceSelectionChange($event)">
                 <option value="">Select an extra service to copy</option>
-                <option *ngFor="let extra of allExtraServices" [value]="extra.id">
+                <option *ngFor="let extra of getAvailableExtraServicesForCopy()" [value]="extra.id">
                   {{ extra.name }} ({{ extra.isAvailableForAll ? 'Universal' : 'Service-specific' }})
                 </option>
               </select>

@@ -137,6 +137,7 @@
       .radio-option {
         display: flex;
         align-items: center;
+        cursor: pointer;
         
         input[type="radio"] {
           margin-right: 0.5rem;
@@ -148,7 +149,6 @@
         }
         
         label {
-          cursor: pointer;
           color: #333;
           white-space: nowrap;
         }

@@ -570,8 +570,8 @@ export class OrderEditComponent implements OnInit {
           totalDuration += service.timeDuration * quantity;
         }
       } else if (service.serviceKey === 'bedrooms' && quantity === 0) {
-        // Studio apartment - flat rate of $20
-        const cost = 20 * priceMultiplier;
+        // Studio apartment - flat rate of $10
+        const cost = 10 * priceMultiplier;
         subtotal += cost;
         if (!useExplicitHours) {
           totalDuration += 20; // 20 minutes for studio
@@ -1024,6 +1024,14 @@ export class OrderEditComponent implements OnInit {
     } else if (deepCleaning) {
       return 60;
     }
+    
+    // Get the actual cleaner service cost from the selected services
+    const cleanerService = this.selectedServices.find(s => s.service.serviceRelationType === 'cleaner');
+    if (cleanerService) {
+      return cleanerService.service.cost;
+    }
+    
+    // Fallback to default if no cleaner service found
     return 40;
   }
 

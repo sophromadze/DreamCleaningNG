@@ -184,7 +184,7 @@
           <span class="service-cost">
             <!-- Bedrooms -->
             <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity === 0">
-              +$20
+              +$10
             </ng-container>
             <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity !== 0">
               +${{ Math.round(selected.service.cost * selected.quantity) }}
@@ -234,7 +234,7 @@
     <div class="cleaning-type-selection">
       <label>Cleaning Type <span class="required">*</span></label>
       <select [formControl]="cleaningType" (change)="onCleaningTypeChange(cleaningType.value)" id="cleaningType">
-        <option value="normal">Normal Cleaning</option>
+        <option value="normal">Regular Cleaning</option>
         <option value="deep">Deep Cleaning</option>
         <option value="super-deep">Super Deep Cleaning</option>
       </select>
