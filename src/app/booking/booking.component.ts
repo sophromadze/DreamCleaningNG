@@ -49,6 +49,8 @@ export class BookingComponent implements OnInit, OnDestroy {
   customCleaners: FormControl = new FormControl(1, [Validators.required, Validators.min(1), Validators.max(10)]);
   customDuration: FormControl = new FormControl(90, [Validators.required, Validators.min(30), Validators.max(480)]);
 
+  // Service Type Form Control
+  serviceTypeControl: FormControl = new FormControl('', [Validators.required]);
 
   // Data
   serviceTypes: ServiceType[] = [];
@@ -121,7 +123,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   isGiftCard = false;
   
   // Constants
-  salesTaxRate = 0.088; // 8.8%
+  salesTaxRate = 0.08875; // 8.875%
   minDate = new Date();
   minTipAmount = 10; 
   minCompanyTipAmount = 10;
@@ -310,6 +312,11 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (savedData.cleaningType) formValues.cleaningType = savedData.cleaningType;
   
     this.bookingForm.patchValue(formValues);
+    
+    // Restore service type control value
+    if (savedData.selectedServiceTypeId) {
+      this.serviceTypeControl.setValue(savedData.selectedServiceTypeId);
+    }
   }  
 
   private loadInitialData() {
@@ -355,6 +362,8 @@ export class BookingComponent implements OnInit, OnDestroy {
         if (savedData?.selectedServiceTypeId) {
           const savedServiceType = this.serviceTypes.find(st => String(st.id) === String(savedData.selectedServiceTypeId));
           if (savedServiceType) {
+            // Set the service type control value first
+            this.serviceTypeControl.setValue(savedServiceType.id);
             this.selectServiceType(savedServiceType);
             
             // Restore selected services
@@ -591,11 +600,17 @@ export class BookingComponent implements OnInit, OnDestroy {
     };
   
     this.formPersistenceService.saveFormData(formData);
+    
+    // Also save the service type control value
+    if (this.selectedServiceType) {
+      this.serviceTypeControl.setValue(this.selectedServiceType.id);
+    }
   }
 
   clearAllFormData() {
     if (confirm('Are you sure you want to clear all form data?')) {
       this.formPersistenceService.clearFormData();
+      this.serviceTypeControl.setValue('');
       this.router.navigate(['/booking']).then(() => {
         window.location.reload();
       });
@@ -730,6 +745,24 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.saveFormData();
   }
 
+  onServiceTypeChange(event: any) {
+    const serviceTypeId = event.target.value;
+    if (serviceTypeId) {
+      const selectedType = this.serviceTypes.find(type => type.id === parseInt(serviceTypeId));
+      if (selectedType) {
+        this.selectServiceType(selectedType);
+      }
+    } else {
+      // Reset when no service type is selected
+      this.selectedServiceType = null;
+      this.selectedServices = [];
+      this.selectedExtraServices = [];
+      this.showPollForm = false;
+      this.showCustomPricing = false;
+      this.calculateTotal();
+      this.saveFormData();
+    }
+  }
 
   updateServiceQuantity(service: Service, quantity: number) {
     const selectedService = this.selectedServices.find(s => s.service.id === service.id);
@@ -1277,13 +1310,14 @@ export class BookingComponent implements OnInit, OnDestroy {
   getCleanerPricingText(): string {
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+    const pricePerHour = this.getCleanerPricePerHour();
     
     if (superDeepCleaning) {
-      return 'Hourly Service: $80 per hour/per cleaner <span class="cleaning-type-red">(Super Deep Cleaning)</span>';
+      return `Hourly Service: $${pricePerHour} per hour/per cleaner <span class="cleaning-type-red">(Super Deep Cleaning)</span>`;
     } else if (deepCleaning) {
-      return 'Hourly Service: $60 per hour/per cleaner <span class="cleaning-type-red">(Deep Cleaning)</span>';
+      return `Hourly Service: $${pricePerHour} per hour/per cleaner <span class="cleaning-type-red">(Deep Cleaning)</span>`;
     }
-    return 'Hourly Service: $40 per hour/per cleaner';
+    return `Hourly Service: $${pricePerHour} per hour/per cleaner`;
   }
 
   // Get cleaner cost display
@@ -1321,23 +1355,20 @@ export class BookingComponent implements OnInit, OnDestroy {
 
   // Get cleaner price per hour based on cleaning type
   getCleanerPricePerHour(): number {
+    // Get the actual cleaner service cost from the selected services
+    const cleanerService = this.selectedServices.find(s => s.service.serviceRelationType === 'cleaner');
+    const basePrice = cleanerService ? cleanerService.service.cost : 40; // fallback to 40 if no cleaner service found
+    
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
     
     if (superDeepCleaning) {
-      return 80;
+      return basePrice * 2.0; // 2.0x multiplier for super deep cleaning
     } else if (deepCleaning) {
-      return 60;
+      return basePrice * 1.5; // 1.5x multiplier for deep cleaning
     }
     
-    // Get the actual cleaner service cost from the selected services
-    const cleanerService = this.selectedServices.find(s => s.service.serviceRelationType === 'cleaner');
-    if (cleanerService) {
-      return cleanerService.service.cost;
-    }
-    
-    // Fallback to default if no cleaner service found
-    return 40;
+    return basePrice; // regular cleaning - no multiplier
   }
 
   getExtraCleanersCount(): number {
@@ -1403,25 +1434,13 @@ export class BookingComponent implements OnInit, OnDestroy {
     return selected ? selected.quantity : (service.minValue || 0);
   }
 
-  getServiceTypeIcon(serviceType: ServiceType): string {
-    // Map service types to icons
-    const iconMap: { [key: string]: string } = {
-      'Residential Cleaning': '🏠',
-      'Move in/out Cleaning': '📦',
-      'Office Cleaning': '🏢',
-      'Custom Cleaning': '🧹',
-      'Filthy Cleaning': '🧽',
-      'Post Construction Cleaning': '🏗️'
-    };
-    return iconMap[serviceType.name] || '🧹';
-  }
-
   isFormValid(): boolean {
     if (this.showPollForm) {
       return this.isPollFormValid();
     }
     
     return this.bookingForm.valid && 
+           this.serviceTypeControl.valid &&
            this.selectedServiceType !== null && 
            this.selectedSubscription !== null && 
            this.cleaningType.value !== null;
@@ -1577,6 +1596,9 @@ export class BookingComponent implements OnInit, OnDestroy {
   private scrollToFirstError() {
     // Mark all form controls as touched to trigger validation
     this.markFormGroupTouched(this.bookingForm);
+    
+    // Mark service type control as touched
+    this.serviceTypeControl.markAsTouched();
     
     // Also mark custom pricing controls if applicable
     if (this.showCustomPricing) {

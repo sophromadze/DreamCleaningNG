@@ -38,6 +38,11 @@
     &.full-width {
       grid-template-columns: 1fr;
     }
+    
+    // When no service type is selected, make form stretch full width
+    &:not(.has-summary) {
+      grid-template-columns: 1fr;
+    }
   }
   
   .booking-form {
@@ -188,51 +193,92 @@
   }
   
   // Service Type Selection
-  .service-types {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
+  .service-type-selection {
+    margin-bottom: 2rem;
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+      
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #333;
+      }
+      
+      select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        background-color: white;
+        transition: border-color 0.3s ease;
+        
+        &:focus {
+          outline: none;
+          border-color: #007bff;
+          box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+        }
+        
+        &.ng-invalid.ng-touched {
+          border-color: #dc3545;
+          box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
+        }
+      }
+    }
+    
+    .service-type-description {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-top: 1rem;
+      animation: fadeIn 0.3s ease-in-out;
+      
+      .description-content {
+        p {
+          color: #333;
+          font-size: 1rem;
+          line-height: 1.6;
+          margin: 0 0 1rem 0;
+        }
+        
+        .service-type-details {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1.5rem;
+          
+          .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            
+            .detail-label {
+              font-weight: 600;
+              color: #495057;
+              font-size: 0.9rem;
+            }
+            
+            .detail-value {
+              color: #007bff;
+              font-weight: 600;
+              font-size: 1rem;
+            }
+          }
+        }
+      }
+    }
   }
   
-  .service-type-card {
-    border: 2px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 1.5rem;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  
-    &:hover {
-      border-color: #007bff;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
     }
-  
-    &.selected {
-      border-color: #007bff;
-      background-color: #f0f8ff;
-    }
-  
-    .service-icon {
-      font-size: 3rem;
-      margin-bottom: 0.5rem;
-    }
-  
-    h3 {
-      margin: 0.5rem 0;
-      color: #333;
-    }
-  
-    p {
-      color: #666;
-      font-size: 0.9rem;
-      margin: 0.5rem 0;
-    }
-  
-    .base-price {
-      color: #007bff;
-      font-weight: 600;
-      margin-top: 0.5rem;
+    to {
+      opacity: 1;
+      transform: translateY(0);
     }
   }
   
@@ -408,6 +454,39 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 1.5rem;
+  }
+  
+  .extra-services-info {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    
+    p {
+      margin: 0 0 1rem 0;
+      color: #333;
+      line-height: 1.5;
+      
+      &:last-of-type {
+        margin-bottom: 0.5rem;
+      }
+    }
+    
+    ul {
+      margin: 0;
+      padding-left: 1.5rem;
+      
+      li {
+        color: #666;
+        line-height: 1.4;
+        margin-bottom: 0.25rem;
+      }
+    }
+    
+    strong {
+      color: #007bff;
+    }
   }
   
   .extra-service-card {

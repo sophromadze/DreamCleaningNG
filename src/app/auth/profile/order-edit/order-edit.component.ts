@@ -80,7 +80,7 @@ export class OrderEditComponent implements OnInit {
   originalGiftCardAmountUsed = 0;
   
   // Constants
-  salesTaxRate = 0.088; // 8.8%
+  salesTaxRate = 0.08875; // 8.875%
 
   calculatedMaidsCount = 1;
   originalMaidsCount = 1;

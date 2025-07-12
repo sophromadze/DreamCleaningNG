@@ -20,6 +20,7 @@ export interface UserDto {
   subscriptionId?: number;
   authProvider?: string;
   role: string;
+  profilePictureUrl?: string;
 }
 
 interface AuthResponse {
@@ -54,6 +55,7 @@ export class AuthService {
   private isInitializedSubject = new BehaviorSubject<boolean>(false);
   public isInitialized$ = this.isInitializedSubject.asObservable();
   private isSocialLogin = false;
+  private profilePictureCache = new Map<string, string>();
 
   constructor(
     private http: HttpClient,
@@ -246,6 +248,14 @@ export class AuthService {
   //     }
   //   }
   // }
+
+  getCachedProfilePicture(url: string): string {
+    if (this.profilePictureCache.has(url)) {
+      return this.profilePictureCache.get(url)!;
+    }
+    this.profilePictureCache.set(url, url);
+    return url;
+  }  
 
   // Social logout
   async socialSignOut(): Promise<void> {

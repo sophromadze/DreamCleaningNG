@@ -6,7 +6,9 @@
       {{ errorMessage }}
     </div>
 
-    <div class="booking-grid" [class.full-width]="showPollForm">
+    <div class="booking-grid" 
+         [class.full-width]="showPollForm"
+         [class.has-summary]="selectedServiceType && !showPollForm">
       <!-- Left Side - Service Selection -->
       <div class="booking-form">
         <div class="clear-form-section" *ngIf="formPersistenceService.hasSavedData()">
@@ -18,15 +20,25 @@
         <!-- Step 1: Service Type Selection - ALWAYS VISIBLE -->
         <section class="booking-section">
           <h2>Select Service Type</h2>
-          <div class="service-types">
-            <div class="service-type-card" 
-                 *ngFor="let type of serviceTypes"
-                 [class.selected]="selectedServiceType && selectedServiceType.id === type.id"
-                 (click)="selectServiceType(type)">
-              <div class="service-icon">{{ getServiceTypeIcon(type) }}</div>
-              <h3>{{ type.name }}</h3>
-              <p>{{ type.description }}</p>
-              <div class="base-price" *ngIf="type.basePrice > 0">Starting at ${{ type.basePrice }}</div>
+          <div class="service-type-selection">
+            <div class="form-group">
+              <label>Service Type <span class="required">*</span></label>
+              <select [formControl]="serviceTypeControl" (change)="onServiceTypeChange($event)" id="serviceTypeSelect">
+                <option value="" *ngIf="!selectedServiceType">Select a service type</option>
+                <option *ngFor="let type of serviceTypes" [value]="type.id">
+                  {{ type.name }}
+                </option>
+              </select>
+              <div class="error-message" *ngIf="serviceTypeControl.invalid && serviceTypeControl.touched">
+                <div *ngIf="serviceTypeControl.errors?.['required']">Service type is required</div>
+              </div>
+            </div>
+            
+            <!-- Service Type Description -->
+            <div class="service-type-description" *ngIf="selectedServiceType">
+              <div class="description-content">
+                <p>{{ selectedServiceType.description }}</p>
+              </div>
             </div>
           </div>
         </section>
@@ -229,6 +241,16 @@
   <!-- Step 3: Extra Services -->
   <section class="booking-section">
     <h2>Add Extra Services</h2>
+    
+    <div class="extra-services-info">
+      <p><strong>Deep Cleaning Includes:</strong> Inside of the Fridge, inside kitchen cabinets and inside the oven. All other services you must select by yourself.</p>
+      <p><strong>We will not be able to do the following:</strong></p>
+      <ul>
+        <li>Moving Heavy Furniture and Appliances</li>
+        <li>Exterior Window Cleaning</li>
+        <li>Pet Waste</li>
+      </ul>
+    </div>
     
     <!-- Cleaning Type Selection -->
     <div class="cleaning-type-selection">
@@ -869,7 +891,7 @@
       </div>
 
       <div class="price-item">
-        <span>Sales Tax (8.8%):</span>
+        <span>Sales Tax (8.875%):</span>
         <span>${{ calculation.tax.toFixed(2) }}</span>
       </div>
       

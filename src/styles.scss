@@ -24,3 +24,21 @@ html {
     margin: 0 auto;
     padding: 0 20px;
 }
+
+/* Google Sign-in Button Styling */
+.google-button-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+}
+
+/* Google button content alignment */
+asl-google-signin-button div[role="button"] > div > div > div {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+}
