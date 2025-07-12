@@ -1646,6 +1646,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     return options;
   }
 
+
+
   getMinDateString(): string {
     const today = new Date();
     const year = today.getFullYear();
