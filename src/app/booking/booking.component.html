@@ -202,34 +202,7 @@
               <ng-container *ngIf="!(selected.service.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
             </option>
           </select>
-          <span class="service-duration" *ngIf="selected.service.timeDuration">
-            <i class="fas fa-clock duration-icon"></i>
-            {{ formatServiceDuration(getServiceDuration(selected.service)) }}
-          </span>
-          <span class="service-cost">
-            <!-- Bedrooms -->
-            <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity === 0">
-              +${{ Math.round(getServicePrice(selected.service, 0)) }}
-            </ng-container>
-            <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity !== 0">
-              +${{ Math.round(getServicePrice(selected.service, selected.quantity)) }}
-            </ng-container>
-            
-            <!-- Bathrooms -->
-            <ng-container *ngIf="selected.service.serviceKey === 'bathrooms'">
-              +${{ Math.round(getServicePrice(selected.service, selected.quantity)) }}
-            </ng-container>
-            
-            <!-- Cleaners (with serviceRelationType) -->
-            <ng-container *ngIf="selected.service.serviceRelationType === 'cleaner'">
-              {{ getCleanerCostDisplay(selected.quantity) }}
-            </ng-container>
-            
-            <!-- Hours (with serviceRelationType) -->
-            <ng-container *ngIf="selected.service.serviceRelationType === 'hours'">
-              {{ getHoursCostDisplay(selected.quantity) }}
-            </ng-container>
-          </span>
+          <!-- Removed duration and cost display -->
         </div>
 
         <!-- Slider Input for Square Feet -->
@@ -245,7 +218,7 @@
                   [step]="selected.service.stepValue"
                   (input)="updateServiceQuantity(selected.service, +selected.quantity)">
                   <span class="slider-quantity">{{ selected.quantity }} sq ft</span>
-              <span class="service-cost">+${{ Math.round(getServicePrice(selected.service, selected.quantity)) }}</span>
+              <!-- Removed cost display -->
           </div>                  
         </div>
       </div>
@@ -283,51 +256,47 @@
       <div class="extra-service-card"
             *ngFor="let extra of getFilteredExtraServices()"
             [class.selected]="isExtraServiceSelected(extra)"
+            [class.mobile-tooltip-visible]="isMobileTooltipVisible(extra.id)"
             (click)="toggleExtraService(extra)"
             [attr.data-tooltip]="getExtraServiceTooltip(extra)">
         <div class="extra-header">
-          <div class="extra-icon">
-            <i [class]="getExtraServiceIcon(extra)"></i>
+          <div class="extra-top-controls">
+            <div class="extra-icon">
+              <i [class]="getExtraServiceIcon(extra)"></i>
+            </div>
+            <div class="checkbox">
+              <input type="checkbox" [checked]="isExtraServiceSelected(extra)" style="pointer-events: none; cursor: default;">
+            </div>
           </div>
           <div class="extra-info">
             <h4>{{ extra.name }}</h4>
             <div class="extra-details">
-              <div class="extra-price">
-                <ng-container *ngIf="extra.name === 'Extra Cleaners'">
-                  ${{ getCleanerPricePerHour() }}/hour per cleaner
-                </ng-container>
-                <ng-container *ngIf="extra.name !== 'Extra Cleaners'">
-                  ${{ getExtraServicePrice(extra).toFixed(2) }}
-                </ng-container>
-              </div>
-              <div class="extra-duration" *ngIf="extra.duration">
-                <i class="fas fa-clock duration-icon"></i>
-                {{ formatServiceDuration(getExtraServiceDuration(extra)) }}
-              </div>
+              <!-- Removed price and duration display -->
             </div>
-          </div>
-          <div class="checkbox">
-            <input type="checkbox" [checked]="isExtraServiceSelected(extra)" style="pointer-events: none; cursor: default;">
           </div>
         </div>
         
         <!-- Quantity Control -->
         <div class="extra-controls" *ngIf="isExtraServiceSelected(extra) && (extra.hasQuantity || extra.hasHours)">
           <div class="quantity-control" *ngIf="extra.hasQuantity">
-            <label>Quantity:</label>
-            <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
-                    [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
-            <span>{{ getExtraServiceQuantity(extra) }}</span>
-            <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1); $event.stopPropagation()">+</button>
+            <label>Qty:</label>
+            <div class="control-buttons">
+              <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
+                      [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
+              <span>{{ getExtraServiceQuantity(extra) }}</span>
+              <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1); $event.stopPropagation()">+</button>
+            </div>
           </div>
           
           <!-- Hours Control -->
           <div class="hours-control" *ngIf="extra.hasHours">
             <label>Hours:</label>
-            <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) - 0.5); $event.stopPropagation()" 
-                    [disabled]="getExtraServiceHours(extra) <= 0.5">-</button>
-            <span>{{ getExtraServiceHours(extra) }}</span>
-            <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) + 0.5); $event.stopPropagation()">+</button>
+            <div class="control-buttons">
+              <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) - 0.5); $event.stopPropagation()" 
+                      [disabled]="getExtraServiceHours(extra) <= 0.5">-</button>
+              <span>{{ getExtraServiceHours(extra) }}</span>
+              <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) + 0.5); $event.stopPropagation()">+</button>
+            </div>
           </div>
         </div>
       </div>
@@ -820,10 +789,10 @@
       <!-- Right Side - Booking Summary (Fixed) -->
 <!-- Show summary for regular and custom pricing, but NOT for polls -->
 <div class="booking-summary" *ngIf="selectedServiceType && !showPollForm">
-  <div class="summary-card">
+  <div class="summary-card" [class.collapsed]="isSummaryCollapsed">
     <h3>Booking Summary</h3>
     
-    <div class="summary-details">
+    <div class="summary-details" [class.hidden]="isSummaryCollapsed">
       <div class="summary-item">
         <span>Service Type:</span>
         <span>{{ selectedServiceType.name }}</span>
@@ -867,7 +836,7 @@
       </div>
     </div>
 
-    <div class="price-breakdown">
+    <div class="price-breakdown" [class.hidden]="isSummaryCollapsed">
       <div class="price-item">
         <span>Subtotal:</span>
         <span>${{ calculation.subTotal.toFixed(2) }}</span>
@@ -917,24 +886,37 @@
         <span>Tips for Company Development:</span>
         <span>${{ (companyDevelopmentTips.value || 0).toFixed(2) }}</span>
       </div>
-      
+    </div>
+    
+    <!-- Fixed Total Section with Toggle -->
+    <div class="total-section">
       <div class="total">
         <span>Total:</span>
         <span>${{ calculation.total.toFixed(2) }}</span>
       </div>
+      <button class="summary-toggle" (click)="toggleBookingSummary()" type="button">
+        <!-- Chevron down when collapsed -->
+        <svg class="chevron-icon" *ngIf="isSummaryCollapsed" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+        </svg>
+        <!-- Red X when expanded -->
+        <svg class="close-icon" *ngIf="!isSummaryCollapsed" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+        </svg>
+      </button>
+    </div>
 
-      <!-- Show next order discount for subscription -->
-      <div class="next-order-info" *ngIf="selectedSubscription && (selectedSubscription.subscriptionDays || 0) > 0 && !hasActiveSubscription">
-        <div class="divider"></div>
-        <div class="next-order-title">Next Order with {{ selectedSubscription.name }} Subscription:</div>
-        <div class="price-item">
-          <span>Discount ({{ selectedSubscription.discountPercentage }}%):</span>
-          <span class="discount">-${{ nextOrderDiscount.toFixed(2) }}</span>
-        </div>
-        <div class="price-item next-total">
-          <span>Next Order Total:</span>
-          <span>${{ nextOrderTotal.toFixed(2) }}</span>
-        </div>
+    <!-- Show next order discount for subscription -->
+    <div class="next-order-info" *ngIf="selectedSubscription && (selectedSubscription.subscriptionDays || 0) > 0 && !hasActiveSubscription" [class.hidden]="isSummaryCollapsed">
+      <div class="divider"></div>
+      <div class="next-order-title">Next Order with {{ selectedSubscription.name }} Subscription:</div>
+      <div class="price-item">
+        <span>Discount ({{ selectedSubscription.discountPercentage }}%):</span>
+        <span class="discount">-${{ nextOrderDiscount.toFixed(2) }}</span>
+      </div>
+      <div class="price-item next-total">
+        <span>Next Order Total:</span>
+        <span>${{ nextOrderTotal.toFixed(2) }}</span>
       </div>
     </div>
   </div>

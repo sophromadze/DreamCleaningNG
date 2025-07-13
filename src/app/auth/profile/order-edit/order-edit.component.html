@@ -40,23 +40,7 @@
                           </ng-container>
                         </ng-container>
                       </span>
-                      <span class="price">
-                        <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0">
-                          +${{ getServicePrice(service, 0) }}
-                        </ng-container>
-                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0)">
-                          <ng-container *ngIf="service?.serviceRelationType === 'cleaner'">
-                            +${{ service.cost * getOriginalServiceQuantity(service) * getOriginalServiceHours(service) }}
-                          </ng-container>
-                          <ng-container *ngIf="service?.serviceRelationType !== 'cleaner'">
-                            +${{ getServicePrice(service, getOriginalServiceQuantity(service)) }}
-                          </ng-container>
-                        </ng-container>
-                      </span>
-                      <span class="service-duration" *ngIf="service.timeDuration">
-                        <i class="fas fa-clock duration-icon"></i>
-                        {{ formatServiceDuration(getServiceDuration(service)) }}
-                      </span>
+                      <!-- Removed price and duration display -->
                     </div>
                   </div>
                   <div class="quantity-section">
@@ -76,23 +60,7 @@
                           </ng-container>
                         </option>
                       </select>
-                      <span class="price">
-                        <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0">
-                          +${{ getServicePrice(service, 0) }}
-                        </ng-container>
-                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0)">
-                          <ng-container *ngIf="service?.serviceRelationType === 'cleaner'">
-                            +${{ service.cost * getServiceQuantity(service) * getServiceHours(service) }}
-                          </ng-container>
-                          <ng-container *ngIf="service?.serviceRelationType !== 'cleaner'">
-                            +${{ getServicePrice(service, getServiceQuantity(service)) }}
-                          </ng-container>
-                        </ng-container>
-                      </span>
-                      <span class="service-duration" *ngIf="service.timeDuration">
-                        <i class="fas fa-clock duration-icon"></i>
-                        {{ formatServiceDuration(getServiceDuration(service)) }}
-                      </span>
+                      <!-- Removed price and duration display -->
                     </div>
                   </div>
                 </div>
@@ -138,49 +106,45 @@
             <div class="extra-service-card" 
                  *ngFor="let extra of getFilteredExtraServices()"
                  [class.selected]="isExtraServiceSelected(extra)"
+                 [class.mobile-tooltip-visible]="isMobileTooltipVisible(extra.id)"
                  (click)="toggleExtraService(extra)"
                  [attr.data-tooltip]="getExtraServiceTooltip(extra)">
               <div class="extra-header">
-                <div class="extra-icon">
-                  <i [class]="getExtraServiceIcon(extra)"></i>
+                <div class="extra-top-controls">
+                  <div class="extra-icon">
+                    <i [class]="getExtraServiceIcon(extra)"></i>
+                  </div>
+                  <div class="checkbox">
+                    <input type="checkbox" [checked]="isExtraServiceSelected(extra)" style="pointer-events: none; cursor: default;">
+                  </div>
                 </div>
                 <div class="extra-info">
                   <h4>{{ extra.name }}</h4>
                   <div class="extra-details">
-                    <div class="extra-price">
-                      <ng-container *ngIf="extra.name === 'Extra Cleaners'">
-                        ${{ getCleanerPricePerHour() }}/hour per cleaner
-                      </ng-container>
-                      <ng-container *ngIf="extra.name !== 'Extra Cleaners'">
-                        ${{ getExtraServicePrice(extra).toFixed(2) }}
-                      </ng-container>
-                    </div>
-                    <div class="extra-duration" *ngIf="extra.duration">
-                      <i class="fas fa-clock duration-icon"></i>
-                      {{ formatServiceDuration(getExtraServiceDuration(extra)) }}
-                    </div>
+                    <!-- Removed price and duration display -->
                   </div>
-                </div>
-                <div class="checkbox">
-                  <input type="checkbox" [checked]="isExtraServiceSelected(extra)" style="pointer-events: none; cursor: default;">
                 </div>
               </div>
               
               <div class="extra-controls" *ngIf="isExtraServiceSelected(extra) && (extra.hasQuantity || extra.hasHours)">
                 <div class="quantity-control" *ngIf="extra.hasQuantity">
                   <label>Quantity:</label>
-                  <button type="button" (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
-                          [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
-                  <span>{{ getExtraServiceQuantity(extra) }}</span>
-                  <button type="button" (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1); $event.stopPropagation()">+</button>
+                  <div class="control-buttons">
+                    <button type="button" (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
+                            [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
+                    <span>{{ getExtraServiceQuantity(extra) }}</span>
+                    <button type="button" (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1); $event.stopPropagation()">+</button>
+                  </div>
                 </div>
                 
                 <div class="hours-control" *ngIf="extra.hasHours">
                   <label>Hours:</label>
-                  <button type="button" (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) - 0.5); $event.stopPropagation()" 
-                          [disabled]="getExtraServiceHours(extra) <= 0.5">-</button>
-                  <span>{{ getExtraServiceHours(extra) }}</span>
-                  <button type="button" (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) + 0.5); $event.stopPropagation()">+</button>
+                  <div class="control-buttons">
+                    <button type="button" (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) - 0.5); $event.stopPropagation()" 
+                            [disabled]="getExtraServiceHours(extra) <= 0.5">-</button>
+                    <span>{{ getExtraServiceHours(extra) }}</span>
+                    <button type="button" (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) + 0.5); $event.stopPropagation()">+</button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -353,89 +317,107 @@
         </div>
       </form>
 
-      <!-- Price Calculator Card -->
-      <div class="price-calculator">
-        <div class="calculator-header">
+      <!-- Order Summary -->
+      <div class="order-summary">
+        <div class="summary-card" [class.collapsed]="isSummaryCollapsed">
           <h3>Order Summary</h3>
-        </div>
-        
-        <div class="calculator-content">
-          <div class="price-row">
-            <span>Date & Time:</span>
-            <span class="amount">{{ orderForm.get('serviceDate')?.value | date:'MMM d' }} at {{ formatTime(orderForm.get('serviceTime')?.value) }}</span>
+          
+          <div class="summary-details" [class.hidden]="isSummaryCollapsed">
+            <div class="summary-item">
+              <span>Date & Time:</span>
+              <span>{{ orderForm.get('serviceDate')?.value | date:'MMM d' }} at {{ formatTime(orderForm.get('serviceTime')?.value) }}</span>
+            </div>
+
+            <div class="summary-item">
+              <span>Number of Cleaners:</span>
+              <span>{{ calculatedMaidsCount }} {{ calculatedMaidsCount > 1 ? 'Maids' : 'Maid' }}</span>
+            </div>
+            
+            <div class="summary-item">
+              <span>Total Duration:</span>
+              <span>{{ formatDuration(totalDurationDisplay) }}</span>
+            </div>
           </div>
 
-          <div class="price-row">
-            <span>Number of Cleaners:</span>
-            <span class="amount">{{ calculatedMaidsCount }} {{ calculatedMaidsCount > 1 ? 'Maids' : 'Maid' }}</span>
-          </div>
-          
-          <div class="price-row">
-            <span>Total Duration:</span>
-            <span class="amount">{{ formatDuration(totalDurationDisplay) }}</span>
-          </div>
-          
-          <div class="price-row">
-            <span>Subtotal:</span>
-            <span class="amount">${{ (newSubTotal + originalDiscountAmount + originalSubscriptionDiscountAmount).toFixed(2) }}</span>
-          </div>
-          
-          <div class="price-row" *ngIf="originalSubscriptionDiscountAmount > 0">
-            <span>Subscription Discount:</span>
-            <span class="amount discount">-${{ originalSubscriptionDiscountAmount.toFixed(2) }}</span>
-          </div>
-          
-          <div class="price-row" *ngIf="originalDiscountAmount > 0">
-            <span>Discount:</span>
-            <span class="amount discount">-${{ originalDiscountAmount.toFixed(2) }}</span>
+          <div class="price-breakdown" [class.hidden]="isSummaryCollapsed">
+            <div class="price-item">
+              <span>Subtotal:</span>
+              <span>${{ (newSubTotal + originalDiscountAmount + originalSubscriptionDiscountAmount).toFixed(2) }}</span>
+            </div>
+            
+            <div class="price-item" *ngIf="originalSubscriptionDiscountAmount > 0">
+              <span>Subscription Discount:</span>
+              <span class="discount">-${{ originalSubscriptionDiscountAmount.toFixed(2) }}</span>
+            </div>
+            
+            <div class="price-item" *ngIf="originalDiscountAmount > 0">
+              <span>Discount:</span>
+              <span class="discount">-${{ originalDiscountAmount.toFixed(2) }}</span>
+            </div>
+
+            <!-- Gift Card Discount -->
+            <div class="price-item gift-card-discount" *ngIf="giftCardApplied && originalGiftCardCode">
+              <span>Gift Card:</span>
+              <span class="discount">-${{ giftCardAmountToUse.toFixed(2) }}</span>
+            </div>
+
+            <!-- Gift Card Remaining Balance -->
+            <div class="price-item gift-card-remaining" *ngIf="giftCardApplied && (giftCardBalance - giftCardAmountToUse) > 0">
+              <span>Remaining balance:</span>
+              <span>${{ (giftCardBalance - giftCardAmountToUse).toFixed(2) }}</span>
+            </div>
+            
+            <div class="price-item">
+              <span>Tax (8.875%):</span>
+              <span>${{ newTax.toFixed(2) }}</span>
+            </div>
+            
+            <div class="price-item" *ngIf="tips.value > 0">
+              <span>Tips for Cleaners:</span>
+              <span>${{ tips.value.toFixed(2) }}</span>
+            </div>
+            
+            <div class="price-item" *ngIf="companyDevelopmentTips.value > 0">
+              <span>Tips for Company Development:</span>
+              <span>${{ companyDevelopmentTips.value.toFixed(2) }}</span>
+            </div>
           </div>
 
-          <!-- Gift Card Discount -->
-          <div class="price-row gift-card-discount" *ngIf="giftCardApplied && originalGiftCardCode">
-            <span>Gift Card:</span>
-            <span class="amount discount">-${{ giftCardAmountToUse.toFixed(2) }}</span>
-          </div>
+          <!-- Additional info when expanded -->
+          <div class="additional-info" *ngIf="!isSummaryCollapsed">
+            <div class="price-item original-total">
+              <span>Original Total:</span>
+              <span>${{ originalTotal.toFixed(2) }}</span>
+            </div>
+            
+            <div class="price-item" *ngIf="additionalAmount !== 0" style="font-weight: bold;">
+              <span>{{ additionalAmount > 0 ? 'Additional Payment:' : 'Reduction:' }}</span>
+              <span [class.positive]="additionalAmount > 0" [class.negative]="additionalAmount < 0">
+                {{ additionalAmount > 0 ? '+' : '' }}${{ (additionalAmount > 0 ? additionalAmount : -additionalAmount).toFixed(2) }}
+              </span>
+            </div>
 
-          <!-- Gift Card Remaining Balance -->
-          <div class="price-row gift-card-remaining" *ngIf="giftCardApplied && (giftCardBalance - giftCardAmountToUse) > 0">
-            <span>Remaining balance:</span>
-            <span class="amount">${{ (giftCardBalance - giftCardAmountToUse).toFixed(2) }}</span>
+            <div class="price-note" *ngIf="additionalAmount < 0">
+              <p>⚠️ Refunds are not available for order reductions. The new total cannot be less than the original amount paid.</p>
+            </div>
           </div>
           
-          <div class="price-row">
-            <span>Tax (8.875%):</span>
-            <span class="amount">${{ newTax.toFixed(2) }}</span>
-          </div>
-          
-          <div class="price-row" *ngIf="tips.value > 0">
-            <span>Tips for Cleaners:</span>
-            <span class="amount">${{ tips.value.toFixed(2) }}</span>
-          </div>
-          
-          <div class="price-row" *ngIf="companyDevelopmentTips.value > 0">
-            <span>Tips for Company Development:</span>
-            <span class="amount">${{ companyDevelopmentTips.value.toFixed(2) }}</span>
-          </div>
-          
-          <div class="price-row total">
-            <span>New Total:</span>
-            <span class="amount positive">${{ newTotal.toFixed(2) }}</span>
-          </div>
-          
-          <div class="price-row original-total">
-            <span>Original Total:</span>
-            <span class="amount">${{ originalTotal.toFixed(2) }}</span>
-          </div>
-          
-          <div class="price-row" *ngIf="additionalAmount !== 0" style="font-weight: bold;">
-            <span>{{ additionalAmount > 0 ? 'Additional Payment:' : 'Reduction:' }}</span>
-            <span class="amount" [class.positive]="additionalAmount > 0" [class.negative]="additionalAmount < 0">
-              {{ additionalAmount > 0 ? '+' : '' }}${{ (additionalAmount > 0 ? additionalAmount : -additionalAmount).toFixed(2) }}
-            </span>
-          </div>
-
-          <div class="price-note" *ngIf="additionalAmount < 0">
-            <p>⚠️ Refunds are not available for order reductions. The new total cannot be less than the original amount paid.</p>
+          <!-- Fixed Total Section with Toggle - Now at the bottom -->
+          <div class="total-section">
+            <div class="total">
+              <span>New Total:</span>
+              <span>${{ newTotal.toFixed(2) }}</span>
+            </div>
+            <button class="summary-toggle" (click)="toggleOrderSummary()" type="button">
+              <!-- Chevron down when collapsed -->
+              <svg class="chevron-icon" *ngIf="isSummaryCollapsed" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+              </svg>
+              <!-- Red X when expanded -->
+              <svg class="close-icon" *ngIf="!isSummaryCollapsed" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>

@@ -81,6 +81,14 @@ export class OrderEditComponent implements OnInit {
   originalGiftCardCode: string | null = null;
   originalGiftCardAmountUsed = 0;
   
+  // Mobile tooltip management
+  mobileTooltipTimeouts: { [key: number]: any } = {};
+  mobileTooltipStates: { [key: number]: boolean } = {};
+  isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  
+  // Order summary collapse state
+  isSummaryCollapsed = false;
+  
   // Constants
   salesTaxRate = 0.08875; // 8.875%
 
@@ -126,6 +134,14 @@ export class OrderEditComponent implements OnInit {
     const orderId = this.route.snapshot.params['id'];
     this.loadLocationData();
     this.loadOrder(orderId);
+    
+    // Auto-collapse summary on mobile devices (≤1200px)
+    this.updateSummaryCollapseState();
+    
+    // Listen to window resize events
+    window.addEventListener('resize', () => {
+      this.updateSummaryCollapseState();
+    });
     
     // Listen to tips changes
     this.orderForm.get('tips')?.valueChanges.subscribe(() => {
@@ -360,11 +376,17 @@ export class OrderEditComponent implements OnInit {
       // Remove if already selected
       this.selectedExtraServices.splice(index, 1);
       
+      // Clear mobile tooltip for this service immediately
+      this.clearMobileTooltip(extraService.id);
+      
       if (extraService.isSameDayService) {
         this.isSameDaySelected = false;
         this.updateDateRestrictions();
       }
     } else {
+      // Clear all existing tooltips first
+      this.clearAllMobileTooltips();
+      
       // If selecting a cleaning type, remove other cleaning types
       if (extraService.isDeepCleaning || extraService.isSuperDeepCleaning) {
         // Remove any existing deep cleaning or super deep cleaning
@@ -380,6 +402,11 @@ export class OrderEditComponent implements OnInit {
         hours: extraService.hasHours ? 0.5 : 0
       });
       
+      // Show mobile tooltip for this service after a brief delay to ensure state is set
+      setTimeout(() => {
+        this.showMobileTooltip(extraService.id);
+      }, 10);
+      
       if (extraService.isSameDayService) {
         this.isSameDaySelected = true;
         this.updateDateRestrictions();
@@ -387,6 +414,58 @@ export class OrderEditComponent implements OnInit {
     }
     
     this.calculateNewTotal();
+  }
+
+  // Mobile tooltip management methods
+  showMobileTooltip(extraServiceId: number) {
+    // Only show tooltip on mobile devices
+    if (!this.isCurrentlyMobile()) return;
+    
+    // Clear any existing timeout for this service
+    this.clearMobileTooltip(extraServiceId);
+    
+    // Set tooltip state to visible
+    this.mobileTooltipStates[extraServiceId] = true;
+    
+    // Set timeout to hide tooltip after 5 seconds
+    this.mobileTooltipTimeouts[extraServiceId] = setTimeout(() => {
+      this.clearMobileTooltip(extraServiceId);
+    }, 5000);
+  }
+
+  clearMobileTooltip(extraServiceId: number) {
+    // Clear the timeout
+    if (this.mobileTooltipTimeouts[extraServiceId]) {
+      clearTimeout(this.mobileTooltipTimeouts[extraServiceId]);
+      delete this.mobileTooltipTimeouts[extraServiceId];
+    }
+    
+    // Set tooltip state to hidden
+    this.mobileTooltipStates[extraServiceId] = false;
+  }
+
+  // Clear all mobile tooltips
+  clearAllMobileTooltips() {
+    // Clear all timeouts
+    Object.keys(this.mobileTooltipTimeouts).forEach(key => {
+      const id = parseInt(key);
+      if (this.mobileTooltipTimeouts[id]) {
+        clearTimeout(this.mobileTooltipTimeouts[id]);
+      }
+    });
+    
+    // Reset all tooltip states
+    this.mobileTooltipTimeouts = {};
+    this.mobileTooltipStates = {};
+  }
+
+  isMobileTooltipVisible(extraServiceId: number): boolean {
+    return this.mobileTooltipStates[extraServiceId] || false;
+  }
+
+  // Check if currently on mobile
+  isCurrentlyMobile(): boolean {
+    return window.innerWidth <= 768;
   }
 
   private updateDateRestrictions() {
@@ -529,10 +608,27 @@ export class OrderEditComponent implements OnInit {
     if (!this.serviceType || !this.serviceType.extraServices) {
       return [];
     }
-    // Filter out same day service and deep cleaning services in order edit
-    return this.serviceType.extraServices.filter(extra => 
-      !extra.isSameDayService && !extra.isDeepCleaning && !extra.isSuperDeepCleaning
-    );
+    
+    // Check if same day service was originally selected in the order
+    const wasSameDayServiceSelected = this.order?.extraServices.some(orderExtra => {
+      const extraService = this.serviceType!.extraServices.find(es => es.id === orderExtra.extraServiceId);
+      return extraService?.isSameDayService;
+    }) || false;
+    
+    // Filter out deep cleaning and super deep cleaning services
+    // Also filter out same day service if it was not originally selected
+    return this.serviceType.extraServices.filter(extra => {
+      if (extra.isDeepCleaning || extra.isSuperDeepCleaning) {
+        return false;
+      }
+      
+      // Hide same day service if it was not originally selected
+      if (extra.isSameDayService && !wasSameDayServiceSelected) {
+        return false;
+      }
+      
+      return true;
+    });
   }
 
   getOriginalServiceHours(service: Service): number {
@@ -1163,5 +1259,28 @@ export class OrderEditComponent implements OnInit {
 
   onTimeChange(time: string) {
     this.orderForm.patchValue({ serviceTime: time });
+  }
+
+  toggleOrderSummary() {
+    this.isSummaryCollapsed = !this.isSummaryCollapsed;
+    
+    // Scroll to the order summary
+    setTimeout(() => {
+      const summaryElement = document.querySelector('.order-summary');
+      if (summaryElement) {
+        summaryElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }, 100);
+  }
+
+  private updateSummaryCollapseState() {
+    if (window.innerWidth <= 1200) {
+      this.isSummaryCollapsed = true;
+    } else {
+      this.isSummaryCollapsed = false;
+    }
   }
 }

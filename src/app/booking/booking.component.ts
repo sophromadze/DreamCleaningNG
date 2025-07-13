@@ -107,7 +107,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   acceptedFormats = 'image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif';
   isUploadingPhoto = false;
   photoUploadError = '';
-  isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
   
   // Subscription-related properties
   userSubscription: any = null;
@@ -122,6 +122,13 @@ export class BookingComponent implements OnInit, OnDestroy {
   giftCardBalance = 0;
   giftCardAmountToUse = 0;
   isGiftCard = false;
+  
+  // Mobile tooltip management
+  mobileTooltipTimeouts: { [key: number]: any } = {};
+  mobileTooltipStates: { [key: number]: boolean } = {};
+  
+  // Booking summary collapse state
+  isSummaryCollapsed = true;
   
   // Constants
   salesTaxRate = 0.08875; // 8.875%
@@ -736,6 +743,7 @@ export class BookingComponent implements OnInit, OnDestroy {
         
         sortedServices.forEach(service => {
           if (service.isActive !== false) {
+            // Use minValue as default for all services
             const defaultQuantity = service.minValue ?? 0;
             this.selectedServices.push({
               service: service,
@@ -804,6 +812,9 @@ export class BookingComponent implements OnInit, OnDestroy {
       // Remove if already selected
       this.selectedExtraServices.splice(index, 1);
       
+      // Clear mobile tooltip for this service immediately
+      this.clearMobileTooltip(extraService.id);
+      
       if (extraService.isSameDayService) {
         this.isSameDaySelected = false;
         // Only set date to tomorrow if this is a manual uncheck (not from date selection)
@@ -819,6 +830,9 @@ export class BookingComponent implements OnInit, OnDestroy {
         }
       }
     } else {
+      // Clear all existing tooltips first
+      this.clearAllMobileTooltips();
+      
       // If selecting a cleaning type, remove other cleaning types
       if (extraService.isDeepCleaning || extraService.isSuperDeepCleaning) {
         // Remove any existing deep cleaning or super deep cleaning
@@ -834,6 +848,9 @@ export class BookingComponent implements OnInit, OnDestroy {
         hours: extraService.hasHours ? 0.5 : 0
       });
       
+      // Show mobile tooltip for this service
+      this.showMobileTooltip(extraService.id);
+      
       if (extraService.isSameDayService) {
         this.isSameDaySelected = true;
         this.updateDateRestrictions();
@@ -842,6 +859,58 @@ export class BookingComponent implements OnInit, OnDestroy {
     
     this.calculateTotal();
     this.saveFormData();
+  }
+
+  // Mobile tooltip management methods
+  showMobileTooltip(extraServiceId: number) {
+    // Only show tooltip on mobile devices
+    if (!this.isCurrentlyMobile()) return;
+    
+    // Clear any existing timeout for this service
+    this.clearMobileTooltip(extraServiceId);
+    
+    // Set tooltip state to visible
+    this.mobileTooltipStates[extraServiceId] = true;
+    
+    // Set timeout to hide tooltip after 5 seconds
+    this.mobileTooltipTimeouts[extraServiceId] = setTimeout(() => {
+      this.clearMobileTooltip(extraServiceId);
+    }, 5000);
+  }
+
+  clearMobileTooltip(extraServiceId: number) {
+    // Clear the timeout
+    if (this.mobileTooltipTimeouts[extraServiceId]) {
+      clearTimeout(this.mobileTooltipTimeouts[extraServiceId]);
+      delete this.mobileTooltipTimeouts[extraServiceId];
+    }
+    
+    // Set tooltip state to hidden
+    this.mobileTooltipStates[extraServiceId] = false;
+  }
+
+  // Clear all mobile tooltips
+  clearAllMobileTooltips() {
+    // Clear all timeouts
+    Object.keys(this.mobileTooltipTimeouts).forEach(key => {
+      const id = parseInt(key);
+      if (this.mobileTooltipTimeouts[id]) {
+        clearTimeout(this.mobileTooltipTimeouts[id]);
+      }
+    });
+    
+    // Reset all tooltip states
+    this.mobileTooltipTimeouts = {};
+    this.mobileTooltipStates = {};
+  }
+
+  isMobileTooltipVisible(extraServiceId: number): boolean {
+    return this.mobileTooltipStates[extraServiceId] || false;
+  }
+
+  // Check if currently on mobile
+  isCurrentlyMobile(): boolean {
+    return window.innerWidth <= 768;
   }
 
   updateExtraServiceQuantity(extraService: ExtraService, quantity: number) {
@@ -2389,5 +2458,20 @@ export class BookingComponent implements OnInit, OnDestroy {
     
     // Default icon for unknown services
     return 'fas fa-plus';
+  }
+
+  toggleBookingSummary() {
+    this.isSummaryCollapsed = !this.isSummaryCollapsed;
+    
+    // Scroll to the booking summary
+    setTimeout(() => {
+      const summaryElement = document.querySelector('.booking-summary');
+      if (summaryElement) {
+        summaryElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }, 100);
   }
 }
