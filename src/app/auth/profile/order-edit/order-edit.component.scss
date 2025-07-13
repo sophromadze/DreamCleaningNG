@@ -152,14 +152,13 @@
   }
   
   .section {
-    margin-bottom: 2.5rem;
+    margin-bottom: 1rem;
     
     h2 {
       margin: 0 0 1rem 0;
-      color: #333;
+      color: #007bff;
       font-size: 1.5rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid #e0e0e0;
+      text-align: center;
     }
   
     .service-info {
@@ -204,39 +203,125 @@
     }
   }
   
+  .extra-services-info {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    
+    p {
+      margin: 0 0 1rem 0;
+      color: #333;
+      line-height: 1.5;
+      
+      &:last-of-type {
+        margin-bottom: 0.5rem;
+      }
+    }
+    
+    ul {
+      margin: 0;
+      padding-left: 1.5rem;
+      
+      li {
+        color: #666;
+        line-height: 1.4;
+        margin-bottom: 0.25rem;
+      }
+    }
+    
+    strong {
+      color: #007bff;
+    }
+  }
+  
   .extra-services {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 2fr));
     gap: 1rem;
   }
   
   .extra-service-card {
-    border: 2px solid #e0e0e0;
+    border: 1px solid #e9ecef;
     border-radius: 8px;
     padding: 1rem;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
+    background: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
   
     &:hover {
       border-color: #007bff;
+      box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
     }
   
     &.selected {
       border-color: #007bff;
-      background-color: #f0f8ff;
+      background-color: #f8f9ff;
+      box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+    }
+  
+    // Custom tooltip styling
+    &[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      line-height: 1.4;
+      white-space: pre-line;
+      z-index: 1000;
+      max-width: 300px;
+      width: max-content;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      margin-bottom: 8px;
+    }
+    
+    &[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      margin-bottom: 3px;
     }
   
     .extra-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
+      gap: 1rem;
+
+      .extra-icon {
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #007bff;
+        font-size: 1rem;
+        flex-shrink: 0;
+      }
   
       .extra-info {
         flex: 1;
   
         h4 {
-          margin: 0 0 0.5rem 0;
+          margin: 0 0 0.5rem;
           color: #333;
+          font-size: 1rem;
+          font-weight: 600;
+          text-align: center;
         }
   
         p {
@@ -245,17 +330,55 @@
           margin: 0 0 0.5rem 0;
         }
   
-        .extra-price {
-          color: #007bff;
-          font-weight: 600;
+        .extra-details {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 1rem;
+          flex-wrap: wrap;
+  
+          .extra-price {
+            color: #28a745;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            height: 32px;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+  
+          .extra-duration {
+            color: #6c757d;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            height: 32px;
+            min-width: 80px;
+            justify-content: center;
+  
+            .duration-icon {
+              font-size: 0.85rem;
+              color: #007bff;
+            }
+          }
         }
       }
   
       .checkbox {
         input[type="checkbox"] {
-          width: 20px;
-          height: 20px;
+          width: 18px;
+          height: 18px;
           cursor: pointer;
+          accent-color: #007bff;
         }
       }
     }
@@ -263,31 +386,38 @@
     .extra-controls {
       margin-top: 1rem;
       padding-top: 1rem;
-      border-top: 1px solid #e0e0e0;
+      border-top: 1px solid #e9ecef;
   
       .quantity-control,
       .hours-control {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 1rem;
   
         label {
           font-weight: 600;
-          color: #666;
+          color: #495057;
+          min-width: 60px;
+          font-size: 0.9rem;
         }
   
         button {
-          width: 30px;
-          height: 30px;
-          border: 1px solid #ddd;
+          width: 32px;
+          height: 32px;
+          border: 1px solid #ced4da;
           background: white;
-          border-radius: 4px;
+          border-radius: 6px;
           cursor: pointer;
-          transition: all 0.3s ease;
+          transition: all 0.2s ease;
+          font-weight: 600;
+          color: #495057;
+          font-size: 0.9rem;
   
           &:hover:not(:disabled) {
             background-color: #007bff;
             color: white;
+            border-color: #007bff;
           }
   
           &:disabled {
@@ -300,9 +430,36 @@
           min-width: 40px;
           text-align: center;
           font-weight: 600;
+          color: #333;
+          padding: 0.5rem;
+          background-color: #f8f9fa;
+          border-radius: 4px;
+          border: 1px solid #e9ecef;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.9rem;
         }
       }
     }
+  }
+  
+  // Date & Time Selection
+  .date-time-selection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  // Required field styling
+  .required {
+    color: #dc3545;
+    font-weight: bold;
   }
   
   .form-row {

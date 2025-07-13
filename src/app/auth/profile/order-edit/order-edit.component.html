@@ -13,8 +13,7 @@
       <form [formGroup]="orderForm" (ngSubmit)="onSubmit()" class="edit-form">
         <!-- Service Type Info -->
         <div class="section">
-          <h2>Service Type: {{ serviceType?.name }}</h2>
-          <p class="service-info">Base Price: ${{ serviceType?.basePrice }}</p>
+          <h2>{{ serviceType?.name }}</h2>
         </div>
   
         <!-- Services -->
@@ -42,13 +41,15 @@
                         </ng-container>
                       </span>
                       <span class="price">
-                        <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0">+$20</ng-container>
+                        <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0">
+                          +${{ getServicePrice(service, 0) }}
+                        </ng-container>
                         <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0)">
                           <ng-container *ngIf="service?.serviceRelationType === 'cleaner'">
                             +${{ service.cost * getOriginalServiceQuantity(service) * getOriginalServiceHours(service) }}
                           </ng-container>
                           <ng-container *ngIf="service?.serviceRelationType !== 'cleaner'">
-                            +${{ service.cost * getOriginalServiceQuantity(service) }}
+                            +${{ getServicePrice(service, getOriginalServiceQuantity(service)) }}
                           </ng-container>
                         </ng-container>
                       </span>
@@ -76,13 +77,15 @@
                         </option>
                       </select>
                       <span class="price">
-                        <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0">+$20</ng-container>
+                        <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0">
+                          +${{ getServicePrice(service, 0) }}
+                        </ng-container>
                         <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getServiceQuantity(service) === 0)">
                           <ng-container *ngIf="service?.serviceRelationType === 'cleaner'">
                             +${{ service.cost * getServiceQuantity(service) * getServiceHours(service) }}
                           </ng-container>
                           <ng-container *ngIf="service?.serviceRelationType !== 'cleaner'">
-                            +${{ service.cost * getServiceQuantity(service) }}
+                            +${{ getServicePrice(service, getServiceQuantity(service)) }}
                           </ng-container>
                         </ng-container>
                       </span>
@@ -111,6 +114,16 @@
         <div class="section" *ngIf="serviceType && serviceType.extraServices.length > 0">
           <h2>Extra Services</h2>
           
+          <div class="extra-services-info">
+            <p><strong>Deep Cleaning Includes:</strong> Inside of the Fridge and inside the oven. All other services you must select by yourself.</p>
+            <p><strong>We will not be able to do the following:</strong></p>
+            <ul>
+              <li>Moving Heavy Furniture and Appliances</li>
+              <li>Exterior Window Cleaning</li>
+              <li>Pet Waste</li>
+            </ul>
+          </div>
+          
           <!-- Cleaning Type Selection -->
           <div class="cleaning-type-selection">
             <label>Cleaning Type *</label>
@@ -125,16 +138,26 @@
             <div class="extra-service-card" 
                  *ngFor="let extra of getFilteredExtraServices()"
                  [class.selected]="isExtraServiceSelected(extra)"
-                 (click)="toggleExtraService(extra)">
+                 (click)="toggleExtraService(extra)"
+                 [attr.data-tooltip]="getExtraServiceTooltip(extra)">
               <div class="extra-header">
+                <div class="extra-icon">
+                  <i [class]="getExtraServiceIcon(extra)"></i>
+                </div>
                 <div class="extra-info">
                   <h4>{{ extra.name }}</h4>
-                  <p>{{ extra.description }}</p>
                   <div class="extra-details">
-                    <div class="extra-price">${{ extra.price }}</div>
+                    <div class="extra-price">
+                      <ng-container *ngIf="extra.name === 'Extra Cleaners'">
+                        ${{ getCleanerPricePerHour() }}/hour per cleaner
+                      </ng-container>
+                      <ng-container *ngIf="extra.name !== 'Extra Cleaners'">
+                        ${{ getExtraServicePrice(extra).toFixed(2) }}
+                      </ng-container>
+                    </div>
                     <div class="extra-duration" *ngIf="extra.duration">
                       <i class="fas fa-clock duration-icon"></i>
-                      {{ formatServiceDuration(extra.duration * (isExtraServiceSelected(extra) ? getExtraServiceQuantity(extra) : 1)) }}
+                      {{ formatServiceDuration(getExtraServiceDuration(extra)) }}
                     </div>
                   </div>
                 </div>
@@ -143,7 +166,7 @@
                 </div>
               </div>
               
-              <div class="extra-controls" *ngIf="isExtraServiceSelected(extra)">
+              <div class="extra-controls" *ngIf="isExtraServiceSelected(extra) && (extra.hasQuantity || extra.hasHours)">
                 <div class="quantity-control" *ngIf="extra.hasQuantity">
                   <label>Quantity:</label>
                   <button type="button" (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
@@ -166,21 +189,24 @@
   
         <!-- Date & Time -->
         <div class="section">
-          <h2>Date & Time</h2>
-          <div class="form-row">
+          <h2>Select Date & Time</h2>
+          <div class="date-time-selection">
             <div class="form-group">
-              <label>Service Date *</label>
-              <input type="date" formControlName="serviceDate" [min]="minDate">
+              <label>Service Date <span class="required">*</span></label>
+              <app-date-selector 
+                [value]="orderForm.get('serviceDate')?.value" 
+                [minDate]="minDate"
+                [isSameDaySelected]="false"
+                (valueChange)="onDateChange($event)">
+              </app-date-selector>
             </div>
             <div class="form-group">
-              <label>Service Time *</label>
-              <select formControlName="serviceTime">
-                <option value="">Select time</option>
-                <option *ngFor="let timeSlot of getAvailableTimeSlots()" 
-                        [value]="timeSlot">
-                  {{ formatTimeSlot(timeSlot) }}
-                </option>
-              </select>
+              <label>Service Time <span class="required">*</span></label>
+              <app-time-selector 
+                [value]="orderForm.get('serviceTime')?.value" 
+                [availableTimeSlots]="getAvailableTimeSlots()"
+                (valueChange)="onTimeChange($event)">
+              </app-time-selector>
             </div>
           </div>
         </div>

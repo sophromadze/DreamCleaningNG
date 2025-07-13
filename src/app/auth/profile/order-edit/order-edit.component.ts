@@ -8,6 +8,8 @@ import { BookingService, ServiceType, Service, ExtraService, Subscription } from
 import { LocationService } from '../../../services/location.service';
 import { AuthService } from '../../../services/auth.service';
 import { DurationUtils } from '../../../utils/duration.utils';
+import { DateSelectorComponent } from '../../../booking/date-selector/date-selector.component';
+import { TimeSelectorComponent } from '../../../booking/time-selector/time-selector.component';
 
 interface SelectedService {
   service: Service;
@@ -24,7 +26,7 @@ interface SelectedExtraService {
 @Component({
   selector: 'app-order-edit',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DateSelectorComponent, TimeSelectorComponent],
   templateUrl: './order-edit.component.html',
   styleUrls: ['./order-edit.component.scss']
 })
@@ -440,6 +442,75 @@ export class OrderEditComponent implements OnInit {
     return selected ? selected.hours : 0.5;
   }
 
+  getExtraServicePrice(extraService: ExtraService): number {
+    const selected = this.selectedExtraServices.find(s => s.extraService.id === extraService.id);
+    
+    // Get price multiplier based on cleaning type
+    let priceMultiplier = 1;
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+
+    if (superDeepCleaning) {
+      priceMultiplier = superDeepCleaning.extraService.priceMultiplier;
+    } else if (deepCleaning) {
+      priceMultiplier = deepCleaning.extraService.priceMultiplier;
+    }
+
+    // Apply multiplier (except for same day service)
+    const currentMultiplier = extraService.isSameDayService ? 1 : priceMultiplier;
+
+    // Calculate price based on type
+    if (extraService.hasHours) {
+      // For hours-based services, use selected hours or default to 0.5
+      const hours = selected ? selected.hours : 0.5;
+      return extraService.price * hours * currentMultiplier;
+    } else if (extraService.hasQuantity) {
+      // For quantity-based services, use selected quantity or default to 1
+      const quantity = selected ? selected.quantity : 1;
+      return extraService.price * quantity * currentMultiplier;
+    } else {
+      return extraService.price * currentMultiplier;
+    }
+  }
+
+  getExtraServiceDuration(extraService: ExtraService): number {
+    const selected = this.selectedExtraServices.find(s => s.extraService.id === extraService.id);
+    
+    // Calculate duration based on type
+    if (extraService.hasHours) {
+      // For hours-based services, use selected hours or default to 0.5
+      const hours = selected ? selected.hours : 0.5;
+      return extraService.duration * hours;
+    } else if (extraService.hasQuantity) {
+      // For quantity-based services, use selected quantity or default to 1
+      const quantity = selected ? selected.quantity : 1;
+      return extraService.duration * quantity;
+    } else {
+      return extraService.duration;
+    }
+  }
+
+  getServicePrice(service: Service, quantity: number): number {
+    // Get price multiplier based on cleaning type
+    let priceMultiplier = 1;
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+
+    if (superDeepCleaning) {
+      priceMultiplier = superDeepCleaning.extraService.priceMultiplier;
+    } else if (deepCleaning) {
+      priceMultiplier = deepCleaning.extraService.priceMultiplier;
+    }
+
+    // Special handling for studio apartment (bedrooms = 0)
+    if (service.serviceKey === 'bedrooms' && quantity === 0) {
+      return 10 * priceMultiplier; // $10 base price for studio, adjusted by cleaning type
+    }
+
+    // Apply multiplier to service cost
+    return service.cost * quantity * priceMultiplier;
+  }
+
   getServiceQuantity(service: Service): number {
     const selected = this.selectedServices.find(s => s.service.id === service.id);
     return selected ? selected.quantity : (service.minValue || 0);
@@ -570,12 +641,13 @@ export class OrderEditComponent implements OnInit {
           totalDuration += service.timeDuration * quantity;
         }
       } else if (service.serviceKey === 'bedrooms' && quantity === 0) {
-        // Studio apartment - flat rate of $10
-        const cost = 10 * priceMultiplier;
+        // Studio apartment - use getServicePrice method for consistent pricing
+        const cost = this.getServicePrice(service, 0);
         subtotal += cost;
         if (!useExplicitHours) {
-          totalDuration += 20; // 20 minutes for studio
-          actualTotalDuration += 20;
+          const studioDuration = this.getServiceDuration(service);
+          totalDuration += studioDuration;
+          actualTotalDuration += studioDuration;
         }
       } else if (service.serviceRelationType !== 'hours') {
         // Regular service calculation (not hours in a cleaner-hours relationship)
@@ -603,17 +675,13 @@ export class OrderEditComponent implements OnInit {
             actualTotalDuration += selected.extraService.duration * selected.hours;
           }
         } else if (selected.extraService.name === 'Extra Cleaners' && selected.extraService.hasQuantity) {
-          // Extra Cleaners: fixed cost per cleaner (not based on hours)
-          let baseCostPerCleaner = 40; // Base cost per extra cleaner
+          // Extra Cleaners: use the actual cleaner service cost and apply cleaning type multiplier
+          const cleanerService = this.selectedServices.find(s => s.service.serviceRelationType === 'cleaner');
+          const baseCostPerCleaner = cleanerService ? cleanerService.service.cost : 40; // fallback to 40 if no cleaner service found
           
-          // Adjust cost based on cleaning type
-          if (superDeepCleaning) {
-            baseCostPerCleaner = 80; // Super deep cleaning
-          } else if (deepCleaning) {
-            baseCostPerCleaner = 60; // Deep cleaning
-          }
-          
-          const cost = baseCostPerCleaner * selected.quantity;
+          // Apply cleaning type multiplier
+          const costPerCleaner = baseCostPerCleaner * priceMultiplier;
+          const cost = costPerCleaner * selected.quantity;
           subtotal += cost;
           
         } else if (selected.extraService.hasQuantity) {
@@ -941,10 +1009,24 @@ export class OrderEditComponent implements OnInit {
   }
 
   getServiceDuration(service: Service): number {
-    if (service.serviceKey === 'bedrooms' && this.getServiceQuantity(service) === 0) {
-      return 20; // 20 minutes for studio apartment
+    // Get duration multiplier based on cleaning type
+    let durationMultiplier = 1;
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+
+    if (superDeepCleaning) {
+      durationMultiplier = superDeepCleaning.extraService.priceMultiplier;
+    } else if (deepCleaning) {
+      durationMultiplier = deepCleaning.extraService.priceMultiplier;
     }
-    return service.timeDuration;
+
+    // Special handling for studio apartment (bedrooms = 0)
+    if (service.serviceKey === 'bedrooms' && this.getServiceQuantity(service) === 0) {
+      return Math.round(20 * durationMultiplier); // 20 minutes base for studio, adjusted by cleaning type
+    }
+
+    // Apply multiplier to service duration
+    return Math.round(service.timeDuration * durationMultiplier);
   }
 
   getAvailableTimeSlots(): string[] {
@@ -1019,23 +1101,67 @@ export class OrderEditComponent implements OnInit {
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
     
-    if (superDeepCleaning) {
-      return 80;
-    } else if (deepCleaning) {
-      return 60;
-    }
-    
     // Get the actual cleaner service cost from the selected services
     const cleanerService = this.selectedServices.find(s => s.service.serviceRelationType === 'cleaner');
-    if (cleanerService) {
-      return cleanerService.service.cost;
+    const basePrice = cleanerService ? cleanerService.service.cost : 40; // fallback to 40 if no cleaner service found
+    
+    if (superDeepCleaning) {
+      return basePrice * superDeepCleaning.extraService.priceMultiplier;
+    } else if (deepCleaning) {
+      return basePrice * deepCleaning.extraService.priceMultiplier;
     }
     
-    // Fallback to default if no cleaner service found
-    return 40;
+    return basePrice; // regular cleaning - no multiplier
+  }
+
+  getExtraServiceIcon(extraService: ExtraService): string {
+    const serviceName = extraService.name.toLowerCase();
+    
+    if (serviceName.includes('same day')) return 'fas fa-bolt';
+    if (serviceName.includes('extra cleaners')) return 'fas fa-users';
+    if (serviceName.includes('extra minutes')) return 'fas fa-clock';
+    if (serviceName.includes('cleaning supplies')) return 'fas fa-spray-can';
+    if (serviceName.includes('vacuum cleaner')) return 'fas fa-stethoscope fa-flip-vertical';
+    if (serviceName.includes('pets')) return 'fas fa-paw';
+    if (serviceName.includes('fridge')) return 'fas fa-toilet-portable';
+    if (serviceName.includes('oven')) return 'fas fa-pager fa-flip-vertical';
+    if (serviceName.includes('kitchen cabinets')) return 'fas fa-box-archive';
+    if (serviceName.includes('closets')) return 'fas fa-calendar-week fa-flip-vertical';
+    if (serviceName.includes('dishes')) return 'fas fa-utensils';
+    if (serviceName.includes('baseboards')) return 'fas fa-ruler-horizontal';
+    if (serviceName.includes('windows')) return 'fas fa-table';
+    if (serviceName.includes('walls')) return 'fas fa-clapperboard fa-flip-vertical';
+    if (serviceName.includes('stairs')) return 'fas fa-stairs';
+    if (serviceName.includes('folding') || serviceName.includes('folding / organizing')) return 'fas fa-layer-group';
+    if (serviceName.includes('laundry')) return 'fas fa-camera-retro';
+    if (serviceName.includes('balcony')) return 'fas fa-store';
+    if (serviceName.includes('office')) return 'fas fa-building';
+    if (serviceName.includes('couches')) return 'fas fa-couch';
+    
+    // Default icon for unknown services
+    return 'fas fa-plus';
+  }
+
+  getExtraServiceTooltip(extra: ExtraService): string {
+    let tooltip = extra.description || '';
+    
+    // Add additional info for Extra Cleaners
+    if (extra.name === 'Extra Cleaners') {
+      tooltip += '\n\nEach extra cleaner reduces service duration.';
+    }
+    
+    return tooltip;
   }
 
   get cleaningType() {
     return this.orderForm.get('cleaningType') as FormControl;
+  }
+
+  onDateChange(date: string) {
+    this.orderForm.patchValue({ serviceDate: date });
+  }
+
+  onTimeChange(time: string) {
+    this.orderForm.patchValue({ serviceTime: time });
   }
 }

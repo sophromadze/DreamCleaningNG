@@ -195,7 +195,7 @@
   // Service Type Selection
   .service-type-selection {
     margin-bottom: 2rem;
-    
+
     .form-group {
       margin-bottom: 1.5rem;
       
@@ -206,24 +206,88 @@
         color: #333;
       }
       
-      select {
+      .service-type-dropdown {
+        position: relative;
+        display: inline-block;
         width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-size: 1rem;
-        background-color: white;
-        transition: border-color 0.3s ease;
-        
-        &:focus {
-          outline: none;
-          border-color: #007bff;
-          box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+
+        .dropdown-toggle {
+          width: 100%;
+          background: #f8f9fa;
+          border: 1px solid #dee2e6;
+          padding: 0.75rem 1rem;
+          border-radius: 4px;
+          font-size: 1rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          color: #333;
+          transition: all 0.3s ease;
+
+          &:hover:not(:disabled) {
+            background: #e9ecef;
+            border-color: #007bff;
+          }
+
+          &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+
+          .chevron {
+            font-size: 0.75rem;
+            margin-left: 8px;
+            opacity: 0.7;
+            transition: transform 0.3s ease;
+          }
         }
-        
-        &.ng-invalid.ng-touched {
-          border-color: #dc3545;
-          box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
+
+        .dropdown-menu {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          border: 1px solid #dee2e6;
+          border-radius: 4px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          z-index: 1000;
+          max-height: 300px;
+          overflow-y: auto;
+
+          .dropdown-item {
+            display: block;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 1rem;
+            border: none;
+            background: white;
+            text-align: left;
+            transition: background-color 0.2s ease;
+
+            &:hover {
+              background: #f8f9fa;
+              color: #007bff;
+            }
+
+            &:not(:last-child) {
+              border-bottom: 1px solid #e9ecef;
+            }
+
+            &:first-child {
+              border-top-left-radius: 4px;
+              border-top-right-radius: 4px;
+            }
+
+            &:last-child {
+              border-bottom-left-radius: 4px;
+              border-bottom-right-radius: 4px;
+            }
+          }
         }
       }
     }
@@ -285,8 +349,8 @@
   // Services Customization
   .services {
     .service-item {
-      margin-bottom: 2rem;
-      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
       background: white;
       border: 1px solid #e9ecef;
       border-radius: 8px;
@@ -302,24 +366,26 @@
         display: block;
         font-weight: 600;
         color: #333;
-        margin-bottom: 1rem;
-        font-size: 1.1rem;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
       }
   
       .service-input {
         display: flex;
         align-items: center;
-        gap: 1.5rem;
+        gap: 1rem;
         flex-wrap: wrap;
   
         select {
-          min-width: 120px;
-          padding: 0.75rem;
+          min-width: 100px;
+          width: 120px;
+          padding: 0.5rem;
           border: 1px solid #ced4da;
           border-radius: 6px;
-          font-size: 1rem;
+          font-size: 0.9rem;
           background-color: white;
           transition: border-color 0.2s ease;
+          height: 40px;
   
           &:focus {
             outline: none;
@@ -330,16 +396,19 @@
   
         .service-duration {
           color: #6c757d;
-          font-size: 0.9rem;
+          font-size: 0.85rem;
           display: flex;
           align-items: center;
           gap: 0.5rem;
           padding: 0.5rem 0.75rem;
           background-color: #f8f9fa;
           border-radius: 4px;
+          height: 40px;
+          min-width: 80px;
+          justify-content: center;
   
           .duration-icon {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #007bff;
           }
         }
@@ -347,16 +416,22 @@
         .service-cost {
           color: #28a745;
           font-weight: 600;
-          font-size: 1rem;
+          font-size: 0.9rem;
           padding: 0.5rem 0.75rem;
           background-color: #d4edda;
           border-radius: 4px;
           border: 1px solid #c3e6cb;
+          height: 40px;
+          min-width: 80px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .slider-container {
           display: flex;
-          flex-direction: column;
+          justify-content: center;
+          align-items: center;
           gap: 0.75rem;
           width: 100%;
 
@@ -365,7 +440,16 @@
             color: #333;
             font-size: 0.95rem;
             text-align: center;
-            width: 100%;
+            border-radius: 4px;
+            padding: 0.25rem 0.5rem;
+            background-color: #f8f9fa;
+            color: #333;
+            font-size: 0.9rem;
+            min-width: 80px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
 
           input[type="range"] {
@@ -427,6 +511,7 @@
           margin-top: 0.5rem;
           width: 100%;
           text-align: center;
+          gap: 1rem;
 
           .service-cost {
             color: #28a745;
@@ -441,9 +526,7 @@
       }
   
       &.slider-input {
-        width: 100%;
-
-          
+        width: 100%;          
         }
       }
     }
@@ -452,15 +535,15 @@
   // Extra Services
   .extra-services {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 2fr));
+    gap: 1rem;
   }
   
   .extra-services-info {
     background: #f8f9fa;
     border: 1px solid #e9ecef;
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 1rem;
     margin-bottom: 1.5rem;
     
     p {
@@ -492,16 +575,16 @@
   .extra-service-card {
     border: 1px solid #e9ecef;
     border-radius: 8px;
-    padding: 1.5rem;
+    padding: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
     background: white;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
   
     &:hover {
       border-color: #007bff;
       box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
-      transform: translateY(-1px);
     }
   
     &.selected {
@@ -510,32 +593,71 @@
       box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
     }
   
+    // Custom tooltip styling
+    &[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      line-height: 1.4;
+      white-space: pre-line;
+      z-index: 1000;
+      max-width: 300px;
+      width: max-content;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      margin-bottom: 8px;
+    }
+    
+    &[data-tooltip]:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 5px solid transparent;
+      border-top-color: rgba(0, 0, 0, 0.9);
+      z-index: 1000;
+      margin-bottom: 3px;
+    }
+  
     .extra-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
       gap: 1rem;
+
+      .extra-icon {
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #007bff;
+        font-size: 1rem;
+        flex-shrink: 0;
+      }
   
       .extra-info {
         flex: 1;
   
         h4 {
-          margin: 0 0 0.75rem;
+          margin: 0 0 0.5rem;
           color: #333;
-          font-size: 1.1rem;
+          font-size: 1rem;
           font-weight: 600;
-        }
-  
-        p {
-          color: #6c757d;
-          font-size: 0.9rem;
-          margin: 0 0 0.75rem;
-          line-height: 1.4;
+          text-align: center;
         }
   
         .extra-details {
           display: flex;
           align-items: center;
+          justify-content: center;
           gap: 1rem;
           flex-wrap: wrap;
   
@@ -547,20 +669,28 @@
             border: 1px solid #c3e6cb;
             border-radius: 4px;
             font-size: 0.9rem;
+            height: 32px;
+            min-width: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
   
           .extra-duration {
             color: #6c757d;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
             padding: 0.25rem 0.5rem;
             background-color: #f8f9fa;
             border-radius: 4px;
+            height: 32px;
+            min-width: 80px;
+            justify-content: center;
   
             .duration-icon {
-              font-size: 0.9rem;
+              font-size: 0.85rem;
               color: #007bff;
             }
           }
@@ -578,21 +708,22 @@
     }
   
     .extra-controls {
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
       border-top: 1px solid #e9ecef;
   
       .quantity-control,
       .hours-control {
         display: flex;
         align-items: center;
+        justify-content: center;
         gap: 1rem;
-        margin-bottom: 1rem;
   
         label {
           font-weight: 600;
           color: #495057;
           min-width: 60px;
+          font-size: 0.9rem;
         }
   
         button {
@@ -605,6 +736,7 @@
           transition: all 0.2s ease;
           font-weight: 600;
           color: #495057;
+          font-size: 0.9rem;
   
           &:hover:not(:disabled) {
             background-color: #007bff;
@@ -627,18 +759,12 @@
           background-color: #f8f9fa;
           border-radius: 4px;
           border: 1px solid #e9ecef;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.9rem;
         }
-      }
-      
-      .extra-cleaners-note {
-        margin-top: 1rem;
-        padding: 0.75rem;
-        background-color: #fff3cd;
-        border: 1px solid #ffeaa7;
-        border-radius: 6px;
-        color: #856404;
-        font-size: 0.85rem;
-        line-height: 1.4;
       }
     }
   }

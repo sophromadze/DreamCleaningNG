@@ -23,12 +23,25 @@
           <div class="service-type-selection">
             <div class="form-group">
               <label>Service Type <span class="required">*</span></label>
-              <select [formControl]="serviceTypeControl" (change)="onServiceTypeChange($event)" id="serviceTypeSelect">
-                <option value="" *ngIf="!selectedServiceType">Select a service type</option>
-                <option *ngFor="let type of serviceTypes" [value]="type.id">
-                  {{ type.name }}
-                </option>
-              </select>
+              <div class="service-type-dropdown">
+                <button 
+                  type="button"
+                  class="dropdown-toggle"
+                  (click)="toggleServiceTypeDropdown()"
+                  [disabled]="isLoading">
+                  <span>{{ selectedServiceType ? selectedServiceType.name : 'Select a service type' }}</span>
+                  <span class="chevron">▼</span>
+                </button>
+                <div class="dropdown-menu" *ngIf="serviceTypeDropdownOpen">
+                  <button 
+                    *ngFor="let type of serviceTypes" 
+                    type="button"
+                    class="dropdown-item"
+                    (click)="selectServiceType(type)">
+                    {{ type.name }}
+                  </button>
+                </div>
+              </div>
               <div class="error-message" *ngIf="serviceTypeControl.invalid && serviceTypeControl.touched">
                 <div *ngIf="serviceTypeControl.errors?.['required']">Service type is required</div>
               </div>
@@ -196,15 +209,15 @@
           <span class="service-cost">
             <!-- Bedrooms -->
             <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity === 0">
-              +$10
+              +${{ Math.round(getServicePrice(selected.service, 0)) }}
             </ng-container>
             <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && selected.quantity !== 0">
-              +${{ Math.round(selected.service.cost * selected.quantity) }}
+              +${{ Math.round(getServicePrice(selected.service, selected.quantity)) }}
             </ng-container>
             
             <!-- Bathrooms -->
             <ng-container *ngIf="selected.service.serviceKey === 'bathrooms'">
-              +${{ Math.round(selected.service.cost * selected.quantity) }}
+              +${{ Math.round(getServicePrice(selected.service, selected.quantity)) }}
             </ng-container>
             
             <!-- Cleaners (with serviceRelationType) -->
@@ -222,17 +235,18 @@
         <!-- Slider Input for Square Feet -->
         <div class="service-input slider-input" *ngIf="selected.service.isRangeInput">
           <div class="slider-container">
-            <span class="slider-quantity">{{ selected.quantity }} sq ft</span>
+            <!-- <div class="slider-header">            
+              
+            </div>   -->
             <input type="range"
                   [(ngModel)]="selected.quantity"
                   [min]="selected.service.minValue"
                   [max]="selected.service.maxValue"
                   [step]="selected.service.stepValue"
                   (input)="updateServiceQuantity(selected.service, +selected.quantity)">
-          </div>
-          <div class="slider-header">            
-            <span class="service-cost">+${{ Math.round(selected.service.cost * selected.quantity) }}</span>
-          </div>          
+                  <span class="slider-quantity">{{ selected.quantity }} sq ft</span>
+              <span class="service-cost">+${{ Math.round(getServicePrice(selected.service, selected.quantity)) }}</span>
+          </div>                  
         </div>
       </div>
     </div>
@@ -243,7 +257,7 @@
     <h2>Add Extra Services</h2>
     
     <div class="extra-services-info">
-      <p><strong>Deep Cleaning Includes:</strong> Inside of the Fridge, inside kitchen cabinets and inside the oven. All other services you must select by yourself.</p>
+      <p><strong>Deep Cleaning Includes:</strong> Inside of the Fridge and inside the oven. All other services you must select by yourself.</p>
       <p><strong>We will not be able to do the following:</strong></p>
       <ul>
         <li>Moving Heavy Furniture and Appliances</li>
@@ -269,23 +283,26 @@
       <div class="extra-service-card"
             *ngFor="let extra of getFilteredExtraServices()"
             [class.selected]="isExtraServiceSelected(extra)"
-            (click)="toggleExtraService(extra)">
+            (click)="toggleExtraService(extra)"
+            [attr.data-tooltip]="getExtraServiceTooltip(extra)">
         <div class="extra-header">
+          <div class="extra-icon">
+            <i [class]="getExtraServiceIcon(extra)"></i>
+          </div>
           <div class="extra-info">
             <h4>{{ extra.name }}</h4>
-            <p>{{ extra.description }}</p>
             <div class="extra-details">
               <div class="extra-price">
                 <ng-container *ngIf="extra.name === 'Extra Cleaners'">
                   ${{ getCleanerPricePerHour() }}/hour per cleaner
                 </ng-container>
                 <ng-container *ngIf="extra.name !== 'Extra Cleaners'">
-                  ${{ extra.price }}
+                  ${{ getExtraServicePrice(extra).toFixed(2) }}
                 </ng-container>
               </div>
               <div class="extra-duration" *ngIf="extra.duration">
                 <i class="fas fa-clock duration-icon"></i>
-                {{ formatServiceDuration(extra.duration * (isExtraServiceSelected(extra) ? getExtraServiceQuantity(extra) : 1)) }}
+                {{ formatServiceDuration(getExtraServiceDuration(extra)) }}
               </div>
             </div>
           </div>
@@ -295,17 +312,13 @@
         </div>
         
         <!-- Quantity Control -->
-        <div class="extra-controls" *ngIf="isExtraServiceSelected(extra)">
+        <div class="extra-controls" *ngIf="isExtraServiceSelected(extra) && (extra.hasQuantity || extra.hasHours)">
           <div class="quantity-control" *ngIf="extra.hasQuantity">
             <label>Quantity:</label>
             <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
                     [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
             <span>{{ getExtraServiceQuantity(extra) }}</span>
             <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1); $event.stopPropagation()">+</button>
-          </div>
-          <!-- Special note for Extra Cleaners -->
-          <div class="extra-cleaners-note" *ngIf="isExtraServiceSelected(extra) && extra.name === 'Extra Cleaners'">
-            <small>Each extra cleaner reduces service duration</small>
           </div>
           
           <!-- Hours Control -->

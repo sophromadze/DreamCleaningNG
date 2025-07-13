@@ -88,6 +88,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   isLoading = false;
   errorMessage = '';
   isSameDaySelected = false;
+  serviceTypeDropdownOpen = false;
   hasFirstTimeDiscount = false;
   firstTimeDiscountApplied = false;
   promoCodeApplied = false;
@@ -264,11 +265,23 @@ export class BookingComponent implements OnInit, OnDestroy {
           }
         });
     }
+    
+    // Setup click outside handler for dropdown
+    this.setupDropdownClickOutside();
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  private setupDropdownClickOutside() {
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.service-type-dropdown')) {
+        this.serviceTypeDropdownOpen = false;
+      }
+    });
   }
 
   private initializeCustomPricingDefaults() {
@@ -640,8 +653,14 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
   }
 
+  toggleServiceTypeDropdown() {
+    this.serviceTypeDropdownOpen = !this.serviceTypeDropdownOpen;
+  }
+
   selectServiceType(serviceType: ServiceType) {
     this.selectedServiceType = serviceType;
+    this.serviceTypeControl.setValue(serviceType.id);
+    this.serviceTypeDropdownOpen = false; // Close dropdown after selection
     this.selectedServices = [];
     this.selectedExtraServices = [];
 
@@ -854,6 +873,77 @@ export class BookingComponent implements OnInit, OnDestroy {
     const selected = this.selectedExtraServices.find(s => s.extraService.id === extraService.id);
     return selected ? selected.hours : 0.5;
   }
+
+  getExtraServicePrice(extraService: ExtraService): number {
+    const selected = this.selectedExtraServices.find(s => s.extraService.id === extraService.id);
+    
+    // Get price multiplier based on cleaning type
+    let priceMultiplier = 1;
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+
+    if (superDeepCleaning) {
+      priceMultiplier = superDeepCleaning.extraService.priceMultiplier;
+    } else if (deepCleaning) {
+      priceMultiplier = deepCleaning.extraService.priceMultiplier;
+    }
+
+    // Apply multiplier (except for same day service)
+    const currentMultiplier = extraService.isSameDayService ? 1 : priceMultiplier;
+
+    // Calculate price based on type
+    if (extraService.hasHours) {
+      // For hours-based services, use selected hours or default to 0.5
+      const hours = selected ? selected.hours : 0.5;
+      return extraService.price * hours * currentMultiplier;
+    } else if (extraService.hasQuantity) {
+      // For quantity-based services, use selected quantity or default to 1
+      const quantity = selected ? selected.quantity : 1;
+      return extraService.price * quantity * currentMultiplier;
+    } else {
+      return extraService.price * currentMultiplier;
+    }
+  }
+
+  getExtraServiceDuration(extraService: ExtraService): number {
+    const selected = this.selectedExtraServices.find(s => s.extraService.id === extraService.id);
+    
+    // Calculate duration based on type
+    if (extraService.hasHours) {
+      // For hours-based services, use selected hours or default to 0.5
+      const hours = selected ? selected.hours : 0.5;
+      return extraService.duration * hours;
+    } else if (extraService.hasQuantity) {
+      // For quantity-based services, use selected quantity or default to 1
+      const quantity = selected ? selected.quantity : 1;
+      return extraService.duration * quantity;
+    } else {
+      return extraService.duration;
+    }
+  }
+
+  getServicePrice(service: Service, quantity: number): number {
+    // Get price multiplier based on cleaning type
+    let priceMultiplier = 1;
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+
+    if (superDeepCleaning) {
+      priceMultiplier = superDeepCleaning.extraService.priceMultiplier;
+    } else if (deepCleaning) {
+      priceMultiplier = deepCleaning.extraService.priceMultiplier;
+    }
+
+    // Special handling for studio apartment (bedrooms = 0)
+    if (service.serviceKey === 'bedrooms' && quantity === 0) {
+      return 10 * priceMultiplier; // $10 base price for studio, adjusted by cleaning type
+    }
+
+    // Apply multiplier to service cost
+    return service.cost * quantity * priceMultiplier;
+  }
+
+
 
   selectSubscription(subscription: Subscription) {
     this.selectedSubscription = subscription;
@@ -1122,11 +1212,12 @@ export class BookingComponent implements OnInit, OnDestroy {
           subTotal += cost;
         }
       } else if (selected.service.serviceKey === 'bedrooms' && selected.quantity === 0) {
-        const cost = 10 * priceMultiplier;
+        const cost = this.getServicePrice(selected.service, 0);
         subTotal += cost;
         if (!useExplicitHours) {
-          totalDuration += 20;
-          actualTotalDuration += 20;
+          const studioDuration = this.getServiceDuration(selected.service);
+          totalDuration += studioDuration;
+          actualTotalDuration += studioDuration;
         }
       } else if (selected.service.serviceRelationType !== 'hours') {
         const cost = selected.service.cost * selected.quantity * priceMultiplier;
@@ -1363,9 +1454,9 @@ export class BookingComponent implements OnInit, OnDestroy {
     const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
     
     if (superDeepCleaning) {
-      return basePrice * 2.0; // 2.0x multiplier for super deep cleaning
+      return basePrice * superDeepCleaning.extraService.priceMultiplier;
     } else if (deepCleaning) {
-      return basePrice * 1.5; // 1.5x multiplier for deep cleaning
+      return basePrice * deepCleaning.extraService.priceMultiplier;
     }
     
     return basePrice; // regular cleaning - no multiplier
@@ -1416,17 +1507,28 @@ export class BookingComponent implements OnInit, OnDestroy {
   getServiceDuration(service: Service): number {
     const quantity = this.getServiceQuantity(service);
     
+    // Get duration multiplier based on cleaning type
+    let durationMultiplier = 1;
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+
+    if (superDeepCleaning) {
+      durationMultiplier = superDeepCleaning.extraService.priceMultiplier;
+    } else if (deepCleaning) {
+      durationMultiplier = deepCleaning.extraService.priceMultiplier;
+    }
+    
     if (service.serviceKey === 'bedrooms' && quantity === 0) {
-      return 20; // 20 minutes for studio apartment
+      return Math.round(20 * durationMultiplier); // 20 minutes base for studio, adjusted by cleaning type
     }
     
     // For most services, duration should be multiplied by quantity
     // But for cleaner and hours services, we don't multiply as they have special logic
     if (service.serviceRelationType === 'cleaner' || service.serviceRelationType === 'hours') {
-      return service.timeDuration;
+      return Math.round(service.timeDuration * durationMultiplier);
     }
     
-    return service.timeDuration * quantity;
+    return Math.round(service.timeDuration * quantity * durationMultiplier);
   }
 
   getServiceQuantity(service: Service): number {
@@ -2015,9 +2117,22 @@ export class BookingComponent implements OnInit, OnDestroy {
   // Get filtered extra services (excluding deep cleaning and super deep cleaning)
   getFilteredExtraServices(): ExtraService[] {
     if (!this.selectedServiceType) return [];
-    return this.selectedServiceType.extraServices.filter(extra => 
-      !extra.isDeepCleaning && !extra.isSuperDeepCleaning
-    );
+    
+    return this.selectedServiceType.extraServices.filter(extra => {
+      // Show all extra services except deep cleaning and super deep cleaning
+      return !extra.isDeepCleaning && !extra.isSuperDeepCleaning;
+    });
+  }
+
+  getExtraServiceTooltip(extra: ExtraService): string {
+    let tooltip = extra.description || '';
+    
+    // Add additional info for Extra Cleaners
+    if (extra.name === 'Extra Cleaners') {
+      tooltip += '\n\nEach extra cleaner reduces service duration.';
+    }
+    
+    return tooltip;
   }
 
   // Handle cleaning type selection
@@ -2246,5 +2361,33 @@ export class BookingComponent implements OnInit, OnDestroy {
       base64Data: photo.base64,
       contentType: photo.file.type
     }));
+  }
+
+  getExtraServiceIcon(extraService: ExtraService): string {
+    const serviceName = extraService.name.toLowerCase();
+    
+    if (serviceName.includes('same day')) return 'fas fa-bolt';
+    if (serviceName.includes('extra cleaners')) return 'fas fa-users';
+    if (serviceName.includes('extra minutes')) return 'fas fa-clock';
+    if (serviceName.includes('cleaning supplies')) return 'fas fa-spray-can';
+    if (serviceName.includes('vacuum cleaner')) return 'fas fa-stethoscope fa-flip-vertical';
+    if (serviceName.includes('pets')) return 'fas fa-paw';
+    if (serviceName.includes('fridge')) return 'fas fa-toilet-portable';
+    if (serviceName.includes('oven')) return 'fas fa-pager fa-flip-vertical';
+    if (serviceName.includes('kitchen cabinets')) return 'fas fa-box-archive';
+    if (serviceName.includes('closets')) return 'fas fa-calendar-week fa-flip-vertical';
+    if (serviceName.includes('dishes')) return 'fas fa-utensils';
+    if (serviceName.includes('baseboards')) return 'fas fa-ruler-horizontal';
+    if (serviceName.includes('windows')) return 'fas fa-table';
+    if (serviceName.includes('walls')) return 'fas fa-clapperboard fa-flip-vertical';
+    if (serviceName.includes('stairs')) return 'fas fa-stairs';
+    if (serviceName.includes('folding') || serviceName.includes('folding / organizing')) return 'fas fa-layer-group';
+    if (serviceName.includes('laundry')) return 'fas fa-camera-retro';
+    if (serviceName.includes('balcony')) return 'fas fa-store';
+    if (serviceName.includes('office')) return 'fas fa-desktop';
+    if (serviceName.includes('couches')) return 'fas fa-couch';
+    
+    // Default icon for unknown services
+    return 'fas fa-plus';
   }
 }
