@@ -773,6 +773,24 @@
       <div *ngIf="smsConsent.errors?.['required']">SMS consent is required to proceed with booking</div>
     </div>
   </div>
+
+  <!-- Cancellation Fee and Booking Details Consent Checkbox -->
+  <div class="cancellation-consent-section">
+    <div class="checkbox-group">
+      <input 
+        type="checkbox" 
+        id="cancellationConsent" 
+        [formControl]="cancellationConsent" 
+        class="form-checkbox"
+        [class.error]="cancellationConsent.invalid && cancellationConsent.touched">
+              <label for="cancellationConsent" class="checkbox-label">
+          I understand that I will be charged a $70 cancellation fee if I cancel or reschedule my appointment less than 48 hours before the scheduled service. I also confirm that the booking details accurately reflect the cleaning requirements. If the actual condition differs from the described details, Dream Cleaning Team reserves the right to either leave or adjust the services to match the actual condition. I understand, that cleaning lady may arrive within a 30-60 minute window of the scheduled cleaning time. <span class="required">*</span>
+        </label>
+    </div>
+    <div class="error-message" *ngIf="cancellationConsent.invalid && cancellationConsent.touched">
+      <div *ngIf="cancellationConsent.errors?.['required']">Cancellation fee and booking details consent is required to proceed with booking</div>
+    </div>
+  </div>
 </section>
 
         <!-- Book Now Button -->
@@ -783,6 +801,11 @@
                   [class.disabled]="!isFormValid() || isLoading">
             {{ isLoading ? 'Processing...' : (showPollForm ? 'Send for Quote' : 'Book Now') }}
           </button>
+          
+          <!-- Payment Note -->
+          <div class="payment-note">
+            <p><span class="note-label">Please note:</span> We accept credit or debit cards, and all online payments are securely processed through Stripe. When you book with Dream Cleaning, you can rest assured that your transaction is safe and protected. At the time of scheduling, we place a hold on your card (which may appear as 'pending' on your statement), rather than a charge. By ordering our services and providing your credit card details, you consent to us charging your card for the service fee. Your card will only be charged once the cleaning is completed.</p>
+          </div>
         </div>
       </div>
 

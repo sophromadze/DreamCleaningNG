@@ -1,125 +1,239 @@
-.services-page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+.service-page {
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
 
-  h1 {
+  .hero-section {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    padding: 40px 0;
     text-align: center;
-    font-size: 2.5rem;
-    color: #007bff;
-    margin-bottom: 3rem;
-  }
-}
 
-.service-section {
-  margin-bottom: 4rem;
-  padding: 2rem;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  scroll-margin-top: 100px;
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      line-height: 1.2;
+    }
 
-  h2 {
-    font-size: 2rem;
-    color: #007bff;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 2px solid #e2e8f0;
-  }
-
-  .service-content {
-    p {
-      color: #4a5568;
-      line-height: 1.8;
-      margin-bottom: 1.5rem;
+    .main-description {
       font-size: 1.1rem;
+      margin-bottom: 20px;
+      max-width: 800px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+    }
+
+    .book-now-btn {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+
+      &:hover {
+        background: #ff5252;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+      }
     }
   }
 
-  .service-features {
+  .secondary-description {
     background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 8px;
-    margin-top: 2rem;
+    padding: 30px 0;
+    text-align: center;
 
-    h3 {
-      color: #007bff;
-      font-size: 1.25rem;
-      margin-bottom: 1rem;
+    p {
+      font-size: 1rem;
+      line-height: 1.6;
+      max-width: 900px;
+      margin: 0 auto;
+      color: #333;
+    }
+  }
+
+  .services-section {
+    padding: 40px 0;
+    background: white;
+
+    .services-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin-top: 20px;
     }
 
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1rem;
+    .service-card {
+      display: flex;
+      align-items: center;
+      padding: 25px 0;
+      border-bottom: 1px solid #e0e0e0;
 
-      li {
-        color: #4a5568;
-        padding-left: 1.5rem;
-        position: relative;
-        line-height: 1.6;
+      &:last-child {
+        border-bottom: none;
+      }
 
-        &:before {
-          content: "✓";
-          color: #48bb78;
-          position: absolute;
-          left: 0;
-          font-weight: bold;
+      .service-image {
+        flex: 0 0 250px;
+        height: 150px;
+        margin-right: 25px;
+        background: #f8f9fa;
+        border: 2px dashed #007bff;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        .placeholder-text {
+          color: #007bff;
+          font-size: 0.9rem;
+          text-align: center;
+          font-weight: 500;
+        }
+      }
+
+      .service-content {
+        flex: 1;
+
+        h3 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          margin-bottom: 10px;
+          color: #333;
+        }
+
+        p {
+          color: #666;
+          line-height: 1.5;
+          margin-bottom: 15px;
+          font-size: 1rem;
+        }
+
+        .read-more-btn {
+          background: transparent;
+          color: #007bff;
+          border: 2px solid #007bff;
+          padding: 10px 25px;
+          border-radius: 25px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          text-decoration: none;
+          display: inline-block;
+          font-weight: 500;
+
+          &:hover {
+            background: #007bff;
+            color: white;
+          }
+        }
+      }
+    }
+  }
+
+  .closing-section {
+    background: #f8f9fa;
+    padding: 30px 0;
+    text-align: center;
+
+    p {
+      font-size: 1rem;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      color: #333;
+
+      .booking-link {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+
+        &:hover {
+          color: #0056b3;
+          text-decoration: underline;
         }
       }
     }
   }
 }
 
+// Responsive Design
 @media (max-width: 768px) {
-  .services-page {
-    padding: 0.75rem;
+  .service-page {
+    .hero-section {
+      padding: 30px 0;
 
-    h1 {
-      font-size: 1.75rem;
-      margin-bottom: 1.5rem;
-    }
-  }
+      h1 {
+        font-size: 1.8rem;
+      }
 
-  .service-section {
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border-radius: 8px;
-
-    h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-      padding-bottom: 0.25rem;
-    }
-
-    .service-content {
-      p {
+      .main-description {
         font-size: 0.95rem;
-        line-height: 1.6;
-        margin-bottom: 1rem;
+      }
+      
+      .book-now-btn {
+        font-size: 0.95rem;
+        padding: 12px 30px;
+      }
+    }
+    
+    .secondary-description {
+      p {
+        font-size: 0.9rem;
       }
     }
 
-    .service-features {
-      padding: 1rem;
-      margin-top: 1rem;
+    .services-section {
+      .service-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 20px 0;
 
-      h3 {
-        font-size: 1.1rem;
-        margin-bottom: 0.75rem;
+        .service-image {
+          flex: none;
+          width: 100%;
+          max-width: 250px;
+          margin-right: 0;
+          margin-bottom: 15px;
+          
+          .placeholder-text {
+            font-size: 0.85rem;
+          }
+        }
+
+        .service-content {
+          h3 {
+            font-size: 1.3rem;
+          }
+
+          p {
+            font-size: 0.9rem;
+          }
+          
+          .read-more-btn {
+            font-size: 0.9rem;
+            padding: 8px 20px;
+          }
+        }
       }
-
-      ul {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-
-        li {
+    }
+    
+    .closing-section {
+      p {
+        font-size: 0.9rem;
+        
+        .booking-link {
           font-size: 0.9rem;
-          padding-left: 1.25rem;
-          line-height: 1.5;
         }
       }
     }
@@ -127,48 +241,59 @@
 }
 
 @media (max-width: 480px) {
-  .services-page {
-    padding: 0.5rem;
-
-    h1 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-    }
-  }
-
-  .service-section {
-    padding: 0.75rem;
-    margin-bottom: 1rem;
-
-    h2 {
-      font-size: 1.25rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .service-content {
-      p {
+  .service-page {
+    .hero-section {
+      h1 {
+        font-size: 1.6rem;
+      }
+      
+      .main-description {
         font-size: 0.9rem;
-        margin-bottom: 0.75rem;
+      }
+      
+      .book-now-btn {
+        font-size: 0.9rem;
+        padding: 10px 25px;
       }
     }
-
-    .service-features {
-      padding: 0.75rem;
-      margin-top: 0.75rem;
-
-      h3 {
-        font-size: 1rem;
-        margin-bottom: 0.5rem;
+    
+    .secondary-description {
+      p {
+        font-size: 0.85rem;
       }
+    }
+    
+    .services-section {
+      .service-card {
+        .service-content {
+          h3 {
+            font-size: 1.2rem;
+          }
 
-      ul {
-        gap: 0.5rem;
-
-        li {
-          font-size: 0.85rem;
-          padding-left: 1rem;
+          p {
+            font-size: 0.85rem;
+          }
+          
+          .read-more-btn {
+            font-size: 0.85rem;
+            padding: 8px 18px;
+          }
         }
       }
+    }
+    
+    .closing-section {
+      p {
+        font-size: 0.85rem;
+        
+        .booking-link {
+          font-size: 0.85rem;
+        }
+      }
+    }
+
+    .container {
+      padding: 0 15px;
     }
   }
 }

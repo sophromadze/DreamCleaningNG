@@ -35,6 +35,8 @@ export interface BookingFormData {
   tips?: number;
   companyDevelopmentTips?: number;
   cleaningType?: string;
+  smsConsent?: boolean;
+  cancellationConsent?: boolean;
   
   // Selected Subscription
   selectedSubscriptionId?: string;

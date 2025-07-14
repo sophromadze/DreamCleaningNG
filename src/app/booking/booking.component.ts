@@ -203,7 +203,8 @@ export class BookingComponent implements OnInit, OnDestroy {
         }
       ]],
       cleaningType: ['normal', Validators.required], // Add new form control for cleaning type
-      smsConsent: [false, [Validators.requiredTrue]]
+      smsConsent: [false, [Validators.requiredTrue]],
+      cancellationConsent: [false, [Validators.requiredTrue]]
     });
   }
 
@@ -330,6 +331,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (savedData.tips !== undefined) formValues.tips = savedData.tips;
     if (savedData.companyDevelopmentTips !== undefined) formValues.companyDevelopmentTips = savedData.companyDevelopmentTips;
     if (savedData.cleaningType) formValues.cleaningType = savedData.cleaningType;
+    if (savedData.smsConsent !== undefined) formValues.smsConsent = savedData.smsConsent;
+    if (savedData.cancellationConsent !== undefined) formValues.cancellationConsent = savedData.cancellationConsent;
   
     this.bookingForm.patchValue(formValues);
     
@@ -616,7 +619,11 @@ export class BookingComponent implements OnInit, OnDestroy {
       ...this.bookingForm.value,
       
       // Selected Subscription
-      selectedSubscriptionId: this.selectedSubscription?.id ? String(this.selectedSubscription.id) : undefined
+      selectedSubscriptionId: this.selectedSubscription?.id ? String(this.selectedSubscription.id) : undefined,
+      
+      // Consent checkboxes
+      smsConsent: this.smsConsent.value,
+      cancellationConsent: this.cancellationConsent.value
     };
   
     this.formPersistenceService.saveFormData(formData);
@@ -1614,7 +1621,9 @@ export class BookingComponent implements OnInit, OnDestroy {
            this.serviceTypeControl.valid &&
            this.selectedServiceType !== null && 
            this.selectedSubscription !== null && 
-           this.cleaningType.value !== null;
+           this.cleaningType.value !== null &&
+           this.smsConsent.value === true &&
+           this.cancellationConsent.value === true;
   }
 
   onSubmit() {
@@ -1753,6 +1762,7 @@ export class BookingComponent implements OnInit, OnDestroy {
       customCleaners: this.showCustomPricing ? parseInt(this.customCleaners.value) : undefined,
       customDuration: this.showCustomPricing ? parseInt(this.customDuration.value) : undefined,
       smsConsent: formValue.smsConsent,
+      cancellationConsent: formValue.cancellationConsent,
       uploadedPhotos: this.preparePhotosForSubmission(),
     };
 
@@ -2041,6 +2051,11 @@ export class BookingComponent implements OnInit, OnDestroy {
       }
     }
     
+    // Check consent checkboxes for poll forms
+    if (!this.smsConsent.value || !this.cancellationConsent.value) {
+      return false;
+    }
+    
     return true;
   }
   
@@ -2111,6 +2126,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   get companyDevelopmentTips() { return this.bookingForm.get('companyDevelopmentTips') as FormControl; }
   get cleaningType() { return this.bookingForm.get('cleaningType') as FormControl; }
   get smsConsent() { return this.bookingForm.get('smsConsent') as FormControl; }
+  get cancellationConsent() { return this.bookingForm.get('cancellationConsent') as FormControl; }
 
   // Check if promo code should be disabled
   isPromoCodeDisabled(): boolean {

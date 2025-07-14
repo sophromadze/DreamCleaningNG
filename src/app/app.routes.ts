@@ -18,6 +18,47 @@ export const routes: Routes = [
     path: 'service-page',
     loadComponent: () => import('./service-page/service-page.component').then(m => m.ServicePageComponent)
   },
+  // Service routes
+  {
+    path: 'services/basic-cleaning',
+    loadComponent: () => import('./service-page/services/basic-cleaning/basic-cleaning.component').then(m => m.BasicCleaningComponent)
+  },
+  {
+    path: 'services/basic-cleaning/kitchen',
+    loadComponent: () => import('./service-page/services/basic-cleaning/kitchen-cleaning/kitchen-cleaning.component').then(m => m.KitchenCleaningComponent)
+  },
+  {
+    path: 'services/basic-cleaning/bathroom',
+    loadComponent: () => import('./service-page/services/basic-cleaning/bathroom-cleaning/bathroom-cleaning.component').then(m => m.BathroomCleaningComponent)
+  },
+  {
+    path: 'services/basic-cleaning/general',
+    loadComponent: () => import('./service-page/services/basic-cleaning/general-cleaning/general-cleaning.component').then(m => m.GeneralCleaningComponent)
+  },
+  {
+    path: 'services/deep-cleaning',
+    loadComponent: () => import('./service-page/services/deep-cleaning/deep-cleaning.component').then(m => m.DeepCleaningComponent)
+  },
+  {
+    path: 'services/office-cleaning',
+    loadComponent: () => import('./service-page/services/office-cleaning/office-cleaning.component').then(m => m.OfficeCleaningComponent)
+  },
+  {
+    path: 'services/custom-cleaning',
+    loadComponent: () => import('./service-page/services/custom-cleaning/custom-cleaning.component').then(m => m.CustomCleaningComponent)
+  },
+  {
+    path: 'services/move-in-out-cleaning',
+    loadComponent: () => import('./service-page/services/move-in-out-cleaning/move-in-out-cleaning.component').then(m => m.MoveInOutCleaningComponent)
+  },
+  {
+    path: 'services/filthy-cleaning',
+    loadComponent: () => import('./service-page/services/filthy-cleaning/filthy-cleaning.component').then(m => m.FilthyCleaningComponent)
+  },
+  {
+    path: 'services/post-construction-cleaning',
+    loadComponent: () => import('./service-page/services/post-construction-cleaning/post-construction-cleaning.component').then(m => m.PostConstructionCleaningComponent)
+  },
   {
     path: 'booking',
     loadComponent: () => import('./booking/booking.component').then(m => m.BookingComponent)

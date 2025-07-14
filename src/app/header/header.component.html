@@ -6,7 +6,67 @@
         <div class="nav-links">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">Home</a>
           <a routerLink="/about" routerLinkActive="active" (click)="closeMobileMenu()">About</a>
-          <a routerLink="/service-page" routerLinkActive="active" (click)="closeMobileMenu()">Services</a>
+          
+          <!-- Services Dropdown -->
+          <div class="dropdown" 
+               [class.open]="isServicesMenuOpen"
+               (mouseenter)="showServicesMenu()" 
+               (mouseleave)="hideServicesMenu()"
+               (click)="toggleServicesMenu($event)">
+            <a class="dropdown-toggle" 
+               [routerLink]="!isMobile ? '/service-page' : null" 
+               routerLinkActive="active" 
+               [routerLinkActiveOptions]="{exact: false}"
+               (click)="onServicesClick($event)">
+              Services
+              <svg class="chevron-down" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                <g fill-rule="evenodd" transform="translate(-448 -544)">
+                  <path fill-rule="nonzero" d="M452.707 549.293a1 1 0 0 0-1.414 1.414l4 4a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414L456 552.586l-3.293-3.293z"></path>
+                </g>
+              </svg>
+            </a>
+            <div class="dropdown-menu services-dropdown" *ngIf="isServicesMenuOpen" (click)="$event.stopPropagation()">
+              
+              <!-- All Services link (mobile only) -->
+              <a routerLink="/service-page" 
+                 (click)="onAllServicesClick($event)" 
+                 *ngIf="isMobile" 
+                 class="all-services-link">
+                All Services
+              </a>
+              
+              <!-- Basic Cleaning with nested dropdown -->
+              <div class="nested-dropdown" 
+                   [class.open]="isBasicCleaningSubmenuOpen"
+                   (mouseenter)="showBasicCleaningSubmenu()" 
+                   (mouseleave)="hideBasicCleaningSubmenu()"
+                   (click)="toggleBasicCleaningSubmenu($event)">
+                <a [routerLink]="!isMobile ? '/services/basic-cleaning' : null" 
+                   (click)="onBasicCleaningClick($event)">
+                  Basic Cleaning
+                  <svg class="chevron-right" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                    <g fill-rule="evenodd" transform="translate(-448 -544)">
+                      <path fill-rule="nonzero" d="M452.707 549.293a1 1 0 0 0-1.414 1.414l4 4a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414L456 552.586l-3.293-3.293z"></path>
+                    </g>
+                  </svg>
+                </a>
+                <div class="submenu" *ngIf="isBasicCleaningSubmenuOpen">
+                  <a routerLink="/services/basic-cleaning" (click)="closeAllMenus()" *ngIf="isMobile">Basic Cleaning</a>
+                  <a routerLink="/services/basic-cleaning/kitchen" (click)="closeAllMenus()">Kitchen Cleaning</a>
+                  <a routerLink="/services/basic-cleaning/bathroom" (click)="closeAllMenus()">Bathroom Cleaning</a>
+                  <a routerLink="/services/basic-cleaning/general" (click)="closeAllMenus()">General Cleaning</a>
+                </div>
+              </div>
+              
+              <a routerLink="/services/deep-cleaning" (click)="closeAllMenus()">Deep Cleaning</a>
+              <a routerLink="/services/office-cleaning" (click)="closeAllMenus()">Office Cleaning</a>
+              <a routerLink="/services/custom-cleaning" (click)="closeAllMenus()">Custom Cleaning</a>
+              <a routerLink="/services/move-in-out-cleaning" (click)="closeAllMenus()">Move In/Out Cleaning</a>
+              <a routerLink="/services/filthy-cleaning" (click)="closeAllMenus()">Filthy Cleaning</a>
+              <a routerLink="/services/post-construction-cleaning" (click)="closeAllMenus()">Post Construction Cleaning</a>
+            </div>
+          </div>
+          
           <a routerLink="/booking" routerLinkActive="active" (click)="closeMobileMenu()">Booking</a>
           <a routerLink="/contact" routerLinkActive="active" (click)="closeMobileMenu()">Contact</a>
         </div>
@@ -47,27 +107,27 @@
                 </small>
               </div>
               
-              <a routerLink="/profile" (click)="closeDropdownMenu()">Profile</a>
+              <a routerLink="/profile" (click)="closeAllMenus()">Profile</a>
               
               <!-- Show Cabinet for Cleaners -->
               <a routerLink="/cleaner/cabinet" 
-                 (click)="closeDropdownMenu()"
+                 (click)="closeAllMenus()"
                  *ngIf="currentUser?.role === 'Cleaner'">
                 Cabinet
               </a>
               
-              <a routerLink="/profile/orders" (click)="closeDropdownMenu()">My Orders</a>
-              <a routerLink="/gift-cards" (click)="closeDropdownMenu()">Gift Cards</a>
-              <a routerLink="/change-password" (click)="closeDropdownMenu()">Change Password</a>
+              <a routerLink="/profile/orders" (click)="closeAllMenus()">My Orders</a>
+              <a routerLink="/gift-cards" (click)="closeAllMenus()">Gift Cards</a>
+              <a routerLink="/change-password" (click)="closeAllMenus()">Change Password</a>
               
               <!-- Show Admin Panel for SuperAdmin, Admin, and Moderator -->
               <a routerLink="/admin"
-                 (click)="closeDropdownMenu()"
+                 (click)="closeAllMenus()"
                  *ngIf="currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin' || currentUser?.role === 'Moderator'">
                 Admin Panel
               </a>
               
-              <a (click)="logout(); closeDropdownMenu()">Logout</a>
+              <a (click)="logout(); closeAllMenus()">Logout</a>
             </div>
           </div>
         </ng-template>
