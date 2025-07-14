@@ -1752,6 +1752,10 @@ export class BookingComponent implements OnInit, OnDestroy {
       discountAmount: this.promoOrFirstTimeDiscountAmount,
       subscriptionDiscountAmount: shouldApplySubscriptionDiscount ? this.subscriptionDiscountAmount : 0,
       subTotal: this.calculation.subTotal,
+      // ADD THESE FIELDS TO FIX THE ISSUE:
+      tax: this.calculation.tax,
+      total: this.calculation.total,
+      calculation: this.calculation, // Add the full calculation object
       totalDuration: this.showCustomPricing ? parseInt(this.customDuration.value) : this.actualTotalDuration,
       hasActiveSubscription: this.hasActiveSubscription,
       userSubscriptionId: this.userSubscription?.subscriptionId,

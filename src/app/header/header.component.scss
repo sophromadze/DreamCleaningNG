@@ -16,15 +16,32 @@
   }
   
   .logo {
-    font-size: 24px;
-    font-weight: bold;
-    color: #333;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
     text-decoration: none;
     transition: all 0.3s ease;
   
     &:hover {
-      color: #007bff;
       transform: scale(1.02);
+    }
+
+    .logo-img {
+      height: 40px;
+      width: auto;
+      object-fit: contain;
+    }
+
+    .logo-text {
+      font-family: "Courgette", serif;
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      transition: color 0.3s ease;
+    }
+
+    &:hover .logo-text {
+      color: #007bff;
     }
   }
   
@@ -637,7 +654,13 @@
   // Additional responsive styling for very small screens
   @media (max-width: 480px) {
     .logo {
-      font-size: 18px;
+      .logo-img {
+        height: 48px;
+      }
+      
+      .logo-text {
+        font-size: 18px;
+      }
     }
 
     .nav-container {
@@ -650,7 +673,13 @@
 
   @media (max-width: 350px) {
     .logo {
-      font-size: 16px;
+      .logo-img {
+        height: 40px;
+      }
+      
+      .logo-text {
+        font-size: 16px;
+      }
     }
 
     .nav-container {

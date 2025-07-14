@@ -1,7 +1,10 @@
 <header class="header">
   <div class="container">
     <nav class="nav">
-      <a routerLink="/" class="logo">DreamCleaning</a>
+      <a routerLink="/" class="logo">
+        <img src="/images/logo.png" alt="DreamCleaning Logo" class="logo-img">
+        <span class="logo-text">DreamCleaning</span>
+      </a>
       <div class="nav-container">
         <div class="nav-links">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">Home</a>

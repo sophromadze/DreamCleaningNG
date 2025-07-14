@@ -68,10 +68,34 @@ export class BookingConfirmationComponent implements OnInit {
     }
 
     // Calculate total from booking data
-    const total = this.bookingData.calculation?.total || 
-                  (this.bookingData.subTotal + (this.bookingData.subTotal * 0.088) + 
-                   this.bookingData.tips + this.bookingData.companyDevelopmentTips - 
-                   this.bookingData.discountAmount - this.bookingData.giftCardAmountToUse);
+    let total;
+    
+    // First try to use the pre-calculated total
+    if (this.bookingData.calculation?.total !== undefined && this.bookingData.calculation?.total !== null) {
+      total = this.bookingData.calculation.total;
+    } else if (this.bookingData.total !== undefined && this.bookingData.total !== null) {
+      total = this.bookingData.total;
+    } else {
+      // Fallback calculation - FIXED with correct tax calculation
+      const subTotal = this.bookingData.subTotal || 0;
+      const tips = this.bookingData.tips || 0;
+      const companyDevelopmentTips = this.bookingData.companyDevelopmentTips || 0;
+      const discountAmount = this.bookingData.discountAmount || 0;
+      const subscriptionDiscountAmount = this.bookingData.subscriptionDiscountAmount || 0;
+      const giftCardAmountToUse = this.bookingData.giftCardAmountToUse || 0;
+      
+      // Calculate total discount
+      const totalDiscountAmount = discountAmount + subscriptionDiscountAmount;
+      
+      // Calculate tax on DISCOUNTED subtotal (this is the fix)
+      const discountedSubTotal = subTotal - totalDiscountAmount;
+      const tax = Math.round(discountedSubTotal * 0.08875 * 100) / 100; // Fixed: 0.088 -> 0.08875
+      
+      // Calculate final total
+      const totalBeforeGiftCard = discountedSubTotal + tax + tips + companyDevelopmentTips;
+      total = Math.max(0, totalBeforeGiftCard - giftCardAmountToUse);
+      total = Math.round(total * 100) / 100;
+    }
     
     this.orderTotal = total;
 
@@ -153,7 +177,7 @@ export class BookingConfirmationComponent implements OnInit {
             // Refresh user profile to get updated phone number
             this.authService.refreshUserProfile().subscribe({
               next: () => {
-                console.log('User profile refreshed with new phone number');
+                // User profile refreshed successfully
               },
               error: (error) => {
                 console.error('Failed to refresh user profile:', error);
