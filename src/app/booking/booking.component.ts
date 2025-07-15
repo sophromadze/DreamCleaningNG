@@ -229,11 +229,13 @@ export class BookingComponent implements OnInit, OnDestroy {
     // Ensure custom pricing FormControls have proper default values
     this.initializeCustomPricingDefaults();
     
-    // Initialize entry method to empty to show "Select entry method"
-    this.entryMethod.setValue('');
-
     // Load saved form data if exists
     this.loadSavedFormData();
+    
+    // Initialize entry method to empty only if no saved data exists
+    if (!this.entryMethod.value) {
+      this.entryMethod.setValue('');
+    }
     
     // Wait for auth service to be initialized before proceeding
     this.authService.isInitialized$.subscribe(isInitialized => {
@@ -701,8 +703,10 @@ export class BookingComponent implements OnInit, OnDestroy {
       this.entryMethod.setValidators([Validators.required]);
       this.entryMethod.updateValueAndValidity();
       
-      // Reset entry method to empty to show "Select entry method"
-      this.entryMethod.setValue('');
+      // Reset entry method to empty only if no saved value exists
+      if (!this.entryMethod.value) {
+        this.entryMethod.setValue('');
+      }
 
       // Trigger calculation
       this.calculateTotal();
@@ -718,7 +722,10 @@ export class BookingComponent implements OnInit, OnDestroy {
       this.entryMethod.updateValueAndValidity();
       
       // Set default values to prevent validation errors but disable validators
-      this.entryMethod.setValue('N/A'); // Set a default value
+      // Only set to 'N/A' if no saved value exists
+      if (!this.entryMethod.value) {
+        this.entryMethod.setValue('N/A'); // Set a default value
+      }
       
       // Initialize subscription and cleaning type for consistency
       if (!this.selectedSubscription && this.subscriptions && this.subscriptions.length > 0) {
@@ -739,8 +746,10 @@ export class BookingComponent implements OnInit, OnDestroy {
       this.entryMethod.setValidators([Validators.required]);
       this.entryMethod.updateValueAndValidity();
       
-      // Reset entry method value when switching back to regular booking
-      this.entryMethod.setValue('');
+      // Reset entry method value when switching back to regular booking only if no saved value exists
+      if (!this.entryMethod.value) {
+        this.entryMethod.setValue('');
+      }
       
       // Initialize services based on type (your existing logic)
       if (serviceType.services) {

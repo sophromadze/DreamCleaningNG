@@ -57,11 +57,11 @@
   <div class="success-content" *ngIf="paymentCompleted">
     <i class="fas fa-check-circle success-icon"></i>
     <h1>Payment Successful!</h1>
-    <p>Your gift card has been created.</p>
-    <p class="gift-code">Gift Card Code: <strong>{{ giftCardCode }}</strong></p>
-    <p class="info-text">The recipient will receive an email with the gift card details.</p>
-    <p class="redirect-info">Redirecting to your gift cards...</p>
-    
-    <a routerLink="/gift-cards" class="view-cards-btn">View My Gift Cards</a>
+    <p>Your gift card has been created and sent to the recipient.</p>
+    <div class="email-notification">
+      <i class="fas fa-envelope email-icon"></i>
+      <p class="email-message">Please check your email to see gift card data.</p>
+      <p class="recipient-info">The gift card has been sent to: <strong>{{ giftCardData?.recipientEmail }}</strong></p>
+    </div>
   </div>
 </div>

@@ -51,9 +51,6 @@ export class GiftCardPaymentComponent implements OnInit {
       this.giftCardService.confirmGiftCardPayment(this.giftCardId, paymentIntent.id).subscribe({
         next: () => {
           this.paymentCompleted = true;
-          setTimeout(() => {
-            this.router.navigate(['/gift-cards']);
-          }, 2000);
         },
         error: (error) => {
           this.errorMessage = error.error?.message || 'Failed to confirm payment';

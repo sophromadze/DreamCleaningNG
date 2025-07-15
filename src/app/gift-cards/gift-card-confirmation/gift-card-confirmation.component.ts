@@ -22,7 +22,7 @@ export class GiftCardConfirmationComponent implements OnInit, OnDestroy {
   giftCardAmount: number = 0;
   currentUser: any;
   isPreparing = false;
-  giftCardCode: string = '';
+
   cardError: string | null = null;
 
   constructor(
@@ -100,7 +100,6 @@ export class GiftCardConfirmationComponent implements OnInit, OnDestroy {
       this.giftCardService.createGiftCard(this.giftCardData).subscribe({
         next: async (response) => {
           this.giftCardId = response.giftCardId;
-          this.giftCardCode = response.code;
           this.paymentClientSecret = response.paymentClientSecret;
           
           try {
@@ -115,11 +114,6 @@ export class GiftCardConfirmationComponent implements OnInit, OnDestroy {
               next: (confirmResponse) => {
                 this.paymentCompleted = true;
                 this.isProcessing = false;
-                
-                // Redirect after 3 seconds
-                setTimeout(() => {
-                  this.router.navigate(['/gift-cards']);
-                }, 3000);
               },
               error: (error) => {
                 this.errorMessage = error.error?.message || 'Payment confirmation failed';

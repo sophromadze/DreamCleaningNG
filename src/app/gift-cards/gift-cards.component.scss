@@ -261,12 +261,16 @@
           }
         }
   
-        .gift-card-code {
+        .gift-card-note {
           text-align: center;
-          font-family: monospace;
-          font-size: 1rem;
-          color: #666;
+          font-size: 0.85rem;
+          color: #007bff;
           margin-top: auto;
+          font-style: italic;
+          background-color: rgba(0, 123, 255, 0.1);
+          padding: 0.5rem;
+          border-radius: 4px;
+          border: 1px solid rgba(0, 123, 255, 0.2);
         }
       }
     }

@@ -157,29 +157,42 @@ h1 {
     }
   }
   
+  .email-notification {
+    background-color: #e8f4fd;
+    border: 1px solid #bee5eb;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    text-align: center;
+    
+    .email-icon {
+      font-size: 2rem;
+      color: #007bff;
+      margin-bottom: 1rem;
+    }
+    
+    .email-message {
+      color: #0c5460;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    
+    .recipient-info {
+      color: #666;
+      font-size: 0.95rem;
+      margin: 0;
+      
+      strong {
+        color: #333;
+      }
+    }
+  }
+  
   .info-text {
     color: #666;
     margin-bottom: 1rem;
   }
   
-  .redirect-info {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
-  }
-  
-  .view-cards-btn {
-    display: inline-block;
-    background-color: #007bff;
-    color: white;
-    padding: 0.75rem 2rem;
-    border-radius: 6px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: background-color 0.3s;
-    
-    &:hover {
-      background-color: #0056b3;
-    }
-  }
+
 }
