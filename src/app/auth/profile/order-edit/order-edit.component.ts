@@ -1,5 +1,5 @@
 // src/app/auth/profile/order-edit/order-edit.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { AuthService } from '../../../services/auth.service';
 import { DurationUtils } from '../../../utils/duration.utils';
 import { DateSelectorComponent } from '../../../booking/date-selector/date-selector.component';
 import { TimeSelectorComponent } from '../../../booking/time-selector/time-selector.component';
+import { StripeService } from '../../../services/stripe.service';
 
 interface SelectedService {
   service: Service;
@@ -30,7 +31,7 @@ interface SelectedExtraService {
   templateUrl: './order-edit.component.html',
   styleUrls: ['./order-edit.component.scss']
 })
-export class OrderEditComponent implements OnInit {
+export class OrderEditComponent implements OnInit, OnDestroy {
   order: Order | null = null;
   orderForm: FormGroup;
   
@@ -98,6 +99,14 @@ export class OrderEditComponent implements OnInit {
   originalServiceQuantities: Map<number, number> = new Map();
   serviceControls: FormArray;
 
+  // Payment related properties
+  isProcessingPayment = false;
+  paymentClientSecret: string | null = null;
+  cardError: string | null = null;
+  paymentErrorMessage: string = '';
+  private updateData: UpdateOrder | null = null;
+
+
   constructor(
     private fb: FormBuilder,
     private orderService: OrderService,
@@ -105,7 +114,8 @@ export class OrderEditComponent implements OnInit {
     private locationService: LocationService,
     private route: ActivatedRoute,
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private stripeService: StripeService
   ) {
     this.orderForm = this.fb.group({
       serviceDate: ['', Validators.required],
@@ -885,6 +895,17 @@ export class OrderEditComponent implements OnInit {
     if (Math.abs(this.additionalAmount) < 0.01) {
       this.additionalAmount = 0;
     }
+
+    // At the end of the method, add this logging:
+  console.log('=== FRONTEND CALCULATION DEBUG ===');
+  console.log('Original Total:', this.originalTotal);
+  console.log('New SubTotal:', this.newSubTotal);
+  console.log('New Tax:', this.newTax);
+  console.log('Tips:', this.orderForm.get('tips')?.value || 0);
+  console.log('Company Dev Tips:', this.orderForm.get('companyDevelopmentTips')?.value || 0);
+  console.log('New Total:', this.newTotal);
+  console.log('Additional Amount:', this.additionalAmount);
+  console.log('==================================');
   }
 
   prepareUpdateData(): UpdateOrder {
@@ -956,34 +977,60 @@ export class OrderEditComponent implements OnInit {
     };
   }
 
+  ngOnDestroy() {
+    // Clean up Stripe elements when component is destroyed
+    this.stripeService.destroyCardElement();
+  }
+
   onSubmit() {
     if (!this.orderForm.valid || !this.order) {
       this.errorMessage = 'Please fill in all required fields';
       return;
     }
-  
+
     // Check if the total is being reduced
     if (this.additionalAmount < 0) {
       this.errorMessage = `Cannot reduce order total. The new total would be $${Math.abs(this.additionalAmount).toFixed(2)} less than the original amount paid.`;
       window.scrollTo(0, 0);
       return;
     }
-  
+
+    // Store update data for later use
+    this.updateData = this.prepareUpdateData();
+
     // Check if additional payment is needed
     if (this.additionalAmount > 0) {
       this.showPaymentModal = true;
+      // Initialize Stripe elements when modal opens
+      setTimeout(() => this.initializeStripeElements(), 100);
     } else {
       this.saveOrder();
     }
   }
 
+  private async initializeStripeElements() {
+    try {
+      await this.stripeService.initializeElements();
+      const cardElement = this.stripeService.createCardElement('card-element-order-edit');
+      
+      if (cardElement) {
+        cardElement.on('change', (event: any) => {
+          this.cardError = event.error ? event.error.message : null;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to initialize Stripe elements:', error);
+      this.paymentErrorMessage = 'Failed to initialize payment form';
+    }
+  }
+
   saveOrder() {
     if (!this.order) return;
-  
+
     this.isSaving = true;
     this.errorMessage = '';
-    const updateData = this.prepareUpdateData();
-  
+    const updateData = this.updateData || this.prepareUpdateData();
+
     this.orderService.updateOrder(this.order.id, updateData).subscribe({
       next: (updatedOrder) => {
         this.successMessage = 'Order updated successfully';
@@ -1008,25 +1055,93 @@ export class OrderEditComponent implements OnInit {
     });
   }
 
-  processAdditionalPayment() {
-    if (!this.order) return;
-  
-    // For order edits with additional payment, we just simulate the UI flow
-    // In a real implementation, this would process the additional payment through Stripe
-    this.isSaving = true;
-    
-    // Simulate payment processing delay
-    setTimeout(() => {
-      this.showPaymentModal = false;
-      
-      // The phone number update happens in the saveOrder method
-      // when we call updateOrder on the backend
-      this.saveOrder();
-    }, 1000);
+  async processAdditionalPayment() {
+    if (!this.order || !this.updateData || this.isProcessingPayment || this.cardError) return;
+
+    this.isProcessingPayment = true;
+    this.paymentErrorMessage = '';
+
+    try {
+      // Step 1: Create payment intent for the additional amount
+      this.orderService.createUpdatePaymentIntent(this.order.id, this.updateData).subscribe({
+        next: async (response) => {
+          this.paymentClientSecret = response.paymentClientSecret;
+
+          try {
+            // Step 2: Confirm the payment with Stripe
+            const paymentIntent = await this.stripeService.confirmCardPayment(
+              response.paymentClientSecret,
+              this.getBillingDetails()
+            );
+
+            // Step 3: Confirm with backend and update the order
+            this.orderService.confirmUpdatePayment(
+              this.order!.id, 
+              paymentIntent.id,
+              this.updateData!
+            ).subscribe({
+              next: (updatedOrder) => {
+                this.showPaymentModal = false;
+                this.successMessage = 'Order updated successfully';
+                
+                // Refresh user profile to ensure phone is updated if changed
+                this.authService.refreshUserProfile().subscribe({
+                  next: () => {
+                    console.log('User profile refreshed');
+                  }
+                });
+                
+                setTimeout(() => {
+                  this.router.navigate(['/order', this.order!.id]);
+                }, 1500);
+              },
+              error: (error) => {
+                this.paymentErrorMessage = error.error?.message || 'Failed to update order after payment';
+                this.isProcessingPayment = false;
+              }
+            });
+          } catch (paymentError: any) {
+            // Payment failed
+            this.paymentErrorMessage = paymentError.message || 'Payment failed. Please try again.';
+            this.isProcessingPayment = false;
+          }
+        },
+        error: (error) => {
+          this.paymentErrorMessage = error.error?.message || 'Failed to create payment';
+          this.isProcessingPayment = false;
+        }
+      });
+    } catch (error: any) {
+      this.paymentErrorMessage = 'An unexpected error occurred';
+      this.isProcessingPayment = false;
+    }
   }
 
+  private getBillingDetails() {
+    const formValue = this.orderForm.value;
+    return {
+      name: `${formValue.contactFirstName} ${formValue.contactLastName}`,
+      email: formValue.contactEmail,
+      phone: formValue.contactPhone,
+      address: {
+        line1: formValue.serviceAddress,
+        line2: formValue.aptSuite || '',
+        city: formValue.city,
+        state: formValue.state,
+        postal_code: formValue.zipCode
+      }
+    };
+  }
+
+
   closePaymentModal() {
-    this.showPaymentModal = false;
+    if (!this.isProcessingPayment) {
+      this.showPaymentModal = false;
+      this.paymentErrorMessage = '';
+      this.cardError = null;
+      // Clean up Stripe elements
+      this.stripeService.destroyCardElement();
+    }
   }
 
   getServiceOptions(service: Service): number[] {

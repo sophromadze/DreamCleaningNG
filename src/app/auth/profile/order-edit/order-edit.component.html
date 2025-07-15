@@ -423,21 +423,36 @@
       </div>
   
     <!-- Payment Modal -->
-    <div class="modal-backdrop" *ngIf="showPaymentModal" (click)="closePaymentModal()">
-      <div class="modal" (click)="$event.stopPropagation()">
-        <h2>Additional Payment Required</h2>
-        <div class="payment-info">
-          <p>Your changes require an additional payment of:</p>
-          <div class="amount">${{ additionalAmount.toFixed(2) }}</div>
-          <p class="note">This is the difference between your new order total and the original amount paid.</p>
-        </div>
-        
-        <div class="modal-actions">
-          <button class="pay-btn" (click)="processAdditionalPayment()">
-            Process Payment (Test Mode)
-          </button>
-          <button class="cancel-btn" (click)="closePaymentModal()">Cancel</button>
-        </div>
+<div class="modal-backdrop" *ngIf="showPaymentModal" (click)="closePaymentModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <h2>Additional Payment Required</h2>
+    <div class="payment-info">
+      <p>Your changes require an additional payment of:</p>
+      <div class="amount">${{ additionalAmount.toFixed(2) }}</div>
+      <p class="note">This is the difference between your new order total and the original amount paid.</p>
+    </div>
+    
+    <!-- Stripe Card Element -->
+    <div class="payment-form">
+      <div class="form-group">
+        <label>Card Details</label>
+        <div id="card-element-order-edit" class="stripe-card-element"></div>
+        <div class="card-errors" *ngIf="cardError">{{ cardError }}</div>
       </div>
     </div>
+    
+    <div class="modal-actions">
+      <button class="pay-btn" (click)="processAdditionalPayment()" 
+              [disabled]="isProcessingPayment || !!cardError">
+        {{ isProcessingPayment ? 'Processing...' : 'Pay $' + additionalAmount.toFixed(2) }}
+      </button>
+      <button class="cancel-btn" (click)="closePaymentModal()" 
+              [disabled]="isProcessingPayment">Cancel</button>
+    </div>
+    
+    <div class="error-message" *ngIf="paymentErrorMessage">
+      {{ paymentErrorMessage }}
+    </div>
+  </div>
+</div>
   </div>

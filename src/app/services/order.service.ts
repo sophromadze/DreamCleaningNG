@@ -136,4 +136,15 @@ export class OrderService {
   calculateAdditionalAmount(orderId: number, updateData: UpdateOrder): Observable<{ additionalAmount: number }> {
     return this.http.post<{ additionalAmount: number }>(`${this.apiUrl}/order/${orderId}/calculate-additional`, updateData);
   }
+
+  createUpdatePaymentIntent(orderId: number, updateData: UpdateOrder): Observable<any> {
+    return this.http.post(`${this.apiUrl}/order/${orderId}/create-update-payment`, updateData);
+  }
+  
+  confirmUpdatePayment(orderId: number, paymentIntentId: string, updateData: UpdateOrder): Observable<any> {
+    return this.http.post(`${this.apiUrl}/order/${orderId}/confirm-update-payment`, {
+      paymentIntentId,
+      updateOrderData: updateData
+    });
+  }
 }
