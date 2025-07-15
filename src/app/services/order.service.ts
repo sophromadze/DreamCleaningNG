@@ -137,11 +137,11 @@ export class OrderService {
     return this.http.post<{ additionalAmount: number }>(`${this.apiUrl}/order/${orderId}/calculate-additional`, updateData);
   }
 
-  simulatePayment(orderId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/order/${orderId}/simulate-payment`, {});
-  }
+  // simulatePayment(orderId: number): Observable<any> {
+  //   return this.http.post(`${this.apiUrl}/order/${orderId}/simulate-payment`, {});
+  // }
 
-  simulateBookingPayment(orderId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/booking/simulate-payment/${orderId}`, {});
-  }
+  // simulateBookingPayment(orderId: number): Observable<any> {
+  //   return this.http.post(`${this.apiUrl}/booking/simulate-payment/${orderId}`, {});
+  // }
 }

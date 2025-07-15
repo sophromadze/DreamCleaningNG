@@ -1,19 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { GiftCardService, CreateGiftCard } from '../../services/gift-card.service';
 import { AuthService } from '../../services/auth.service';
-import { PaymentComponent } from '../../booking/payment/payment.component';
 import { StripeService } from '../../services/stripe.service';
 
 @Component({
   selector: 'app-gift-card-confirmation',
   standalone: true,
-  imports: [CommonModule, RouterModule, PaymentComponent],
+  imports: [CommonModule, RouterModule],
   templateUrl: './gift-card-confirmation.component.html',
   styleUrls: ['./gift-card-confirmation.component.scss']
 })
-export class GiftCardConfirmationComponent implements OnInit {
+export class GiftCardConfirmationComponent implements OnInit, OnDestroy {
   giftCardId: number = 0;
   isProcessing = false;
   paymentCompleted = false;
@@ -22,8 +21,9 @@ export class GiftCardConfirmationComponent implements OnInit {
   paymentClientSecret: string | null = null;
   giftCardAmount: number = 0;
   currentUser: any;
-  isPreparing = true;
+  isPreparing = false;
   giftCardCode: string = '';
+  cardError: string | null = null;
 
   constructor(
     private router: Router,
@@ -65,30 +65,81 @@ export class GiftCardConfirmationComponent implements OnInit {
       this.currentUser = user;
     });
 
-    // Prepare payment
-    this.preparePayment();
+    // Initialize Stripe Elements
+    this.initializeStripeElements();
   }
 
-  preparePayment() {
-    this.isPreparing = true;
-    this.errorMessage = '';
+  ngOnDestroy() {
+    this.stripeService.destroyCardElement();
+  }
 
-    const metadata = {
-      userId: this.currentUser?.id?.toString() || '',
-      type: 'gift_card_preparation'
-    };
-
-    this.stripeService.createPaymentIntent(this.giftCardAmount, metadata).subscribe({
-      next: (paymentIntent) => {
-        this.paymentClientSecret = paymentIntent.client_secret;
-        this.isPreparing = false;
-      },
-      error: (error) => {
-        console.error('Failed to create payment intent:', error);
-        this.errorMessage = 'Failed to prepare payment. Please try again.';
-        this.isPreparing = false;
+  private async initializeStripeElements() {
+    try {
+      await this.stripeService.initializeElements();
+      const cardElement = this.stripeService.createCardElement('card-element');
+      
+      if (cardElement) {
+        cardElement.on('change', (event: any) => {
+          this.cardError = event.error ? event.error.message : null;
+        });
       }
-    });
+    } catch (error) {
+      console.error('Failed to initialize Stripe elements:', error);
+      this.errorMessage = 'Failed to initialize payment form';
+    }
+  }
+
+  async processPayment() {
+    if (!this.giftCardData || this.isProcessing || this.cardError) return;
+    
+    this.isProcessing = true;
+    this.errorMessage = '';
+    
+    try {
+      // Create the gift card and get payment intent
+      this.giftCardService.createGiftCard(this.giftCardData).subscribe({
+        next: async (response) => {
+          this.giftCardId = response.giftCardId;
+          this.giftCardCode = response.code;
+          this.paymentClientSecret = response.paymentClientSecret;
+          
+          try {
+            // Confirm the payment
+            const paymentIntent = await this.stripeService.confirmCardPayment(
+              response.paymentClientSecret,
+              this.billingDetails
+            );
+            
+            // Confirm payment with backend
+            this.giftCardService.confirmGiftCardPayment(this.giftCardId, paymentIntent.id).subscribe({
+              next: (confirmResponse) => {
+                this.paymentCompleted = true;
+                this.isProcessing = false;
+                
+                // Redirect after 3 seconds
+                setTimeout(() => {
+                  this.router.navigate(['/gift-cards']);
+                }, 3000);
+              },
+              error: (error) => {
+                this.errorMessage = error.error?.message || 'Payment confirmation failed';
+                this.isProcessing = false;
+              }
+            });
+          } catch (paymentError: any) {
+            this.errorMessage = paymentError.message || 'Payment failed. Please try again.';
+            this.isProcessing = false;
+          }
+        },
+        error: (error) => {
+          this.errorMessage = error.error?.message || 'Failed to create gift card';
+          this.isProcessing = false;
+        }
+      });
+    } catch (error: any) {
+      this.errorMessage = 'An unexpected error occurred';
+      this.isProcessing = false;
+    }
   }
 
   get billingDetails() {
@@ -96,59 +147,6 @@ export class GiftCardConfirmationComponent implements OnInit {
       name: this.giftCardData?.senderName || '',
       email: this.giftCardData?.senderEmail || ''
     };
-  }
-
-  onPaymentComplete(paymentIntent: any) {
-    if (!this.giftCardData) return;
-    
-    this.isProcessing = true;
-    
-    // Create the gift card after successful payment
-    this.giftCardService.createGiftCard(this.giftCardData).subscribe({
-      next: (response) => {
-        this.giftCardId = response.giftCardId;
-        this.giftCardCode = response.code;
-        
-        // Confirm the payment
-        this.giftCardService.confirmGiftCardPayment(response.giftCardId, paymentIntent.id).subscribe({
-          next: (confirmResponse) => {
-            this.paymentCompleted = true;
-            this.isProcessing = false;
-            
-            // Redirect after 3 seconds
-            setTimeout(() => {
-              this.router.navigate(['/gift-cards']);
-            }, 3000);
-          },
-          error: (error) => {
-            this.errorMessage = error.error?.message || 'Payment confirmation failed';
-            this.isProcessing = false;
-          }
-        });
-      },
-      error: (error) => {
-        this.errorMessage = error.error?.message || 'Failed to create gift card';
-        this.isProcessing = false;
-      }
-    });
-  }
-
-  onPaymentError(error: any) {
-    // Only show error message for setup errors, not payment processing errors
-    // Payment processing errors are handled by the payment component itself
-    if (error.error?.type === 'card_error' || error.error?.type === 'validation_error') {
-      // These are handled by the payment component, don't show duplicate error
-      return;
-    }
-    
-    this.errorMessage = error.message || 'Payment setup failed. Please try again.';
-    this.isProcessing = false;
-  }
-
-  retryPayment() {
-    this.errorMessage = '';
-    this.paymentClientSecret = null; // Clear the old payment intent
-    this.preparePayment();
   }
 
   cancelPurchase() {

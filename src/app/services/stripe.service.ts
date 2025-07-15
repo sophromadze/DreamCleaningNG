@@ -1,51 +1,180 @@
 import { Injectable } from '@angular/core';
-import { environment } from '../../environments/environment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+import { loadStripe, Stripe, StripeElements, StripeCardElement } from '@stripe/stripe-js';
 import { AuthService } from './auth.service';
-
-declare var Stripe: any;
 
 @Injectable({
   providedIn: 'root'
 })
 export class StripeService {
-  private stripe: any;
-  private elements: any;
-  private cardElement: any;
+  private stripe: Stripe | null = null;
+  private elements: StripeElements | null = null;
+  private cardElement: StripeCardElement | null = null;
   private apiUrl = environment.apiUrl;
-  
+
   constructor(private http: HttpClient, private authService: AuthService) {
-    this.stripe = Stripe(environment.stripePublishableKey);
+    this.initializeStripe();
   }
 
-  createElements() {
-    this.elements = this.stripe.elements();
+  private async initializeStripe() {
+    this.stripe = await loadStripe(environment.stripePublishableKey);
+  }
+
+  // Initialize Stripe Elements
+  async initializeElements(): Promise<void> {
+    if (!this.stripe) {
+      await this.initializeStripe();
+    }
+    
+    if (this.stripe && !this.elements) {
+      this.elements = this.stripe.elements();
+    }
+  }
+
+  // Create Stripe Elements (for backward compatibility)
+  createElements(): StripeElements | null {
+    // This is synchronous for backward compatibility
+    // But elements might not be ready if stripe isn't loaded
+    if (!this.stripe) {
+      console.warn('Stripe not initialized. Call initializeElements() first.');
+      return null;
+    }
+    
+    if (!this.elements && this.stripe) {
+      this.elements = this.stripe.elements();
+    }
+    
     return this.elements;
   }
 
-  createCardElement(elementId: string) {
-    const style = {
-      base: {
-        fontSize: '16px',
-        color: '#32325d',
-        fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
-        '::placeholder': {
-          color: '#aab7c4'
-        }
-      },
-      invalid: {
-        color: '#fa755a',
-        iconColor: '#fa755a'
-      }
-    };
-
-    this.cardElement = this.elements.create('card', { style });
-    this.cardElement.mount(`#${elementId}`);
+  // Create and mount card element
+  createCardElement(elementId: string): StripeCardElement | null {
+    // Synchronous version for backward compatibility
+    if (!this.elements) {
+      this.createElements();
+    }
     
+    if (!this.elements) {
+      throw new Error('Stripe Elements not initialized');
+    }
+
+    // Destroy existing card element if any
+    if (this.cardElement) {
+      this.cardElement.destroy();
+    }
+
+    // Create new card element
+    this.cardElement = this.elements.create('card', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#32325d',
+          fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+          '::placeholder': {
+            color: '#aab7c4'
+          }
+        },
+        invalid: {
+          color: '#fa755a',
+          iconColor: '#fa755a'
+        }
+      }
+    });
+
+    // Mount to DOM
+    const element = document.getElementById(elementId);
+    if (element) {
+      this.cardElement.mount(`#${elementId}`);
+    }
+
     return this.cardElement;
   }
 
+  // Async version for new implementations
+  async createCardElementAsync(elementId: string): Promise<StripeCardElement | null> {
+    await this.initializeElements();
+    
+    if (!this.elements) {
+      throw new Error('Stripe Elements not initialized');
+    }
+
+    // Destroy existing card element if any
+    if (this.cardElement) {
+      this.cardElement.destroy();
+    }
+
+    // Create new card element
+    this.cardElement = this.elements.create('card', {
+      style: {
+        base: {
+          fontSize: '16px',
+          color: '#32325d',
+          fontFamily: '"Helvetica Neue", Helvetica, sans-serif',
+          '::placeholder': {
+            color: '#aab7c4'
+          }
+        },
+        invalid: {
+          color: '#fa755a',
+          iconColor: '#fa755a'
+        }
+      }
+    });
+
+    // Mount to DOM
+    const element = document.getElementById(elementId);
+    if (element) {
+      this.cardElement.mount(`#${elementId}`);
+    }
+
+    return this.cardElement;
+  }
+
+  // Confirm card payment
+  async confirmCardPayment(clientSecret: string, billingDetails?: any): Promise<any> {
+    if (!this.stripe || !this.cardElement) {
+      throw new Error('Stripe not initialized');
+    }
+
+    const { error, paymentIntent } = await this.stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: this.cardElement,
+        billing_details: billingDetails
+      }
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return paymentIntent;
+  }
+
+  // Get payment intent
+  async getPaymentIntentAsync(paymentIntentId: string): Promise<any> {
+    if (!this.stripe) {
+      await this.initializeStripe();
+    }
+    
+    if (!this.stripe) {
+      throw new Error('Stripe not initialized');
+    }
+    
+    const result = await this.stripe.retrievePaymentIntent(paymentIntentId);
+    return result.paymentIntent;
+  }
+
+  // Destroy card element
+  destroyCardElement(): void {
+    if (this.cardElement) {
+      this.cardElement.destroy();
+      this.cardElement = null;
+    }
+  }
+
+  // Create payment intent API call
   createPaymentIntent(amount: number, metadata?: any): Observable<any> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
@@ -58,37 +187,12 @@ export class StripeService {
       metadata: metadata || {}
     };
     
-    // Fix: Change URL to match your backend controller route
+    // Update this URL to match your backend controller route
     return this.http.post(`${this.apiUrl}/stripewebhook/create-payment-intent`, body, { headers });
   }
 
-  async confirmCardPayment(clientSecret: string, billingDetails?: any) {
-    const { error, paymentIntent } = await this.stripe.confirmCardPayment(
-      clientSecret,
-      {
-        payment_method: {
-          card: this.cardElement,
-          billing_details: billingDetails
-        }
-      }
-    );
-
-    if (error) {
-      throw error;
-    }
-
-    return paymentIntent;
-  }
-
-  async getPaymentIntentAsync(paymentIntentId: string) {
-    const paymentIntent = await this.stripe.retrievePaymentIntent(paymentIntentId);
-    return paymentIntent.paymentIntent;
-  }
-
-  destroyCardElement() {
-    if (this.cardElement) {
-      this.cardElement.destroy();
-      this.cardElement = null;
-    }
+  // Get card element
+  getCardElement(): StripeCardElement | null {
+    return this.cardElement;
   }
 }

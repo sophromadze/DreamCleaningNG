@@ -1,56 +1,67 @@
 <div class="gift-card-confirmation-container">
-    <div class="confirmation-content" *ngIf="!paymentCompleted">
-      <h1>Complete Your Gift Card Purchase</h1>
-      
-      <div class="payment-section" *ngIf="paymentClientSecret && !isPreparing">
-        <div class="purchase-summary">
-          <h3>Purchase Summary</h3>
-          <div class="summary-item">
-            <span>Recipient:</span>
-            <span>{{ giftCardData?.recipientName }}</span>
-          </div>
-          <div class="summary-item">
-            <span>Amount:</span>
-            <span class="amount">${{ giftCardAmount.toFixed(2) }}</span>
-          </div>
-        </div>
-        
-        <app-payment
-          [amount]="giftCardAmount"
-          [clientSecret]="paymentClientSecret"
-          [billingDetails]="billingDetails"
-          (paymentComplete)="onPaymentComplete($event)"
-          (paymentError)="onPaymentError($event)">
-        </app-payment>
+  <div class="confirmation-content" *ngIf="!paymentCompleted">
+    <h1>Complete Your Gift Card Purchase</h1>
+    
+    <div class="purchase-summary">
+      <h3>Purchase Summary</h3>
+      <div class="summary-item">
+        <span>Recipient:</span>
+        <span>{{ giftCardData?.recipientName }}</span>
       </div>
-  
-      <div class="loading-section" *ngIf="isPreparing">
-        <div class="spinner"></div>
-        <p>Setting up secure payment...</p>
-      </div>
-      
-      <div class="error-message" *ngIf="errorMessage && !paymentClientSecret">
-        {{ errorMessage }}
-        <button class="retry-btn" (click)="retryPayment()">Try Again</button>
-      </div>
-  
-      <div class="cancel-action" *ngIf="!isPreparing && !isProcessing">
-        <button 
-          class="cancel-btn" 
-          (click)="cancelPurchase()">
-          Cancel Purchase
-        </button>
+      <div class="summary-item">
+        <span>Amount:</span>
+        <span class="amount">${{ giftCardAmount.toFixed(2) }}</span>
       </div>
     </div>
     
-    <div class="success-content" *ngIf="paymentCompleted">
-              <i class="fas fa-check-circle success-icon"></i>
-      <h1>Payment Successful!</h1>
-      <p>Your gift card has been created.</p>
-      <p class="gift-code">Gift Card Code: <strong>{{ giftCardCode }}</strong></p>
-      <p class="info-text">The recipient will receive an email with the gift card details.</p>
-      <p class="redirect-info">Redirecting to your gift cards...</p>
+    <!-- Payment Form Section -->
+    <div class="payment-section">
+      <h3>Payment Information</h3>
       
-      <a routerLink="/gift-cards" class="view-cards-btn">View My Gift Cards</a>
+      <!-- Card Element Container -->
+      <div id="card-element" class="card-element-container">
+        <!-- Stripe Elements will be mounted here -->
+      </div>
+      
+      <!-- Card Error Message -->
+      <div class="card-error" *ngIf="cardError">
+        {{ cardError }}
+      </div>
+      
+      <!-- Error Message -->
+      <div class="error-message" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="payment-actions">
+        <button 
+          class="pay-btn" 
+          (click)="processPayment()"
+          [disabled]="isProcessing || !!cardError">
+          <span *ngIf="!isProcessing">Pay ${{ giftCardAmount | number:'1.2-2' }}</span>
+          <span *ngIf="isProcessing">Processing...</span>
+        </button>
+        
+        <button 
+          class="cancel-btn" 
+          (click)="cancelPurchase()"
+          [disabled]="isProcessing">
+          Cancel
+        </button>
+      </div>
     </div>
   </div>
+  
+  <!-- Success Content -->
+  <div class="success-content" *ngIf="paymentCompleted">
+    <i class="fas fa-check-circle success-icon"></i>
+    <h1>Payment Successful!</h1>
+    <p>Your gift card has been created.</p>
+    <p class="gift-code">Gift Card Code: <strong>{{ giftCardCode }}</strong></p>
+    <p class="info-text">The recipient will receive an email with the gift card details.</p>
+    <p class="redirect-info">Redirecting to your gift cards...</p>
+    
+    <a routerLink="/gift-cards" class="view-cards-btn">View My Gift Cards</a>
+  </div>
+</div>

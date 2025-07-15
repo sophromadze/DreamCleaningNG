@@ -38,13 +38,21 @@ export class PaymentComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
-  private initializeStripeElements() {
-    this.stripeService.createElements();
-    const cardElement = this.stripeService.createCardElement('card-element');
-    
-    cardElement.addEventListener('change', (event: any) => {
-      this.cardError = event.error ? event.error.message : null;
-    });
+  private async initializeStripeElements() {
+    try {
+      await this.stripeService.initializeElements();
+      const cardElement = this.stripeService.createCardElement('card-element');
+      
+      // cardElement is returned synchronously after elements are initialized
+      if (cardElement) {
+        cardElement.on('change', (event: any) => {
+          this.cardError = event.error ? event.error.message : null;
+        });
+      }
+    } catch (error) {
+      console.error('Failed to initialize Stripe elements:', error);
+      this.errorMessage = 'Failed to initialize payment form';
+    }
   }
 
   private resetPaymentState() {
