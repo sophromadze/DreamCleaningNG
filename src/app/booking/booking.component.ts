@@ -389,11 +389,16 @@ export class BookingComponent implements OnInit, OnDestroy {
           if (savedServiceType) {
             // Set the service type control value first
             this.serviceTypeControl.setValue(savedServiceType.id);
+            
+            // Store saved data for restoration after selectServiceType
+            const savedServices = savedData.selectedServices || [];
+            const savedExtraServices = savedData.selectedExtraServices || [];
+            
             this.selectServiceType(savedServiceType);
             
             // Restore selected services
-            if (savedData.selectedServices) {
-              savedData.selectedServices.forEach(ss => {
+            if (savedServices.length > 0) {
+              savedServices.forEach(ss => {
                 const service = savedServiceType.services.find(s => String(s.id) === String(ss.serviceId));
                 if (service) {
                   const existingIndex = this.selectedServices.findIndex(s => String(s.service.id) === String(service.id));
@@ -405,14 +410,17 @@ export class BookingComponent implements OnInit, OnDestroy {
             }
             
             // Restore selected extra services
-            if (savedData.selectedExtraServices) {
-              savedData.selectedExtraServices.forEach(ses => {
+            if (savedExtraServices.length > 0) {
+              // Clear any extra services that might have been added by selectServiceType
+              this.selectedExtraServices = [];
+              
+              savedExtraServices.forEach(ses => {
                 const extraService = savedServiceType.extraServices.find(es => String(es.id) === String(ses.extraServiceId));
                 if (extraService) {
                   this.selectedExtraServices.push({
                     extraService,
-                    quantity: ses.quantity,
-                    hours: ses.hours
+                    quantity: ses.quantity || 1,
+                    hours: ses.hours || (extraService.hasHours ? 0.5 : 0)
                   });
                 }
               });
@@ -934,6 +942,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (selected && quantity >= 1) {
       selected.quantity = quantity;
       this.calculateTotal();
+      this.saveFormData(); // Save form data immediately when quantity changes
     }
   }
 
@@ -942,6 +951,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (selected && hours >= 0.5) {
       selected.hours = hours;
       this.calculateTotal();
+      this.saveFormData(); // Save form data immediately when hours change
     }
   }
 
