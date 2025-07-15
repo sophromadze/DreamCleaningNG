@@ -10,11 +10,11 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./duration-selector.component.scss']
 })
 export class DurationSelectorComponent implements OnInit {
-  @Input() value: number = 90; // Default to 1.5 hours
+  @Input() value: number = 60; // Default to 1 hour
   @Output() valueChange = new EventEmitter<number>();
 
   selectedHours: number = 1;
-  selectedMinutes: number = 30;
+  selectedMinutes: number = 0;
   
   hours: number[] = Array.from({length: 8}, (_, i) => i + 1); // 1 to 8 hours
   minutes: number[] = [0, 30]; // 00 and 30 minutes
@@ -67,7 +67,7 @@ export class DurationSelectorComponent implements OnInit {
   }
 
   updateValue() {
-    const newValue = (this.selectedHours * 60) + this.selectedMinutes;
+    const newValue = Math.max((this.selectedHours * 60) + this.selectedMinutes, 60); // Ensure minimum 1 hour
     this.value = newValue;
     this.valueChange.emit(newValue);
   }

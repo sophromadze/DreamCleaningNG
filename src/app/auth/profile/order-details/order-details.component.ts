@@ -151,8 +151,9 @@ export class OrderDetailsComponent implements OnInit {
   }
 
   formatDuration(minutes: number): string {
-    // Simply use the rounded duration
-    return DurationUtils.formatDurationRounded(minutes);
+    // Ensure minimum 1 hour (60 minutes) before formatting
+    const adjustedMinutes = Math.max(minutes, 60);
+    return DurationUtils.formatDurationRounded(adjustedMinutes);
   }
 
   formatServiceDuration(minutes: number): string {

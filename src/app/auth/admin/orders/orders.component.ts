@@ -584,15 +584,17 @@ export class OrdersComponent implements OnInit {
   }
 
   formatDuration(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    let mins = minutes % 60;
+    // Ensure minimum 1 hour (60 minutes)
+    const adjustedMinutes = Math.max(minutes, 60);
+    const hours = Math.floor(adjustedMinutes / 60);
+    let mins = adjustedMinutes % 60;
     if (mins >= 15) {
       mins = 30;
     } else {
       mins = 0;
     }
     if (hours === 0 && mins === 0) {
-      return '0 minutes';
+      return '1h'; // Minimum 1 hour
     } else if (hours === 0) {
       return `${mins} minutes`;
     } else if (mins === 0) {

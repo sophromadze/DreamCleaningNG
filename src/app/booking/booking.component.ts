@@ -47,7 +47,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   showCustomPricing = false;
   customAmount: FormControl = new FormControl('', [Validators.required, Validators.min(0.01)]);
   customCleaners: FormControl = new FormControl(1, [Validators.required, Validators.min(1), Validators.max(10)]);
-  customDuration: FormControl = new FormControl(90, [Validators.required, Validators.min(30), Validators.max(480)]);
+  customDuration: FormControl = new FormControl(60, [Validators.required, Validators.min(60), Validators.max(480)]);
 
   // Service Type Form Control
   serviceTypeControl: FormControl = new FormControl('', [Validators.required]);
@@ -1386,9 +1386,12 @@ export class BookingComponent implements OnInit, OnDestroy {
       // If we have explicit cleaners AND extra cleaners, divide by total count
       displayDuration = Math.ceil(actualTotalDuration / this.calculatedMaidsCount);
     }
+    
+    // Ensure display duration never goes below 1 hour (60 minutes)
+    displayDuration = Math.max(displayDuration, 60);
 
-    // Store the actual total duration for backend
-    this.actualTotalDuration = actualTotalDuration;
+    // Store the actual total duration for backend - ensure minimum 1 hour
+    this.actualTotalDuration = Math.max(actualTotalDuration, 60);
 
     // Add deep cleaning fee AFTER discounts are calculated
     subTotal += deepCleaningFee;
@@ -1626,6 +1629,21 @@ export class BookingComponent implements OnInit, OnDestroy {
       return this.isPollFormValid();
     }
     
+    // Check custom pricing validation if applicable
+    if (this.showCustomPricing) {
+      return this.bookingForm.valid && 
+             this.serviceTypeControl.valid &&
+             this.selectedServiceType !== null && 
+             this.selectedSubscription !== null && 
+             this.cleaningType.value !== null &&
+             this.smsConsent.value === true &&
+             this.cancellationConsent.value === true &&
+             this.customAmount.valid &&
+             this.customCleaners.valid &&
+             this.customDuration.valid &&
+             this.entryMethod.value;
+    }
+    
     return this.bookingForm.valid && 
            this.serviceTypeControl.valid &&
            this.selectedServiceType !== null && 
@@ -1765,7 +1783,7 @@ export class BookingComponent implements OnInit, OnDestroy {
       tax: this.calculation.tax,
       total: this.calculation.total,
       calculation: this.calculation, // Add the full calculation object
-      totalDuration: this.showCustomPricing ? parseInt(this.customDuration.value) : this.actualTotalDuration,
+      totalDuration: this.showCustomPricing ? Math.max(parseInt(this.customDuration.value), 60) : this.actualTotalDuration,
       hasActiveSubscription: this.hasActiveSubscription,
       userSubscriptionId: this.userSubscription?.subscriptionId,
       giftCardCode: this.giftCardApplied && this.isGiftCard ? this.promoCode.value : null,

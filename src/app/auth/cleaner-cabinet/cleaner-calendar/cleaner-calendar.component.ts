@@ -98,7 +98,9 @@ export class CleanerCalendarComponent implements OnInit {
   }
 
   formatDuration(minutes: number): string {
-    return DurationUtils.formatDurationRounded(minutes);
+    // Ensure minimum 1 hour (60 minutes) before formatting
+    const adjustedMinutes = Math.max(minutes, 60);
+    return DurationUtils.formatDurationRounded(adjustedMinutes);
   }
 
   getServiceDuration(): number {

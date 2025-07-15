@@ -172,6 +172,7 @@
               </app-duration-selector>
               <div class="error-message" *ngIf="customDuration.invalid && customDuration.touched">
                 <div *ngIf="customDuration.errors?.['required']">Duration is required</div>
+                <div *ngIf="customDuration.errors?.['min']">Duration must be at least 1 hour</div>
               </div>
             </div>
           </div>

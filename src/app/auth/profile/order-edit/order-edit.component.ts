@@ -836,10 +836,13 @@ export class OrderEditComponent implements OnInit {
     } else if (hasCleanerService && this.calculatedMaidsCount > baseMaidsCount) {
       displayDuration = Math.ceil(actualTotalDuration / this.calculatedMaidsCount);
     }
+    
+    // Ensure display duration never goes below 1 hour (60 minutes)
+    displayDuration = Math.max(displayDuration, 60);
 
-    // Store both durations
-    this.totalDuration = displayDuration; // For UI display
-    this.actualTotalDuration = actualTotalDuration; // For backend
+    // Store both durations - ensure minimum 1 hour
+    this.totalDuration = Math.max(displayDuration, 60); // For UI display
+    this.actualTotalDuration = Math.max(actualTotalDuration, 60); // For backend
   
     // Add deep cleaning fee AFTER all other calculations
     subtotal += deepCleaningFee;
@@ -1040,7 +1043,9 @@ export class OrderEditComponent implements OnInit {
   }
 
   formatDuration(minutes: number): string {
-    return DurationUtils.formatDurationRounded(minutes);
+    // Ensure minimum 1 hour (60 minutes) before formatting
+    const adjustedMinutes = Math.max(minutes, 60);
+    return DurationUtils.formatDurationRounded(adjustedMinutes);
   }
 
   formatTime(timeString: string): string {
