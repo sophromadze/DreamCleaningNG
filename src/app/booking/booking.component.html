@@ -75,6 +75,7 @@
                 *ngIf="question.questionType === 'text'"
                 type="text" 
                 [(ngModel)]="pollAnswers[question.id]"
+                (input)="onPollAnswerChange()"
                 [required]="question.isRequired"
                 class="poll-input"
                 [class.ng-invalid]="pollFormSubmitted && question.isRequired && (!pollAnswers[question.id] || pollAnswers[question.id].trim() === '')">
@@ -83,6 +84,7 @@
               <textarea 
                 *ngIf="question.questionType === 'textarea'"
                 [(ngModel)]="pollAnswers[question.id]"
+                (input)="onPollAnswerChange()"
                 [required]="question.isRequired"
                 rows="3"
                 class="poll-textarea"
@@ -92,6 +94,7 @@
               <select 
                 *ngIf="question.questionType === 'dropdown'"
                 [(ngModel)]="pollAnswers[question.id]"
+                (change)="onPollAnswerChange()"
                 [required]="question.isRequired"
                 class="poll-select"
                 [class.ng-invalid]="pollFormSubmitted && question.isRequired && (!pollAnswers[question.id] || pollAnswers[question.id].trim() === '')">
@@ -110,6 +113,7 @@
                     [id]="'question_' + question.id + '_' + i"
                     [value]="option.trim()"
                     [(ngModel)]="pollAnswers[question.id]"
+                    (change)="onPollAnswerChange()"
                     [required]="question.isRequired">
                   <label [for]="'question_' + question.id + '_' + i">{{ option.trim() }}</label>
                 </div>

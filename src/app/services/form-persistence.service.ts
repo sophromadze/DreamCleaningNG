@@ -41,6 +41,14 @@ export interface BookingFormData {
   // Selected Subscription
   selectedSubscriptionId?: string;
   
+  // Custom Pricing Data
+  customAmount?: number;
+  customCleaners?: number;
+  customDuration?: number;
+  
+  // Poll Data
+  pollAnswers?: { [key: number]: string };
+  
   // Timestamp for when form was saved
   savedAt?: number;
 }

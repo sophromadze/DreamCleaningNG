@@ -130,6 +130,10 @@ export class BookingComponent implements OnInit, OnDestroy {
   // Booking summary collapse state
   isSummaryCollapsed = true;
   
+  // Saved data for restoration
+  savedCustomPricingData: any = null;
+  savedPollData: any = null;
+  
   // Constants
   salesTaxRate = 0.08875; // 8.875%
   minDate = new Date();
@@ -272,9 +276,34 @@ export class BookingComponent implements OnInit, OnDestroy {
         .subscribe(() => {
           if (this.showCustomPricing) {
             this.calculateTotal();
+            this.saveFormData(); // Save form data when custom amount changes
           }
         });
     }
+    
+    // Listen to custom cleaners changes
+    this.customCleaners.valueChanges
+      .pipe(
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        if (this.showCustomPricing) {
+          this.calculateTotal();
+          this.saveFormData(); // Save form data when custom cleaners changes
+        }
+      });
+    
+    // Listen to custom duration changes
+    this.customDuration.valueChanges
+      .pipe(
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        if (this.showCustomPricing) {
+          this.calculateTotal();
+          this.saveFormData(); // Save form data when custom duration changes
+        }
+      });
     
     // Setup click outside handler for dropdown
     this.setupDropdownClickOutside();
@@ -342,6 +371,15 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (savedData.selectedServiceTypeId) {
       this.serviceTypeControl.setValue(savedData.selectedServiceTypeId);
     }
+    
+    // Store custom pricing and poll data for restoration after service type is loaded
+    this.savedCustomPricingData = {
+      customAmount: savedData.customAmount,
+      customCleaners: savedData.customCleaners,
+      customDuration: savedData.customDuration
+    };
+    
+    this.savedPollData = savedData.pollAnswers;
   }  
 
   private loadInitialData() {
@@ -633,7 +671,15 @@ export class BookingComponent implements OnInit, OnDestroy {
       
       // Consent checkboxes
       smsConsent: this.smsConsent.value,
-      cancellationConsent: this.cancellationConsent.value
+      cancellationConsent: this.cancellationConsent.value,
+      
+      // Custom Pricing Data
+      customAmount: this.showCustomPricing ? this.customAmount.value : undefined,
+      customCleaners: this.showCustomPricing ? this.customCleaners.value : undefined,
+      customDuration: this.showCustomPricing ? this.customDuration.value : undefined,
+      
+      // Poll Data
+      pollAnswers: this.showPollForm ? this.pollAnswers : undefined
     };
   
     this.formPersistenceService.saveFormData(formData);
@@ -696,15 +742,25 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (serviceType.isCustom) {
       this.showCustomPricing = true;
 
-      // Set defaults for custom fields
-      this.customAmount.setValue(serviceType.basePrice);
-      this.customCleaners.setValue(1);
-      // Always set duration to 60 (1 hour) as default for custom pricing
-      this.customDuration.patchValue(60);
+      // Restore saved custom pricing data if available
+      if (this.savedCustomPricingData) {
+        this.customAmount.setValue(this.savedCustomPricingData.customAmount || serviceType.basePrice);
+        this.customCleaners.setValue(this.savedCustomPricingData.customCleaners || 1);
+        this.customDuration.patchValue(this.savedCustomPricingData.customDuration || 60);
+        
+        // Clear saved data after restoration
+        this.savedCustomPricingData = null;
+      } else {
+        // Set defaults for custom fields
+        this.customAmount.setValue(serviceType.basePrice);
+        this.customCleaners.setValue(1);
+        // Always set duration to 60 (1 hour) as default for custom pricing
+        this.customDuration.patchValue(60);
+      }
 
       // Force Angular to detect changes for the duration dropdown
       setTimeout(() => {
-        this.customDuration.patchValue(60);
+        this.customDuration.patchValue(this.customDuration.value);
       }, 0);
 
       // Ensure entry method is required for custom pricing
@@ -2004,14 +2060,24 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.pollService.getPollQuestions(serviceTypeId).subscribe({
       next: (questions) => {
         this.pollQuestions = questions;
-        this.pollAnswers = {};
         
-        // Initialize dropdown questions with empty string to show "Select an option"
-        questions.forEach(question => {
-          if (question.questionType === 'dropdown') {
-            this.pollAnswers[question.id] = '';
-          }
-        });
+        // Initialize poll answers
+        if (this.savedPollData) {
+          // Restore saved poll answers
+          this.pollAnswers = { ...this.savedPollData };
+          // Clear saved data after restoration
+          this.savedPollData = null;
+        } else {
+          // Initialize with empty answers
+          this.pollAnswers = {};
+          
+          // Initialize dropdown questions with empty string to show "Select an option"
+          questions.forEach(question => {
+            if (question.questionType === 'dropdown') {
+              this.pollAnswers[question.id] = '';
+            }
+          });
+        }
       },
       error: (error) => {
         console.error('Error loading poll questions:', error);
@@ -2293,6 +2359,13 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.customDuration.setValue(duration);
     this.calculateTotal();
     this.saveFormData();
+  }
+  
+  onPollAnswerChange() {
+    // Save form data when poll answers change
+    if (this.showPollForm) {
+      this.saveFormData();
+    }
   }
 
   getAvailableTimeSlots(): string[] {
