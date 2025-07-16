@@ -226,6 +226,28 @@ export interface DetailedUser extends UserAdmin {
   registrationDate?: Date;
 }
 
+export interface OrderUpdateHistory {
+  id: number;
+  updatedAt: Date;
+  updatedBy: string;
+  updatedByEmail: string;
+  originalSubTotal: number;
+  originalTax: number;
+  originalTips: number;
+  originalCompanyDevelopmentTips: number;
+  originalTotal: number;
+  newSubTotal: number;
+  newTax: number;
+  newTips: number;
+  newCompanyDevelopmentTips: number;
+  newTotal: number;
+  additionalAmount: number;
+  paymentIntentId: string | null;
+  isPaid: boolean;
+  paidAt: Date | null;
+  updateNotes: string | null;
+}
+
 export interface UserProfile {
   id: number;
   firstName: string;
@@ -548,5 +570,9 @@ export class AdminService {
   
   deletePollQuestion(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/poll-questions/${id}`);
+  }
+
+  getOrderUpdateHistory(orderId: number): Observable<OrderUpdateHistory[]> {
+    return this.http.get<OrderUpdateHistory[]>(`${this.apiUrl}/orders/${orderId}/update-history`);
   }
 }

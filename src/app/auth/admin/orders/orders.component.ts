@@ -1,7 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AdminService, UserPermissions } from '../../../services/admin.service';
+import { AdminService, OrderUpdateHistory, UserPermissions } from '../../../services/admin.service';
 import { OrderService, Order, OrderList } from '../../../services/order.service';
 import { CleanerService, AvailableCleaner } from '../../../services/cleaner.service';
 import { forkJoin, of } from 'rxjs';
@@ -31,6 +31,8 @@ export class OrdersComponent implements OnInit {
   orders: AdminOrderList[] = [];
   selectedOrder: Order | null = null;
   viewingOrderId: number | null = null;
+
+  Math = Math;
   
   // Filtering and search
   searchTerm: string = '';
@@ -79,6 +81,9 @@ export class OrdersComponent implements OnInit {
     assigningCleaners: false,
     removingCleaner: false
   };
+
+  orderUpdateHistory: OrderUpdateHistory[] = [];
+  loadingUpdateHistory = false;
 
   constructor(
     private adminService: AdminService,
@@ -192,9 +197,14 @@ export class OrdersComponent implements OnInit {
       this.selectedOrder = null;
       return;
     }
+
+    
     
     this.viewingOrderId = orderId;
     this.loadingStates.orderDetails = true;
+    
+    // Clear previous update history
+    this.orderUpdateHistory = [];
     
     if (this.userRole && this.userRole !== 'Customer') {
       this.adminService.getOrderDetails(orderId).subscribe({
@@ -205,11 +215,22 @@ export class OrdersComponent implements OnInit {
             id: order.userId,
             email: order.contactEmail
           });
+
+          console.log('Order details loaded:', {
+            id: order.id,
+            initialTotal: order.initialTotal,
+            initialSubTotal: order.initialSubTotal,
+            total: order.total,
+            subTotal: order.subTotal
+          });
           
           // Only load assigned cleaners if not already cached
           if (!this.assignedCleanersCache.has(orderId)) {
             this.loadSingleOrderCleaners(orderId);
           }
+          
+          // ADD THIS - Load update history
+          this.loadUpdateHistory(orderId);
         },
         error: (error) => {
           console.error('Error loading order details:', error);
@@ -223,6 +244,9 @@ export class OrdersComponent implements OnInit {
       this.orderService.getOrderById(orderId).subscribe({
         next: (order) => {
           this.selectedOrder = order;
+          
+          // ADD THIS - Load update history for regular users too if needed
+          // this.loadUpdateHistory(orderId);
         },
         error: (error) => {
           console.error('Error loading order details:', error);
@@ -233,6 +257,32 @@ export class OrdersComponent implements OnInit {
         }
       });
     }
+  }
+
+  loadUpdateHistory(orderId: number) {
+    this.loadingUpdateHistory = true;
+    
+    this.adminService.getOrderUpdateHistory(orderId).subscribe({
+      next: (history) => {
+        console.log('Update history loaded:', history);
+        this.orderUpdateHistory = history;
+        this.loadingUpdateHistory = false;
+      },
+      error: (error) => {
+        console.error('Error loading update history:', error);
+        this.loadingUpdateHistory = false;
+      }
+    });
+  }
+  
+
+  getTotalAdditionalAmount(): number {
+    return this.orderUpdateHistory.reduce((sum, update) => sum + update.additionalAmount, 0);
+  }
+
+  formatUpdateDate(date: any): string {
+    const d = new Date(date);
+    return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   }
 
   // Separate method for loading individual order cleaners

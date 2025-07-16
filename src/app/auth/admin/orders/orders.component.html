@@ -160,84 +160,175 @@
                       <p>{{selectedOrder.state}}, {{selectedOrder.city}}</p>
                       <p>{{selectedOrder.zipCode}}</p>
                     </div>
-                    
-                    <!-- Pricing -->
-                    <div class="detail-section">
-                      <h5>Pricing Breakdown</h5>
-                      <p><strong>Subtotal:</strong> ${{formatCurrency(selectedOrder.subTotal)}}</p>
-                      <p><strong>Tax:</strong> ${{formatCurrency(selectedOrder.tax)}}</p>
-                      <p *ngIf="selectedOrder.tips > 0"><strong>Tips for Cleaners:</strong> ${{formatCurrency(selectedOrder.tips)}}</p>
-                      <p *ngIf="selectedOrder.companyDevelopmentTips > 0"><strong>Tips for Company:</strong> ${{formatCurrency(selectedOrder.companyDevelopmentTips)}}</p>
-                      <!-- Subscription Discount -->
-                      <p *ngIf="selectedOrder.subscriptionDiscountAmount && selectedOrder.subscriptionDiscountAmount > 0">
-                        <strong>Subscription Discount ({{selectedOrder.subscriptionName}}):</strong> -${{formatCurrency(selectedOrder.subscriptionDiscountAmount)}}
-                      </p>
-                      
-                      <!-- Special Offer Discount -->
-                      <p *ngIf="selectedOrder.specialOfferName && selectedOrder.discountAmount > 0">
-                        <strong>{{selectedOrder.specialOfferName}}:</strong> -${{formatCurrency(selectedOrder.discountAmount)}}
-                      </p>
-                      
-                      <!-- Promo Code Discount -->
-                      <p *ngIf="!selectedOrder.specialOfferName && selectedOrder.promoCodeDetails && selectedOrder.discountAmount > 0">
-                        <strong>Promo Code {{selectedOrder.promoCodeDetails}}:</strong> -${{formatCurrency(selectedOrder.discountAmount)}}
-                      </p>
-                      
-                      <!-- Legacy Discount (fallback) -->
-                      <p *ngIf="!selectedOrder.specialOfferName && !selectedOrder.promoCodeDetails && selectedOrder.discountAmount > 0">
-                        <strong>Discount:</strong> -${{formatCurrency(selectedOrder.discountAmount)}}
-                      </p>
-                      
-                      <!-- Gift Card -->
-                      <p *ngIf="selectedOrder.giftCardDetails && (selectedOrder.giftCardAmountUsed || 0) > 0">
-                        <strong>Gift Card {{selectedOrder.giftCardDetails}}:</strong> -${{formatCurrency(selectedOrder.giftCardAmountUsed || 0)}}
-                      </p>
-                      <p class="total-amount"><strong>Total:</strong> ${{formatCurrency(selectedOrder.total)}}</p>
+                  </div>
+
+                  <!-- Pricing Breakdown - New Row with 3 Columns -->
+                  <div class="pricing-breakdown-row">
+                    <!-- Original Pricing Column -->
+                    <div class="pricing-column original-pricing" 
+                         *ngIf="(selectedOrder.initialTotal && selectedOrder.initialTotal > 0 && selectedOrder.initialTotal !== selectedOrder.total) || 
+                                (orderUpdateHistory && orderUpdateHistory.length > 0)">
+                      <h5>Original Pricing</h5>
+                      <div class="pricing-content">
+                        <p><strong>Subtotal:</strong> 
+                          ${{formatCurrency(selectedOrder.initialTotal > 0 ? selectedOrder.initialSubTotal : 
+                                           (orderUpdateHistory && orderUpdateHistory.length > 0 ? orderUpdateHistory[0].originalSubTotal : 0))}}
+                        </p>
+                        <p><strong>Tax:</strong> 
+                          ${{formatCurrency(selectedOrder.initialTotal > 0 ? selectedOrder.initialTax : 
+                                           (orderUpdateHistory && orderUpdateHistory.length > 0 ? orderUpdateHistory[0].originalTax : 0))}}
+                        </p>
+                        <p *ngIf="(selectedOrder.initialTotal > 0 ? selectedOrder.initialTips : 
+                                   (orderUpdateHistory && orderUpdateHistory.length > 0 ? orderUpdateHistory[0].originalTips : 0)) > 0">
+                          <strong>Tips for Cleaners:</strong> 
+                          ${{formatCurrency(selectedOrder.initialTotal > 0 ? selectedOrder.initialTips : 
+                                           (orderUpdateHistory && orderUpdateHistory.length > 0 ? orderUpdateHistory[0].originalTips : 0))}}
+                        </p>
+                        <p *ngIf="(selectedOrder.initialTotal > 0 ? selectedOrder.initialCompanyDevelopmentTips : 
+                                   (orderUpdateHistory && orderUpdateHistory.length > 0 ? orderUpdateHistory[0].originalCompanyDevelopmentTips : 0)) > 0">
+                          <strong>Tips for Company:</strong> 
+                          ${{formatCurrency(selectedOrder.initialTotal > 0 ? selectedOrder.initialCompanyDevelopmentTips : 
+                                           (orderUpdateHistory && orderUpdateHistory.length > 0 ? orderUpdateHistory[0].originalCompanyDevelopmentTips : 0))}}
+                        </p>
+                        <div class="total-line">
+                          <strong>Original Total:</strong> 
+                          ${{formatCurrency(selectedOrder.initialTotal > 0 ? selectedOrder.initialTotal : 
+                                           (orderUpdateHistory && orderUpdateHistory.length > 0 ? orderUpdateHistory[0].originalTotal : 0))}}
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Current Pricing Column -->
+                    <div class="pricing-column current-pricing">
+                      <h5>{{ (selectedOrder.initialTotal && selectedOrder.initialTotal !== selectedOrder.total) || 
+                             (orderUpdateHistory && orderUpdateHistory.length > 0) ? 'Current Pricing' : 'Order Pricing' }}</h5>
+                      <div class="pricing-content">
+                        <p><strong>Subtotal:</strong> ${{formatCurrency(selectedOrder.subTotal)}}</p>
+                        <p><strong>Tax:</strong> ${{formatCurrency(selectedOrder.tax)}}</p>
+                        <p *ngIf="selectedOrder.tips > 0">
+                          <strong>Tips for Cleaners:</strong> ${{formatCurrency(selectedOrder.tips)}}
+                        </p>
+                        <p *ngIf="selectedOrder.companyDevelopmentTips > 0">
+                          <strong>Tips for Company:</strong> ${{formatCurrency(selectedOrder.companyDevelopmentTips)}}
+                        </p>
+                        
+                        <!-- Subscription Discount -->
+                        <p *ngIf="selectedOrder.subscriptionDiscountAmount && selectedOrder.subscriptionDiscountAmount > 0">
+                          <strong>Subscription Discount ({{selectedOrder.subscriptionName}}):</strong> 
+                          <span class="discount">-${{formatCurrency(selectedOrder.subscriptionDiscountAmount)}}</span>
+                        </p>
+                        
+                        <!-- Special Offer Discount -->
+                        <p *ngIf="selectedOrder.specialOfferName && selectedOrder.discountAmount > 0">
+                          <strong>{{selectedOrder.specialOfferName}}:</strong> 
+                          <span class="discount">-${{formatCurrency(selectedOrder.discountAmount)}}</span>
+                        </p>
+                        
+                        <!-- Promo Code Discount -->
+                        <p *ngIf="!selectedOrder.specialOfferName && selectedOrder.promoCodeDetails && selectedOrder.discountAmount > 0">
+                          <strong>Promo Code {{selectedOrder.promoCodeDetails}}:</strong> 
+                          <span class="discount">-${{formatCurrency(selectedOrder.discountAmount)}}</span>
+                        </p>
+                        
+                        <!-- Legacy Discount (fallback) -->
+                        <p *ngIf="!selectedOrder.specialOfferName && !selectedOrder.promoCodeDetails && selectedOrder.discountAmount > 0">
+                          <strong>Discount:</strong> 
+                          <span class="discount">-${{formatCurrency(selectedOrder.discountAmount)}}</span>
+                        </p>
+                        
+                        <!-- Gift Card -->
+                        <p *ngIf="selectedOrder.giftCardDetails && (selectedOrder.giftCardAmountUsed || 0) > 0">
+                          <strong>Gift Card {{selectedOrder.giftCardDetails}}:</strong> 
+                          <span class="discount">-${{formatCurrency(selectedOrder.giftCardAmountUsed || 0)}}</span>
+                        </p>
+                        
+                        <div class="total-line">
+                          <strong>Current Total:</strong> ${{formatCurrency(selectedOrder.total)}}
+                        </div>              
+                      </div>
+                    </div>
+
+                    <!-- Update History Column -->
+                    <div class="pricing-column update-history" 
+                         *ngIf="orderUpdateHistory && orderUpdateHistory.length > 0">
+                      <h5>Update History</h5>
+                      <div class="pricing-content">
+                        <div class="update-items">
+                          <div class="update-item" *ngFor="let update of orderUpdateHistory">
+                            <div class="update-header">
+                              <span class="update-date">{{formatUpdateDate(update.updatedAt)}}</span>
+                              <span class="update-amount" [class.positive]="update.additionalAmount > 0">
+                                {{update.additionalAmount >= 0 ? '+' : ''}}${{formatCurrency(Math.abs(update.additionalAmount))}}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="total-additional" *ngIf="orderUpdateHistory.length > 1">
+                          <strong>Total Additional Payments:</strong> 
+                          <span class="amount">
+                            ${{formatCurrency(getTotalAdditionalAmount())}}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Loading indicator for update history -->
+                    <div class="loading-history" *ngIf="loadingUpdateHistory">
+                      <small>Loading update history...</small>
                     </div>
                   </div>
                   
-                  <!-- Services List -->
-                  <div class="services-section" *ngIf="selectedOrder.services.length > 0">
-                    <h5>Services</h5>
-                    <ul class="services-list">
-                      <li *ngFor="let service of selectedOrder.services">
-                        <span *ngIf="service.serviceName.toLowerCase().includes('bedroom') && service.quantity === 0">
-                          Studio - {{formatCurrency(service.cost)}}
-                        </span>
-                        <span *ngIf="!(service.serviceName.toLowerCase().includes('bedroom') && service.quantity === 0)">
-                          {{service.serviceName}} - Qty: {{service.quantity}} - ${{formatCurrency(service.cost)}}
-                        </span>
-                        <span *ngIf="service.serviceName.toLowerCase().includes('cleaner')">
-                          - Hours: {{(selectedOrder.totalDuration / 60) | number:'1.0-0'}}h
-                        </span>
-                      </li>
-                    </ul>
-                  </div>
-                  
-                  <!-- Extra Services List -->
-                  <div class="services-section" *ngIf="selectedOrder.extraServices.length > 0">
-                    <h5>Extra Services</h5>
-                    <ul class="services-list">
-                      <li *ngFor="let extra of selectedOrder.extraServices">
-                        <ng-container *ngIf="extra.hours > 0 && extra.quantity > 0; else singleDisplay">
-                          {{extra.extraServiceName}} - Qty: {{extra.quantity}} - Hours: {{extra.hours}} - ${{formatCurrency(extra.cost)}}
-                        </ng-container>
-                        <ng-template #singleDisplay>
-                          <ng-container *ngIf="extra.hours > 0; else quantityOnly">
-                            {{extra.extraServiceName}} - Hours: {{extra.hours}} - ${{formatCurrency(extra.cost)}}
-                          </ng-container>
-                          <ng-template #quantityOnly>
-                            {{extra.extraServiceName}} - Qty: {{extra.quantity}} - ${{formatCurrency(extra.cost)}}
-                          </ng-template>
-                        </ng-template>
-                      </li>
-                    </ul>
-                  </div>
-                  
-                  <!-- Special Instructions -->
-                  <div class="instructions-section" *ngIf="selectedOrder.specialInstructions">
-                    <h5>Special Instructions</h5>
-                    <p>{{selectedOrder.specialInstructions}}</p>
+                  <!-- Services and Instructions Row -->
+                  <div class="services-instructions-row">
+                    <!-- Services Column -->
+                    <div class="services-column" *ngIf="selectedOrder.services.length > 0">
+                      <h5>Services</h5>
+                      <div class="services-content">
+                        <ul class="services-list">
+                          <li *ngFor="let service of selectedOrder.services">
+                            <span *ngIf="service.serviceName.toLowerCase().includes('bedroom') && service.quantity === 0">
+                              Studio - {{formatCurrency(service.cost)}}
+                            </span>
+                            <span *ngIf="!(service.serviceName.toLowerCase().includes('bedroom') && service.quantity === 0)">
+                              {{service.serviceName}} - Qty: {{service.quantity}} - ${{formatCurrency(service.cost)}}
+                            </span>
+                            <span *ngIf="service.serviceName.toLowerCase().includes('cleaner')">
+                              - Hours: {{(selectedOrder.totalDuration / 60) | number:'1.0-0'}}h
+                            </span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <!-- Extra Services Column -->
+                    <div class="services-column" *ngIf="selectedOrder.extraServices.length > 0">
+                      <h5>Extra Services</h5>
+                      <div class="services-content">
+                        <ul class="services-list">
+                          <li *ngFor="let extra of selectedOrder.extraServices">
+                            <ng-container *ngIf="extra.hours > 0 && extra.quantity > 0; else singleDisplay">
+                              {{extra.extraServiceName}} - Qty: {{extra.quantity}} - Hours: {{extra.hours}} - ${{formatCurrency(extra.cost)}}
+                            </ng-container>
+                            <ng-template #singleDisplay>
+                              <ng-container *ngIf="extra.hours > 0; else quantityOnly">
+                                {{extra.extraServiceName}} - Hours: {{extra.hours}} - ${{formatCurrency(extra.cost)}}
+                              </ng-container>
+                              <ng-template #quantityOnly>
+                                {{extra.extraServiceName}} - Qty: {{extra.quantity}} - ${{formatCurrency(extra.cost)}}
+                              </ng-template>
+                            </ng-template>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <!-- Special Instructions Column -->
+                    <div class="services-column" *ngIf="selectedOrder.specialInstructions">
+                      <h5>Special Instructions</h5>
+                      <div class="services-content">
+                        <p>{{selectedOrder.specialInstructions}}</p>
+                      </div>
+                    </div>
                   </div>
 
                   <!-- Assigned Cleaners Section with Enhanced Loading States -->

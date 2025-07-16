@@ -57,6 +57,11 @@ export interface Order {
   userSpecialOfferId?: number;
   promoCodeDetails?: string;
   giftCardDetails?: string;
+  initialSubTotal: number;
+  initialTax: number;
+  initialTips: number;
+  initialCompanyDevelopmentTips: number;
+  initialTotal: number;
 }
 
 export interface OrderService {
