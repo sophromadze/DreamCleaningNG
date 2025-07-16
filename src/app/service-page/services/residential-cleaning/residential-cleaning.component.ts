@@ -3,12 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-basic-cleaning',
+  selector: 'app-residential-cleaning',
   standalone: true,
   imports: [CommonModule, RouterModule],
-  templateUrl: './basic-cleaning.component.html',
-  styleUrl: './basic-cleaning.component.scss'
+  templateUrl: './residential-cleaning.component.html',
+  styleUrl: './residential-cleaning.component.scss'
 })
-export class BasicCleaningComponent {
+export class ResidentialCleaningComponent {
   constructor() {}
 } 

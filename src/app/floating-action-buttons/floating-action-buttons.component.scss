@@ -1,0 +1,311 @@
+.floating-action-buttons {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  
+  @media (max-width: 768px) {
+    bottom: 120px;
+    top: auto;
+    transform: none;
+  }
+  
+  @media (max-width: 480px) {
+    bottom: 140px;
+  }
+}
+
+.book-now-container {
+  display: flex;
+  margin-right: 10px;
+  transform: translateX(-200px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  
+  .book-button {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    transform: rotate(180deg);
+    width: 50px;
+    height: 120px;
+    border-radius: 8px;
+    gap: 8px;
+    
+    @media (max-width: 768px) {
+      width: 45px;
+      height: 100px;
+    }
+    
+    @media (max-width: 480px) {
+      width: 40px;
+      height: 90px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    transform: translateX(-180px);
+  }
+  
+  @media (max-width: 480px) {
+    transform: translateX(-160px);
+  }
+}
+
+.action-buttons-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-right: 10px;
+  transform: translateX(200px);
+  opacity: 0;
+  transition: all 0.3s ease;
+  justify-content: space-evenly;
+  
+  @media (max-width: 768px) {
+    transform: translateX(180px);
+  }
+  
+  @media (max-width: 480px) {
+    transform: translateX(160px);
+  }
+}
+
+.floating-action-buttons.expanded .book-now-container {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.floating-action-buttons.expanded .action-buttons-container {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.action-button {
+  width: 100px;
+  height: 50px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+  
+  @media (max-width: 768px) {
+    width: 90px;
+    height: 45px;
+    font-size: 11px;
+  }
+  
+  @media (max-width: 480px) {
+    width: 80px;
+    height: 40px;
+    font-size: 10px;
+  }
+}
+
+.book-button {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  
+  &:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+  }
+}
+
+.call-button {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  
+  &:hover {
+    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+  }
+}
+
+.email-button {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  
+  &:hover {
+    background: linear-gradient(135deg, #e55a2b 0%, #e0851a 100%);
+  }
+}
+
+.action-icon {
+  width: 16px;
+  height: 16px;
+  
+  @media (max-width: 768px) {
+    width: 14px;
+    height: 14px;
+  }
+  
+  @media (max-width: 480px) {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.button-text {
+  font-weight: 600;
+}
+
+.toggle-button {
+  width: 30px;
+  height: 120px;
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border: none;
+  border-radius: 15px 0 0 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: -2px 4px 12px rgba(0, 0, 0, 0.15);
+  color: white;
+  
+  &:hover {
+    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    box-shadow: -4px 6px 20px rgba(0, 0, 0, 0.25);
+  }
+  
+  @media (max-width: 768px) {
+    width: 28px;
+    height: 100px;
+    border-radius: 14px 0 0 14px;
+  }
+  
+  @media (max-width: 480px) {
+    width: 26px;
+    height: 90px;
+    border-radius: 13px 0 0 13px;
+  }
+}
+
+.toggle-text {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  
+  @media (max-width: 768px) {
+    font-size: 11px;
+  }
+  
+  @media (max-width: 480px) {
+    font-size: 10px;
+  }
+}
+
+.fab-button {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  
+  @media (max-width: 768px) {
+    width: 56px;
+    height: 56px;
+  }
+  
+  @media (max-width: 480px) {
+    width: 56px;
+    height: 56px;
+  }
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.call-button {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  
+  &:hover {
+    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+  }
+}
+
+.email-button {
+  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  color: white;
+  
+  &:hover {
+    background: linear-gradient(135deg, #e55a2b 0%, #e0851a 100%);
+  }
+}
+
+.fab-icon {
+  width: 22px;
+  height: 22px;
+  
+  @media (max-width: 768px) {
+    width: 22px;
+    height: 22px;
+  }
+  
+  @media (max-width: 480px) {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+// Add a subtle pulse animation for the call button to draw attention
+.call-button {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 0 rgba(40, 167, 69, 0.7);
+  }
+  70% {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 10px rgba(40, 167, 69, 0);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 0 rgba(40, 167, 69, 0);
+  }
+} 

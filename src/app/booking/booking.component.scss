@@ -176,7 +176,6 @@
   textarea,
   select {
     font-size: 16px !important;
-    min-font-size: 16px;
   }
 
   // Error message styling
@@ -2623,10 +2622,9 @@
     }
 
     h3 {
-      margin: 0 0 1.5rem 0;
       color: #333;
       text-align: center;
-      padding-bottom: 1rem;
+      padding-bottom: 5px;
       border-bottom: 2px solid #f0f0f0;
       font-size: 1.3rem;
       font-weight: 600;
@@ -2663,29 +2661,11 @@
       }
     }
   
-    .summary-details {
-      margin-bottom: 1.5rem;
-      
-      @media (max-width: 1200px) {
-        margin-bottom: 1.25rem;
-      }
-      
-      @media (max-width: 768px) {
-        margin-bottom: 1rem;
-      }
-      
-      @media (max-width: 534px) {
-        margin-bottom: 0.875rem;
-      }
-      
-      @media (max-width: 500px) {
-        margin-bottom: 0.75rem;
-      }
-  
+    .summary-details {  
       .summary-item {
         display: flex;
         justify-content: space-between;
-        padding: 0.5rem 0;
+        padding: 5px 0;
         color: #666;
         font-size: 0.95rem;
         
@@ -2695,17 +2675,14 @@
         }
         
         @media (max-width: 768px) {
-          padding: 3px 0;
           font-size: 0.85rem;
         }
         
         @media (max-width: 534px) {
-          padding: 3px 0;
           font-size: 0.8rem;
         }
         
         @media (max-width: 500px) {
-          padding: 3px 0;
           font-size: 0.75rem;
         }
   
@@ -2718,28 +2695,13 @@
   
     .price-breakdown {
       border-top: 2px solid #f0f0f0;
-      padding-top: 1rem;
-      
-      @media (max-width: 1200px) {
-        padding-top: 0.875rem;
-      }
-      
-      @media (max-width: 768px) {
-        padding-top: 0.75rem;
-      }
-      
-      @media (max-width: 534px) {
-        padding-top: 0.625rem;
-      }
-      
-      @media (max-width: 500px) {
-        padding-top: 0.5rem;
-      }
-  
+      padding-top: 5px;
+      margin-top: 5px;
+        
       .price-item {
         display: flex;
         justify-content: space-between;
-        padding: 0.5rem 0;
+        padding: 5px 0;
         color: #666;
         font-size: 0.95rem;
         
@@ -2749,17 +2711,14 @@
         }
         
         @media (max-width: 768px) {
-          padding: 3px 0;
           font-size: 0.85rem;
         }
         
         @media (max-width: 534px) {
-          padding: 3px 0;
           font-size: 0.8rem;
         }
         
         @media (max-width: 500px) {
-          padding: 3px 0;
           font-size: 0.75rem;
         }
   
@@ -2795,8 +2754,8 @@
         
         .total-section {
           border-top: 2px solid #f0f0f0;
-          padding-top: 1rem;
-          margin-top: 1rem;
+          padding-top: 5px;
+          margin-top: 5px;
 
           .total{
             justify-content: center;
@@ -2823,8 +2782,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 1rem;
-    padding-top: 1rem;
+    margin-top: 5px;
+    padding: 5px 0;
     border-top: 2px solid #f0f0f0;
     
     @media (max-width: 1200px) {
@@ -3007,17 +2966,20 @@
     }
   }
 
-  .next-order-info {    
+  .next-order-info { 
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 16px;
+    
     .divider {
       border-top: 2px dashed #e0e0e0;
-      margin-bottom: 16px;
+      margin-bottom: 5px;
     }
     
     .next-order-title {
       font-weight: 600;
       color: #1976d2;
-      margin-bottom: 12px;
-      font-size: 14px;
     }
     
     .next-total {

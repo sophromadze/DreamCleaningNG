@@ -16,7 +16,7 @@ export class HeaderComponent implements OnInit {
   isMenuOpen = false;
   isUserMenuOpen = false;
   isServicesMenuOpen = false;
-  isBasicCleaningSubmenuOpen = false;
+  isResidentialCleaningSubmenuOpen = false;
   currentUser: any = null;
   userInitials: string = '';
   isAuthInitialized = false;
@@ -66,7 +66,7 @@ export class HeaderComponent implements OnInit {
     
     if (!clickedInsideServices && this.isServicesMenuOpen) {
       this.isServicesMenuOpen = false;
-      this.isBasicCleaningSubmenuOpen = false;
+      this.isResidentialCleaningSubmenuOpen = false;
     }
   }
 
@@ -90,7 +90,7 @@ export class HeaderComponent implements OnInit {
     if (!this.isMenuOpen) {
       this.isUserMenuOpen = false;
       this.isServicesMenuOpen = false;
-      this.isBasicCleaningSubmenuOpen = false;
+      this.isResidentialCleaningSubmenuOpen = false;
     }
   }
 
@@ -113,7 +113,7 @@ export class HeaderComponent implements OnInit {
     if (this.isUserMenuOpen) {
       this.isMenuOpen = false;
       this.isServicesMenuOpen = false;
-      this.isBasicCleaningSubmenuOpen = false;
+      this.isResidentialCleaningSubmenuOpen = false;
       const navLinks = document.querySelector('.nav-links');
       if (navLinks) {
         navLinks.classList.remove('active');
@@ -130,18 +130,18 @@ export class HeaderComponent implements OnInit {
     if (this.isMobile) {
       this.isServicesMenuOpen = !this.isServicesMenuOpen;
       if (!this.isServicesMenuOpen) {
-        this.isBasicCleaningSubmenuOpen = false;
+        this.isResidentialCleaningSubmenuOpen = false;
       }
     }
   }
 
-  toggleBasicCleaningSubmenu(event?: Event) {
+  toggleResidentialCleaningSubmenu(event?: Event) {
     if (event) {
       event.stopPropagation();
     }
     
     if (this.isMobile) {
-      this.isBasicCleaningSubmenuOpen = !this.isBasicCleaningSubmenuOpen;
+      this.isResidentialCleaningSubmenuOpen = !this.isResidentialCleaningSubmenuOpen;
     }
   }
 
@@ -158,16 +158,16 @@ export class HeaderComponent implements OnInit {
     }
   }
 
-  // Handle basic cleaning link click
-  onBasicCleaningClick(event: Event) {
+  // Handle residential cleaning link click
+  onResidentialCleaningClick(event: Event) {
     if (this.isMobile) {
       // On mobile, only toggle submenu, don't navigate
       event.preventDefault();
-      this.toggleBasicCleaningSubmenu(event);
+      this.toggleResidentialCleaningSubmenu(event);
     } else {
-      // On desktop, navigate to basic cleaning page and close menu
+      // On desktop, navigate to residential cleaning page and close menu
       this.closeServicesMenu();
-      this.router.navigate(['/services/basic-cleaning']);
+      this.router.navigate(['/services/residential-cleaning']);
     }
   }
 
@@ -186,7 +186,7 @@ export class HeaderComponent implements OnInit {
   // Close all menus and mobile menu
   closeAllMenus() {
     this.isServicesMenuOpen = false;
-    this.isBasicCleaningSubmenuOpen = false;
+    this.isResidentialCleaningSubmenuOpen = false;
     this.isUserMenuOpen = false;
     this.isMenuOpen = false;
     const navLinks = document.querySelector('.nav-links');
@@ -205,24 +205,24 @@ export class HeaderComponent implements OnInit {
   hideServicesMenu() {
     if (!this.isMobile) {
       this.isServicesMenuOpen = false;
-      this.isBasicCleaningSubmenuOpen = false;
+      this.isResidentialCleaningSubmenuOpen = false;
     }
   }
 
   closeServicesMenu() {
     this.isServicesMenuOpen = false;
-    this.isBasicCleaningSubmenuOpen = false;
+    this.isResidentialCleaningSubmenuOpen = false;
   }
 
-  showBasicCleaningSubmenu() {
+  showResidentialCleaningSubmenu() {
     if (!this.isMobile) {
-      this.isBasicCleaningSubmenuOpen = true;
+      this.isResidentialCleaningSubmenuOpen = true;
     }
   }
 
-  hideBasicCleaningSubmenu() {
+  hideResidentialCleaningSubmenu() {
     if (!this.isMobile) {
-      this.isBasicCleaningSubmenuOpen = false;
+      this.isResidentialCleaningSubmenuOpen = false;
     }
   }
 

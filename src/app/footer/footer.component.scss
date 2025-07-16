@@ -42,6 +42,16 @@
     line-height: 1.5;
     margin-bottom: 8px;
     font-size: 14px;
+
+    a {
+      color: #b3d9ff;
+      text-decoration: none;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #fff;
+      }
+    }
   }
 }
 

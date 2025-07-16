@@ -333,6 +333,18 @@
         p {
           margin: 8px 0;
           font-size: 1.1rem;
+          word-break: break-word;
+          
+          a {
+            word-break: break-all;
+            color: #007bff;
+            text-decoration: none;
+            transition: text-decoration 0.3s ease;
+            
+            &:hover {
+              text-decoration: underline;
+            }
+          }
         }
       }
 

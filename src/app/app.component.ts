@@ -4,6 +4,7 @@ import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
 import { NotificationModalComponent } from './notification-modal/notification-modal.component';
+import { FloatingActionButtonsComponent } from './floating-action-buttons/floating-action-buttons.component';
 import { AuthService } from './services/auth.service';
 import { TokenRefreshService } from './services/token-refresh.service';
 import { Subscription } from 'rxjs';
@@ -16,7 +17,8 @@ import { Subscription } from 'rxjs';
     RouterOutlet, 
     HeaderComponent, 
     FooterComponent,
-    NotificationModalComponent 
+    NotificationModalComponent,
+    FloatingActionButtonsComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

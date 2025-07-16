@@ -20,20 +20,20 @@ export const routes: Routes = [
   },
   // Service routes
   {
-    path: 'services/basic-cleaning',
-    loadComponent: () => import('./service-page/services/basic-cleaning/basic-cleaning.component').then(m => m.BasicCleaningComponent)
+    path: 'services/residential-cleaning',
+    loadComponent: () => import('./service-page/services/residential-cleaning/residential-cleaning.component').then(m => m.ResidentialCleaningComponent)
   },
   {
-    path: 'services/basic-cleaning/kitchen',
-    loadComponent: () => import('./service-page/services/basic-cleaning/kitchen-cleaning/kitchen-cleaning.component').then(m => m.KitchenCleaningComponent)
+    path: 'services/residential-cleaning/kitchen',
+    loadComponent: () => import('./service-page/services/residential-cleaning/kitchen-cleaning/kitchen-cleaning.component').then(m => m.KitchenCleaningComponent)
   },
   {
-    path: 'services/basic-cleaning/bathroom',
-    loadComponent: () => import('./service-page/services/basic-cleaning/bathroom-cleaning/bathroom-cleaning.component').then(m => m.BathroomCleaningComponent)
+    path: 'services/residential-cleaning/bathroom',
+    loadComponent: () => import('./service-page/services/residential-cleaning/bathroom-cleaning/bathroom-cleaning.component').then(m => m.BathroomCleaningComponent)
   },
   {
-    path: 'services/basic-cleaning/general',
-    loadComponent: () => import('./service-page/services/basic-cleaning/general-cleaning/general-cleaning.component').then(m => m.GeneralCleaningComponent)
+    path: 'services/residential-cleaning/general',
+    loadComponent: () => import('./service-page/services/residential-cleaning/general-cleaning/general-cleaning.component').then(m => m.GeneralCleaningComponent)
   },
   {
     path: 'services/deep-cleaning',

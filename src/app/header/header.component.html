@@ -38,26 +38,26 @@
                 All Services
               </a>
               
-              <!-- Basic Cleaning with nested dropdown -->
+              <!-- Residential Cleaning with nested dropdown -->
               <div class="nested-dropdown" 
-                   [class.open]="isBasicCleaningSubmenuOpen"
-                   (mouseenter)="showBasicCleaningSubmenu()" 
-                   (mouseleave)="hideBasicCleaningSubmenu()"
-                   (click)="toggleBasicCleaningSubmenu($event)">
-                <a [routerLink]="!isMobile ? '/services/basic-cleaning' : null" 
-                   (click)="onBasicCleaningClick($event)">
-                  Basic Cleaning
+                   [class.open]="isResidentialCleaningSubmenuOpen"
+                   (mouseenter)="showResidentialCleaningSubmenu()" 
+                   (mouseleave)="hideResidentialCleaningSubmenu()"
+                   (click)="toggleResidentialCleaningSubmenu($event)">
+                <a [routerLink]="!isMobile ? '/services/residential-cleaning' : null" 
+                   (click)="onResidentialCleaningClick($event)">
+                  Residential Cleaning
                   <svg class="chevron-right" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
                     <g fill-rule="evenodd" transform="translate(-448 -544)">
                       <path fill-rule="nonzero" d="M452.707 549.293a1 1 0 0 0-1.414 1.414l4 4a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414L456 552.586l-3.293-3.293z"></path>
                     </g>
                   </svg>
                 </a>
-                <div class="submenu" *ngIf="isBasicCleaningSubmenuOpen">
-                  <a routerLink="/services/basic-cleaning" (click)="closeAllMenus()" *ngIf="isMobile">Basic Cleaning</a>
-                  <a routerLink="/services/basic-cleaning/kitchen" (click)="closeAllMenus()">Kitchen Cleaning</a>
-                  <a routerLink="/services/basic-cleaning/bathroom" (click)="closeAllMenus()">Bathroom Cleaning</a>
-                  <a routerLink="/services/basic-cleaning/general" (click)="closeAllMenus()">General Cleaning</a>
+                <div class="submenu" *ngIf="isResidentialCleaningSubmenuOpen">
+                  <a routerLink="/services/residential-cleaning" (click)="closeAllMenus()" *ngIf="isMobile">Residential Cleaning</a>
+                  <a routerLink="/services/residential-cleaning/kitchen" (click)="closeAllMenus()">Kitchen Cleaning</a>
+                  <a routerLink="/services/residential-cleaning/bathroom" (click)="closeAllMenus()">Bathroom Cleaning</a>
+                  <a routerLink="/services/residential-cleaning/general" (click)="closeAllMenus()">General Cleaning</a>
                 </div>
               </div>
               
