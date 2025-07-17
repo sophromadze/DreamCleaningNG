@@ -108,19 +108,20 @@
 
     .image-placeholder {
       flex-shrink: 0;
-      width: 120px;
-      height: 120px;
-      background: #f8f9fa;
-      border: 2px dashed #007bff;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      width: 200px;
+      height: 200px;
+      border-radius: 12px;
+      overflow: hidden;
       
-      .placeholder-image {
-        color: #007bff;
-        font-size: 2rem;
-        opacity: 0.6;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+      }
+      
+      &:hover img {
+        transform: scale(1.08);
       }
     }
   }
@@ -330,8 +331,11 @@
       }
 
       .image-placeholder {
-        width: 100%;
-        height: 100px;
+        width: 90vw;
+        max-width: 350px;
+        height: 180px;
+        margin-left: auto;
+        margin-right: auto;
       }
     }
 
@@ -483,7 +487,11 @@
       gap: 12px;
 
       .image-placeholder {
-        height: 80px;
+        width: 100vw;
+        max-width: 100%;
+        height: 140px;
+        margin-left: 0;
+        margin-right: 0;
       }
     }
 
