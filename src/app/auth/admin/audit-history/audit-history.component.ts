@@ -269,6 +269,13 @@ export class AuditHistoryComponent implements OnInit {
       const roles = ['Customer', 'SuperAdmin', 'Admin', 'Moderator', 'Cleaner']; 
       return roles[value] || value.toString();
     }
+
+    // Handle TotalDuration field - format as hours:minutes
+    if (fieldName === 'TotalDuration' && typeof value === 'number') {
+      const hours = Math.floor(value / 60);
+      const minutes = Math.round(value % 60);
+      return `${hours}h ${minutes}m`;
+    }
     
     // IMPORTANT: Handle TimeDuration and Duration fields BEFORE date handling
     if (fieldName === 'TimeDuration' || fieldName === 'Duration') {
