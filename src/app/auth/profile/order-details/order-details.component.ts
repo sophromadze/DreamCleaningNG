@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -13,13 +13,14 @@ import { DurationUtils } from '../../../utils/duration.utils';
   templateUrl: './order-details.component.html',
   styleUrls: ['./order-details.component.scss']
 })
-export class OrderDetailsComponent implements OnInit {
+export class OrderDetailsComponent implements OnInit, OnDestroy {
   order: Order | null = null;
   isLoading = true;
   errorMessage = '';
   showCancelModal = false;
   cancelReason = '';
   now = new Date();
+  private timeUpdateInterval?: any;
 
   constructor(
     private orderService: OrderService,
@@ -32,9 +33,16 @@ export class OrderDetailsComponent implements OnInit {
     const orderId = this.route.snapshot.params['id'];
     this.loadOrder(orderId);
     // Update current time every minute
-    setInterval(() => {
+    this.timeUpdateInterval = setInterval(() => {
       this.now = new Date();
     }, 60000);
+  }
+
+  ngOnDestroy() {
+    // Clear the interval to prevent memory leaks and infinite loops
+    if (this.timeUpdateInterval) {
+      clearInterval(this.timeUpdateInterval);
+    }
   }
 
   loadOrder(orderId: number) {
