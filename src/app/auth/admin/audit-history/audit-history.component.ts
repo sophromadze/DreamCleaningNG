@@ -1,5 +1,3 @@
-// Enhanced audit-history.component.ts with improved cleaner assignment display
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -49,7 +47,8 @@ export class AuditHistoryComponent implements OnInit {
     { value: 'all', label: 'All Changes' },
     { value: 'User', label: 'Users' },
     { value: 'Order', label: 'Orders' },
-    { value: 'CleanerAssignment', label: 'Cleaner Assignments' }, // NEW
+    { value: 'CleanerAssignment', label: 'Cleaner Assignments' },
+    { value: 'OrderServicesUpdate', label: 'Order Services Updates' },
     { value: 'ServiceType', label: 'Service Types' },
     { value: 'Service', label: 'Services' },
     { value: 'ExtraService', label: 'Extra Services' },
@@ -119,7 +118,8 @@ export class AuditHistoryComponent implements OnInit {
   }
 
   processAuditLogs(logs: any[]): any[] {   
-    return logs.map((log, index) => {    
+    // First, process individual logs
+    const processedLogs = logs.map((log, index) => {    
       const processedLog = {
         ...log,
         oldValues: log.oldValues || log.OldValues,
@@ -167,6 +167,77 @@ export class AuditHistoryComponent implements OnInit {
   
       return processedLog;
     });
+
+    // Group related logs together
+    return this.groupRelatedLogs(processedLogs);
+  }
+
+  // NEW: Group related audit logs together
+  groupRelatedLogs(logs: any[]): any[] {
+    const groupedLogs: any[] = [];
+    const processedIds = new Set<number>();
+
+    logs.forEach((log, index) => {
+      if (processedIds.has(log.id)) {
+        return; // Skip if already processed
+      }
+
+      // Check if this is an Order update that might have related OrderServicesUpdate
+      if (log.entityType === 'Order' && log.action === 'Update') {
+        // Look for related OrderServicesUpdate logs with same entityId and timestamp
+        const relatedServiceLogs = logs.filter(otherLog => 
+          otherLog.id !== log.id &&
+          otherLog.entityType === 'OrderServicesUpdate' &&
+          otherLog.entityId === log.entityId &&
+          Math.abs(new Date(otherLog.createdAt).getTime() - new Date(log.createdAt).getTime()) < 5000 && // Within 5 seconds
+          otherLog.changedBy === log.changedBy
+        );
+
+        if (relatedServiceLogs.length > 0) {
+          // Merge the logs
+          const mergedLog = {
+            ...log,
+            hasServiceChanges: true,
+            serviceLogs: relatedServiceLogs,
+            // Combine changed fields
+            changedFields: [
+              ...(log.changedFields || []),
+              ...relatedServiceLogs.flatMap(serviceLog => serviceLog.changedFields || [])
+            ]
+          };
+
+          groupedLogs.push(mergedLog);
+          
+          // Mark all related logs as processed
+          processedIds.add(log.id);
+          relatedServiceLogs.forEach(serviceLog => processedIds.add(serviceLog.id));
+        } else {
+          // No related service logs, add as is
+          groupedLogs.push(log);
+          processedIds.add(log.id);
+        }
+      } else if (log.entityType === 'OrderServicesUpdate') {
+        // Check if this service log is already handled by an Order log
+        const isHandled = logs.some(otherLog => 
+          otherLog.entityType === 'Order' &&
+          otherLog.entityId === log.entityId &&
+          Math.abs(new Date(otherLog.createdAt).getTime() - new Date(log.createdAt).getTime()) < 5000 &&
+          otherLog.changedBy === log.changedBy
+        );
+
+        if (!isHandled) {
+          // This is a standalone service update, add as is
+          groupedLogs.push(log);
+          processedIds.add(log.id);
+        }
+      } else {
+        // Other entity types, add as is
+        groupedLogs.push(log);
+        processedIds.add(log.id);
+      }
+    });
+
+    return groupedLogs;
   }
 
   get filteredLogs(): any[] {
@@ -324,7 +395,51 @@ export class AuditHistoryComponent implements OnInit {
     return String(value);
   }
 
+  isServiceUpdateLog(log: any): boolean {
+    return log.entityType === 'OrderServicesUpdate';
+  }
+  
+  getServiceUpdateDetails(log: any): any {
+    if (!log.oldValues || !log.newValues) return null;
+    
+    const oldValues = typeof log.oldValues === 'string' ? JSON.parse(log.oldValues) : log.oldValues;
+    const newValues = typeof log.newValues === 'string' ? JSON.parse(log.newValues) : log.newValues;
+    
+    return {
+      services: {
+        old: oldValues.Services || [],
+        new: newValues.Services || []
+      },
+      extraServices: {
+        old: oldValues.ExtraServices || [],
+        new: newValues.ExtraServices || []
+      }
+    };
+  }
+  
+  isServiceInList(service: any, list: any[]): boolean {
+    return list.some(s => s.ServiceId === service.ServiceId);
+  }
+  
+  isServiceModified(service: any, oldList: any[]): boolean {
+    const oldService = oldList.find(s => s.ServiceId === service.ServiceId);
+    return oldService && oldService.Quantity !== service.Quantity;
+  }
+  
+  isExtraServiceInList(service: any, list: any[]): boolean {
+    return list.some(s => s.ExtraServiceId === service.ExtraServiceId);
+  }
+  
+  isExtraServiceModified(service: any, oldList: any[]): boolean {
+    const oldService = oldList.find(s => s.ExtraServiceId === service.ExtraServiceId);
+    return oldService && (oldService.Quantity !== service.Quantity || oldService.Hours !== service.Hours);
+  }
+
   shouldShowField(fieldName: string): boolean {
+    if (fieldName === 'Services' || fieldName === 'ExtraServices') {
+      return false;
+    }
+    
     // Hide these fields from display
     const hiddenFields = [
       'PasswordHash',
@@ -347,7 +462,8 @@ export class AuditHistoryComponent implements OnInit {
     const typeMap: { [key: string]: string } = {
       'User': 'User ID',
       'Order': 'Order',
-      'CleanerAssignment': 'Order', // NEW - show as Order for cleaner assignments
+      'CleanerAssignment': 'Order',
+      'OrderServicesUpdate': 'Order Services Update', 
       'GiftCard': 'Gift Card',
       'GiftCardUsage': 'Gift Card Usage',
       'ServiceType': 'Service Type',
@@ -427,5 +543,174 @@ export class AuditHistoryComponent implements OnInit {
     }
 
     return pages;
+  }
+
+  // NEW: Helper method to display service quantity with special handling for bedrooms
+  getServiceQuantityDisplay(service: any): string {
+    if (service.ServiceName === 'Bedrooms' && service.Quantity === 0) {
+      return 'Studio';
+    }
+    return service.Quantity.toString();
+  }
+
+  // NEW: Helper method to display extra service details properly
+  getExtraServiceDisplay(service: any): string {
+    const parts: string[] = [];
+    
+    // Only show quantity if it's greater than 0 and the service doesn't primarily use hours
+    if (service.Quantity > 0 && (!service.Hours || service.Hours === 0)) {
+      parts.push(`Qty ${service.Quantity}`);
+    }
+    
+    // Show hours if present and greater than 0
+    if (service.Hours && service.Hours > 0) {
+      parts.push(`${service.Hours}h`);
+    }
+    
+    return parts.join(' ');
+  }
+
+  // NEW: Helper method to check if extra service should show quantity
+  shouldShowExtraServiceQuantity(service: any): boolean {
+    return service.Quantity > 0 && (!service.Hours || service.Hours === 0);
+  }
+
+  // NEW: Helper method to check if extra service should show hours
+  shouldShowExtraServiceHours(service: any): boolean {
+    return service.Hours && service.Hours > 0;
+  }
+
+  // UPDATED: Get all extra services including removed ones for display, but filter out unchanged ones
+  getAllExtraServices(oldServices: any[], newServices: any[]): any[] {
+    const changedServices: any[] = [];
+    
+    // Add new services that are added, modified, or reduced
+    newServices.forEach(newService => {
+      const oldService = oldServices.find(s => s.ExtraServiceId === newService.ExtraServiceId);
+      
+      // Check if it's added, modified, or reduced
+      if (!oldService || 
+          this.isExtraServiceModified(newService, oldServices) || 
+          this.isExtraServiceReduced(newService, oldServices)) {
+        changedServices.push(newService);
+      }
+    });
+    
+    // Add removed services
+    oldServices.forEach(oldService => {
+      const exists = newServices.some(newService => 
+        newService.ExtraServiceId === oldService.ExtraServiceId
+      );
+      if (!exists) {
+        changedServices.push({
+          ...oldService,
+          isRemoved: true
+        });
+      }
+    });
+    
+    return changedServices;
+  }
+
+  // NEW: Get all regular services including removed ones for display, but filter out unchanged ones
+  getAllServices(oldServices: any[], newServices: any[]): any[] {
+    const changedServices: any[] = [];
+    
+    // Add new services that are added or modified
+    newServices.forEach(newService => {
+      const oldService = oldServices.find(s => s.ServiceId === newService.ServiceId);
+      
+      // Check if it's added or modified
+      if (!oldService || this.isServiceModified(newService, oldServices)) {
+        changedServices.push(newService);
+      }
+    });
+    
+    // Add removed services
+    oldServices.forEach(oldService => {
+      const exists = newServices.some(newService => 
+        newService.ServiceId === oldService.ServiceId
+      );
+      if (!exists) {
+        changedServices.push({
+          ...oldService,
+          isRemoved: true
+        });
+      }
+    });
+    
+    return changedServices;
+  }
+
+  // NEW: Check if extra service was removed
+  isExtraServiceRemoved(service: any): boolean {
+    return service.isRemoved === true;
+  }
+
+  // NEW: Check if extra service was reduced in quantity
+  isExtraServiceReduced(service: any, oldList: any[]): boolean {
+    const oldService = oldList.find(s => s.ExtraServiceId === service.ExtraServiceId);
+    if (!oldService) return false;
+    
+    // Check if quantity was reduced
+    if (service.Quantity !== undefined && oldService.Quantity !== undefined) {
+      return service.Quantity < oldService.Quantity;
+    }
+    
+    // Check if hours were reduced
+    if (service.Hours !== undefined && oldService.Hours !== undefined) {
+      return service.Hours < oldService.Hours;
+    }
+    
+    return false;
+  }
+
+  // NEW: Check if regular service was removed
+  isServiceRemoved(service: any): boolean {
+    return service.isRemoved === true;
+  }
+
+  // NEW: Get old service data for comparison
+  getOldService(service: any, oldServices: any[]): any {
+    return oldServices.find(s => s.ServiceId === service.ServiceId) || service;
+  }
+
+  // NEW: Get old extra service data for comparison
+  getOldExtraService(service: any, oldServices: any[]): any {
+    return oldServices.find(s => s.ExtraServiceId === service.ExtraServiceId) || service;
+  }
+
+  // NEW: Get changed services for "Before" section (services that were modified or removed)
+  getChangedServices(oldServices: any[], newServices: any[]): any[] {
+    const changedServices: any[] = [];
+    
+    oldServices.forEach(oldService => {
+      const newService = newServices.find(s => s.ServiceId === oldService.ServiceId);
+      
+      // Include if it was removed or modified
+      if (!newService || this.isServiceModified(newService, oldServices)) {
+        changedServices.push(oldService);
+      }
+    });
+    
+    return changedServices;
+  }
+
+  // NEW: Get changed extra services for "Before" section (services that were modified or removed)
+  getChangedExtraServices(oldServices: any[], newServices: any[]): any[] {
+    const changedServices: any[] = [];
+    
+    oldServices.forEach(oldService => {
+      const newService = newServices.find(s => s.ExtraServiceId === oldService.ExtraServiceId);
+      
+      // Include if it was removed, modified, or reduced
+      if (!newService || 
+          this.isExtraServiceModified(newService, oldServices) || 
+          this.isExtraServiceReduced(newService, oldServices)) {
+        changedServices.push(oldService);
+      }
+    });
+    
+    return changedServices;
   }
 }
