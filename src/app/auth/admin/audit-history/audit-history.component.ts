@@ -251,11 +251,27 @@ export class AuditHistoryComponent implements OnInit {
     // Filter by search term
     if (this.searchTerm) {
       const search = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(log => 
-        log.changedBy?.toLowerCase().includes(search) ||
-        log.changedByEmail?.toLowerCase().includes(search) ||
-        log.entityId?.toString().includes(search)
-      );
+      
+      // Check if search starts with # for audit log ID search
+      if (search.startsWith('#')) {
+        const logIdSearch = search.substring(1); // Remove the # prefix
+        filtered = filtered.filter(log => 
+          log.id?.toString().includes(logIdSearch)
+        );
+      } else if (search.startsWith('e')) {
+        // Check if search starts with 'e' for entity ID search
+        const entityIdSearch = search.substring(1); // Remove the E prefix
+        filtered = filtered.filter(log => 
+          log.entityId?.toString().includes(entityIdSearch)
+        );
+      } else {
+        // Regular search - check email, log ID, and entity ID
+        filtered = filtered.filter(log => 
+          log.changedByEmail?.toLowerCase().includes(search) ||
+          log.id?.toString().includes(search) ||
+          log.entityId?.toString().includes(search)
+        );
+      }
     }
 
     // Update pagination
@@ -304,6 +320,16 @@ export class AuditHistoryComponent implements OnInit {
            log.changedFields.length > 0 &&
            !!log.oldValues &&
            !!log.newValues;
+  }
+
+  // NEW: Check if there are any meaningful changed fields to display
+  hasMeaningfulChangedFields(log: AuditLog): boolean {
+    if (!log.changedFields || !Array.isArray(log.changedFields)) {
+      return false;
+    }
+    
+    // Check if there are any fields that should be shown
+    return log.changedFields.some(field => this.shouldShowField(field));
   }
 
   // NEW: Get cleaner assignment details for display

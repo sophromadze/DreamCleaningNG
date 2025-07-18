@@ -13,7 +13,7 @@
     <div class="search-box">
       <input type="text" 
              [(ngModel)]="searchTerm" 
-             placeholder="Search by user or ID..."
+             placeholder="Search by email, ID, or EentityID..."
              class="search-input">
     </div>
     
@@ -43,6 +43,7 @@
       <table>
         <thead>
           <tr>
+            <th>ID</th>
             <th>Action</th>
             <th>Entity Type</th>
             <th>Entity ID</th>
@@ -53,20 +54,21 @@
         <tbody>
           <ng-container *ngFor="let log of filteredLogs">
             <tr [class.expanded]="viewingLogId === log.id" (click)="viewLogDetails(log.id)" style="cursor: pointer;">
+              <td>#{{ log.id }}</td>
               <td>
                 <span class="action-badge" [ngClass]="getActionClass(log.action)">
                   {{ log.action }}
                 </span>
               </td>
               <td>{{ getEntityTypeDisplayName(log.entityType) }}</td>
-              <td>{{ log.entityId }}</td>
-              <td>{{ log.changedBy || 'System' }}</td>
+              <td>E{{ log.entityId }}</td>
+              <td>{{ log.changedByEmail || log.changedBy || 'System' }}</td>
               <td>{{ formatDate(log.createdAt) }}</td>
             </tr>
             
             <!-- ENHANCED: Details row with special handling for cleaner assignments -->
             <tr *ngIf="viewingLogId === log.id" class="details-row">
-              <td colspan="5">
+              <td colspan="6">
                 <div class="log-details">
                   
                   <!-- Special view for CleanerAssignment logs -->
@@ -87,7 +89,7 @@
                     <!-- REMOVED: The "Updated:" label as requested -->
                     
                     <!-- Show changed fields for updates -->
-                    <div *ngIf="showChangedFields(log)" class="changed-fields">
+                    <div *ngIf="showChangedFields(log) && hasMeaningfulChangedFields(log)" class="changed-fields">
                       <h4>Changed Fields</h4>
                       <div class="field-changes">
                         <ng-container *ngFor="let field of log.changedFields">
@@ -138,7 +140,7 @@
                     
                     <div class="order-changes-container">
                       <!-- Regular field changes -->
-                      <div *ngIf="showChangedFields(log)" class="changed-fields">
+                      <div *ngIf="showChangedFields(log) && hasMeaningfulChangedFields(log)" class="changed-fields">
                         <h4>Changed Fields</h4>
                         <div class="field-changes">
                           <ng-container *ngFor="let field of log.changedFields">
@@ -152,13 +154,13 @@
                         </div>
                       </div>
 
-                                            <!-- Service changes from related logs -->
+                      <!-- Service changes from related logs -->
                       <ng-container *ngFor="let serviceLog of log.serviceLogs">
                         <ng-container *ngIf="getServiceUpdateDetails(serviceLog) as details">
                           
-                          <!-- Regular Services Changes -->
-                          <div class="services-section" *ngIf="details.services.old.length > 0 || details.services.new.length > 0">
-                            <h4>Service Changes</h4>
+                          <!-- Regular Services -->
+                          <div class="services-section" *ngIf="getAllServices(details.services.old, details.services.new).length > 0">
+                            <h4>Services</h4>
                             <div class="service-changes">
                               <ng-container *ngFor="let service of getAllServices(details.services.old, details.services.new)">
                                 <div class="service-change"
@@ -188,9 +190,9 @@
                             </div>
                           </div>
                           
-                          <!-- Extra Services Changes -->
-                          <div class="extra-services-section" *ngIf="details.extraServices.old.length > 0 || details.extraServices.new.length > 0">
-                            <h4>Extra Service Changes</h4>
+                          <!-- Extra Services -->
+                          <div class="extra-services-section" *ngIf="getAllExtraServices(details.extraServices.old, details.extraServices.new).length > 0">
+                            <h4>Extra Services</h4>
                             <div class="service-changes">
                               <ng-container *ngFor="let service of getAllExtraServices(details.extraServices.old, details.extraServices.new)">
                                 <div class="service-change"
@@ -253,9 +255,9 @@
                     <ng-container *ngIf="getServiceUpdateDetails(log) as details">
                       
                       <div class="order-changes-container">
-                        <!-- Regular Services Changes -->
-                        <div class="services-section" *ngIf="details.services.old.length > 0 || details.services.new.length > 0">
-                        <h4>Service Changes</h4>
+                        <!-- Regular Services -->
+                        <div class="services-section" *ngIf="getAllServices(details.services.old, details.services.new).length > 0">
+                        <h4>Services</h4>
                         <div class="service-changes">
                           <ng-container *ngFor="let service of getAllServices(details.services.old, details.services.new)">
                             <div class="service-change"
@@ -285,9 +287,9 @@
                         </div>
                       </div>
                       
-                      <!-- Extra Services Changes -->
-                      <div class="extra-services-section" *ngIf="details.extraServices.old.length > 0 || details.extraServices.new.length > 0">
-                        <h4>Extra Service Changes</h4>
+                      <!-- Extra Services -->
+                      <div class="extra-services-section" *ngIf="getAllExtraServices(details.extraServices.old, details.extraServices.new).length > 0">
+                        <h4>Extra Services</h4>
                         <div class="service-changes">
                           <ng-container *ngFor="let service of getAllExtraServices(details.extraServices.old, details.extraServices.new)">
                             <div class="service-change"
