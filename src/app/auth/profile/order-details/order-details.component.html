@@ -42,7 +42,7 @@
           </div>
           <div class="info-row">
             <span class="label">Cleaners:</span>
-            <span class="value">{{ order.maidsCount }} {{ order.maidsCount > 1 ? 'Maids' : 'Maid' }}</span>
+            <span class="value">{{ order.maidsCount }}</span>
           </div>
         </div>
       </div>
@@ -65,15 +65,6 @@
                 </ng-container>
               </ng-container>
             </span>
-            <span class="service-duration">
-              <ng-container *ngIf="service.serviceName.toLowerCase().includes('hour')">
-                {{ formatServiceDuration(service.quantity * 60) }}
-              </ng-container>
-              <ng-container *ngIf="!service.serviceName.toLowerCase().includes('hour')">
-                {{ formatServiceDuration(service.duration) }}
-              </ng-container>
-            </span>
-            <span class="service-cost">${{ service.cost.toFixed(2) }}</span>
           </div>
         </div>
       </div>
@@ -104,15 +95,6 @@
                 <!-- Hours are shown in duration column, so nothing here -->
               </ng-container>
             </span>
-            <span class="service-duration">
-              <ng-container *ngIf="extra.hours > 0">
-                {{ formatServiceDuration(extra.hours * 60) }}
-              </ng-container>
-              <ng-container *ngIf="extra.hours <= 0">
-                {{ formatServiceDuration(hasCleanerService() ? 0 : extra.duration) }}
-              </ng-container>
-            </span>
-            <span class="service-cost">${{ extra.cost.toFixed(2) }}</span>
           </div>
         </div>
       </div>

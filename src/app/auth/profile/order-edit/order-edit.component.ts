@@ -89,6 +89,9 @@ export class OrderEditComponent implements OnInit, OnDestroy {
   // Order summary collapse state
   isSummaryCollapsed = false;
   
+  // Tip dropdown state
+  tipDropdownOpen = false;
+  
   // Constants
   salesTaxRate = 0.08875; // 8.875%
 
@@ -185,6 +188,9 @@ export class OrderEditComponent implements OnInit, OnDestroy {
         }
       }
     });
+
+    // Setup click outside listener for tip dropdown
+    this.setupDropdownClickOutside();
   }
 
   loadLocationData() {
@@ -686,9 +692,6 @@ export class OrderEditComponent implements OnInit, OnDestroy {
   }
 
 
-
-  // Add this detailed logging to your calculateNewTotal() method in order-edit.component.ts
-
   calculateNewTotal() {
     if (!this.serviceType) return;
   
@@ -869,13 +872,11 @@ export class OrderEditComponent implements OnInit, OnDestroy {
       this.newTax = Math.round(discountedSubTotal * this.salesTaxRate * 100) / 100;
     }
   
-    // Get tips
-    const tips = this.orderForm.get('tips')?.value || 0;
-    const companyDevelopmentTips = this.orderForm.get('companyDevelopmentTips')?.value || 0;
-    const totalTips = tips + companyDevelopmentTips;
+          // Get tips
+      const tips = this.orderForm.get('tips')?.value || 0;
   
     // Calculate new total
-    this.newTotal = this.newSubTotal + this.newTax + totalTips;
+    this.newTotal = this.newSubTotal + this.newTax + tips;
   
     // Apply gift card if applicable
     let finalTotal = this.newTotal;
@@ -1235,7 +1236,7 @@ export class OrderEditComponent implements OnInit, OnDestroy {
     
     // Add "per maid" logic (like booking component)
     if (this.calculatedMaidsCount > 1) {
-      return `${baseFormat} per maid`;
+      return `${baseFormat}`;
     }
     return baseFormat;
   }
@@ -1272,12 +1273,12 @@ export class OrderEditComponent implements OnInit, OnDestroy {
     return `${year}-${month}-${day}`;
   }
 
-  get tips() {
-    return this.orderForm.get('tips')!;
+  get tips(): FormControl {
+    return this.orderForm.get('tips') as FormControl;
   }
 
-  get companyDevelopmentTips() {
-    return this.orderForm.get('companyDevelopmentTips')!;
+  get companyDevelopmentTips(): FormControl {
+    return this.orderForm.get('companyDevelopmentTips') as FormControl;
   }
   
   get totalDurationDisplay(): number {
@@ -1496,5 +1497,24 @@ export class OrderEditComponent implements OnInit, OnDestroy {
     } else {
       this.isSummaryCollapsed = false;
     }
+  }
+
+  toggleTipDropdown() {
+    this.tipDropdownOpen = !this.tipDropdownOpen;
+  }
+
+  selectTipPreset(amount: number) {
+    this.tips.setValue(amount);
+    this.tipDropdownOpen = false;
+    this.calculateNewTotal();
+  }
+
+  private setupDropdownClickOutside() {
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.tip-dropdown')) {
+        this.tipDropdownOpen = false;
+      }
+    });
   }
 }

@@ -213,11 +213,16 @@
         margin-bottom: 1rem;
         font-weight: 600;
         text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
         
-        &::after {
-          content: '🎯';
-          margin-left: 0.5rem;
-          font-size: 1.5rem;
+        .included-icon {
+          width: 24px;
+          height: 24px;
+          color: #007bff;
+          flex-shrink: 0;
         }
       }
 
@@ -363,8 +368,15 @@
     }
 
     .feature-icon {
-      font-size: 2.5rem;
+      width: 48px;
+      height: 48px;
       margin-bottom: 0.5rem;
+      color: #007bff;
+      
+      svg {
+        width: 100%;
+        height: 100%;
+      }
     }
 
     h3 {
@@ -686,32 +698,31 @@
 
     h2 {
       font-size: 2.5rem;
-      color: #333;
-      margin-bottom: 1.5rem;
+      color: #007bff;
+      margin-bottom: 1rem;
     }
 
     p {
       color: #666;
       line-height: 1.6;
-      margin-bottom: 1rem;
-      font-size: 1.1rem;
+      font-size: 1rem;
     }
 
     .learn-more-btn {
       display: inline-block;
-      background: #2c5282;
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
       color: white;
       padding: 0.75rem 1.5rem;
-      border-radius: 6px;
+      border-radius: 50px;
       text-decoration: none;
       font-weight: 600;
-      transition: background-color 0.3s ease;
+      transition: all 0.3s ease;
       margin-top: 1rem;
+      border: 2px solid #007bff;
 
       &:hover {
-        background: #2b6cb0;
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(44, 82, 130, 0.3);
+        box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
       }
     }
   }
@@ -814,8 +825,9 @@
           font-size: 1.4rem;
           margin-bottom: 1rem;
           
-          &::after {
-            font-size: 1.2rem;
+          .included-icon {
+            width: 20px;
+            height: 20px;
           }
         }
 
@@ -868,8 +880,14 @@
         gap: 0.8rem;
 
         .feature-icon {
-          font-size: 2rem;
+          width: 40px;
+          height: 40px;
           margin-bottom: 0.3rem;
+          
+          svg {
+            width: 100%;
+            height: 100%;
+          }
         }
 
         h3 {

@@ -63,16 +63,6 @@
         <div class="section" *ngIf="serviceType && serviceType.extraServices.length > 0">
           <h2>Extra Services</h2>
           
-          <div class="extra-services-info">
-            <p><strong>Deep Cleaning Includes:</strong> Inside of the Fridge and inside the oven. All other services you must select by yourself.</p>
-            <p><strong>We will not be able to do the following:</strong></p>
-            <ul>
-              <li>Moving Heavy Furniture and Appliances</li>
-              <li>Exterior Window Cleaning</li>
-              <li>Pet Waste</li>
-            </ul>
-          </div>
-          
           <!-- Cleaning Type Selection -->
           <div class="cleaning-type-selection">
             <label>Cleaning Type *</label>
@@ -156,17 +146,76 @@
           </div>
         </div>
   
-        <!-- Entry Method -->
+        <!-- Entry Method and Tips -->
         <div class="section">
-          <h2>Entry Method</h2>
-          <div class="form-group">
-            <select formControlName="entryMethod">
-              <option *ngFor="let method of entryMethods" [value]="method">{{ method }}</option>
-            </select>
-            <input type="text" 
-                   formControlName="customEntryMethod"
-                   placeholder="Please specify"
-                   *ngIf="orderForm.get('entryMethod')?.value === 'Other'">
+          <div class="entry-tips-container">
+            <!-- Entry Method -->
+            <div class="entry-method-section">
+              <h2>Entry Method</h2>
+              <div class="form-group">
+                <select formControlName="entryMethod">
+                  <option *ngFor="let method of entryMethods" [value]="method">{{ method }}</option>
+                </select>
+                <input type="text" 
+                       formControlName="customEntryMethod"
+                       placeholder="Please specify"
+                       *ngIf="orderForm.get('entryMethod')?.value === 'Other'">
+              </div>
+            </div>
+
+            <!-- Tips for Cleaners -->
+            <div class="tips-section">
+              <h2>Tips for Cleaners</h2>
+              <div class="tips-input-container">
+                <div class="tip-dropdown">
+                  <button type="button" 
+                          class="tip-dropdown-toggle"
+                          (click)="toggleTipDropdown()">
+                    ${{ tips.value || 0 }}
+                    <span class="dropdown-arrow">▼</span>
+                  </button>
+                  <div class="tip-dropdown-menu" *ngIf="tipDropdownOpen">
+                    <button type="button" 
+                            class="tip-dropdown-item"
+                            [class.selected]="tips.value === 0"
+                            (click)="selectTipPreset(0)">
+                      $0
+                    </button>
+                    <button type="button" 
+                            class="tip-dropdown-item"
+                            [class.selected]="tips.value === 10"
+                            (click)="selectTipPreset(10)">
+                      $10
+                    </button>
+                    <button type="button" 
+                            class="tip-dropdown-item"
+                            [class.selected]="tips.value === 15"
+                            (click)="selectTipPreset(15)">
+                      $15
+                    </button>
+                    <button type="button" 
+                            class="tip-dropdown-item"
+                            [class.selected]="tips.value === 20"
+                            (click)="selectTipPreset(20)">
+                      $20
+                    </button>
+                    <button type="button" 
+                            class="tip-dropdown-item"
+                            [class.selected]="tips.value === 25"
+                            (click)="selectTipPreset(25)">
+                      $25
+                    </button>
+                  </div>
+                </div>
+                <div class="tip-custom-input">
+                  <input type="number" 
+                         [formControl]="tips" 
+                         min="0" 
+                         placeholder="Or enter custom amount"
+                         class="tip-input">
+                </div>
+              </div>
+            </div>
           </div>
         </div>
   
@@ -238,23 +287,7 @@
             </div>
         </div>
   
-        <!-- Tips -->
-        <div class="section">
-          <h2>Tips for Cleaners</h2>
-          <div class="form-group">
-            <label>Tip Amount</label>
-            <input type="number" formControlName="tips" min="0" step="1">
-          </div>
-        </div>
 
-        <!-- Company Development Tips -->
-        <div class="section">
-          <h2>Tips for Company Development</h2>
-          <div class="form-group">
-            <label>Tip Amount</label>
-            <input type="number" formControlName="companyDevelopmentTips" min="0" step="1">
-          </div>
-        </div>
 
         <!-- Gift Card Applied -->
         <div class="section gift-card-section" *ngIf="giftCardApplied">
@@ -356,11 +389,6 @@
             <div class="price-item" *ngIf="tips.value > 0">
               <span>Tips for Cleaners:</span>
               <span>${{ tips.value.toFixed(2) }}</span>
-            </div>
-            
-            <div class="price-item" *ngIf="companyDevelopmentTips.value > 0">
-              <span>Tips for Company Development:</span>
-              <span>${{ companyDevelopmentTips.value.toFixed(2) }}</span>
             </div>
           </div>
 
