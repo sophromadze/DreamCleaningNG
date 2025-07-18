@@ -36,6 +36,20 @@ export class OrderDetailsComponent implements OnInit, OnDestroy {
     this.timeUpdateInterval = setInterval(() => {
       this.now = new Date();
     }, 60000);
+
+    if (this.order) {
+      const serviceDate = new Date(this.order.serviceDate);
+      const now = new Date();
+      const hoursUntilService = (serviceDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursUntilService <= 48) {
+          this.errorMessage = 'This order cannot be edited. Orders must be edited at least 48 hours before the scheduled service.';
+          // Optionally redirect back
+          setTimeout(() => {
+              this.router.navigate(['/order', this.order!.id]);
+          }, 3000);
+      }
+    }
   }
 
   ngOnDestroy() {
@@ -122,7 +136,7 @@ export class OrderDetailsComponent implements OnInit, OnDestroy {
     const serviceDate = new Date(this.order.serviceDate);
     const now = new Date();
     const hoursUntilService = (serviceDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-    return this.order.status === 'Active' && hoursUntilService > 12;
+    return this.order.status === 'Active' && hoursUntilService > 48;
   }
 
   canCancelOrder(): boolean {
@@ -130,7 +144,7 @@ export class OrderDetailsComponent implements OnInit, OnDestroy {
     const serviceDate = new Date(this.order.serviceDate);
     const now = new Date();
     const hoursUntilService = (serviceDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-    return this.order.status === 'Active' && hoursUntilService > 24;
+    return this.order.status === 'Active' && hoursUntilService > 48;
   }
 
   getStatusClass(status: string): string {

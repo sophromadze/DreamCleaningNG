@@ -70,10 +70,10 @@ export class OrderHistoryComponent implements OnInit {
     // Check if order status is not Active
     if (order.status !== 'Active') return false;
     
-    // Check if it's more than 12 hours before service date
+    // Check if it's more than 48 hours before service date
     const serviceDate = new Date(order.serviceDate);
     const now = new Date();
     const hoursUntilService = (serviceDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-    return hoursUntilService > 12;
+    return hoursUntilService > 48;
   }
 }

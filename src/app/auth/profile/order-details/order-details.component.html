@@ -194,14 +194,14 @@
            [routerLink]="canEditOrder() ? ['/order', order.id, 'edit'] : null" 
            class="edit-btn" 
            [class.disabled]="!canEditOrder()"
-           [attr.data-tooltip]="!canEditOrder() ? (order.status === 'Done' ? 'Order is completed' : order.status === 'Cancelled' ? 'Order is cancelled' : 'Service date has passed') : null">
+           [attr.data-tooltip]="!canEditOrder() ? (order.status === 'Done' ? 'Order is completed' : order.status === 'Cancelled' ? 'Order is cancelled' : 'Orders must be edited at least 48 hours before service') : null">
           Edit Order
         </a>
         
         <button class="cancel-btn" 
                 (click)="canCancelOrder() ? openCancelModal() : null"
                 [class.disabled]="!canCancelOrder()"
-                [attr.data-tooltip]="!canCancelOrder() ? (order.status === 'Done' ? 'Order is completed' : order.status === 'Cancelled' ? 'Order is cancelled' : 'Service date has passed') : null">
+                [attr.data-tooltip]="!canCancelOrder() ? (order.status === 'Done' ? 'Order is completed' : order.status === 'Cancelled' ? 'Order is already cancelled' : 'Orders must be cancelled at least 48 hours before service') : null">
           Cancel Order
         </button>
       </div>
