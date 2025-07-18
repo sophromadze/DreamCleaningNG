@@ -341,9 +341,92 @@
     </div>
   </section>
 
-  <!-- Step 5/3: Subscription -->
+  <!-- Step 5/3: Entry Method & Tips -->
+  <section class="booking-section">
+    <div class="entry-tips-container">
+      <!-- Entry Method -->
+      <div class="entry-method-section">
+        <h2>Entry Method</h2>
+        <p>How should the cleaner get in? <span class="required">*</span></p>
+        <div class="form-group">
+          <select [formControl]="entryMethod" id="entryMethod">
+            <option value="">Select entry method</option>
+            <option *ngFor="let method of entryMethods" [value]="method">{{ method }}</option>
+          </select>
+          <div class="error-message" *ngIf="entryMethod.invalid && entryMethod.touched">
+            <div *ngIf="entryMethod.errors?.['required']">Entry method is required</div>
+          </div>
+          <input type="text" 
+                  [formControl]="customEntryMethod"
+                  placeholder="Please specify"
+                  *ngIf="entryMethod.value === 'Other'">
+        </div>
+      </div>
+
+      <!-- Tips for Cleaners -->
+      <div class="tips-section">
+        <h2>Tips for Cleaners</h2>
+        <p>Your cleaners work hard to make your space shine!</p>
+        <div class="tips-input-container">
+          <div class="tip-dropdown">
+            <button type="button" 
+                    class="tip-dropdown-toggle"
+                    (click)="toggleTipDropdown()">
+              ${{ tips.value || 0 }}
+              <span class="dropdown-arrow">▼</span>
+            </button>
+            <div class="tip-dropdown-menu" *ngIf="tipDropdownOpen">
+              <button type="button" 
+                      class="tip-dropdown-item"
+                      [class.selected]="tips.value === 0"
+                      (click)="selectTipPreset(0)">
+                $0
+              </button>
+              <button type="button" 
+                      class="tip-dropdown-item"
+                      [class.selected]="tips.value === 10"
+                      (click)="selectTipPreset(10)">
+                $10
+              </button>
+              <button type="button" 
+                      class="tip-dropdown-item"
+                      [class.selected]="tips.value === 15"
+                      (click)="selectTipPreset(15)">
+                $15
+              </button>
+              <button type="button" 
+                      class="tip-dropdown-item"
+                      [class.selected]="tips.value === 20"
+                      (click)="selectTipPreset(20)">
+                $20
+              </button>
+              <button type="button" 
+                      class="tip-dropdown-item"
+                      [class.selected]="tips.value === 25"
+                      (click)="selectTipPreset(25)">
+                $25
+              </button>
+            </div>
+          </div>
+          <div class="tip-custom-input">
+            <input type="number" 
+                   [formControl]="tips" 
+                   min="0" 
+                   placeholder="Or enter custom amount"
+                   class="tip-input">
+            <div class="error-message" *ngIf="tips.errors?.['minTipAmount']">
+              Custom tip amount must be at least $10
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 6/4: Subscription -->
   <section class="booking-section">
     <h2>Select Subscription</h2>
+    <p>Choose a subscription plan to save on your cleaning services</p>
     <div class="active-subscription-notice" *ngIf="hasActiveSubscription && userSubscription">
       <i class="fas fa-info-circle"></i>
       <span>You have an active {{ userSubscription?.subscriptionName }} subscription 
@@ -354,9 +437,10 @@
            *ngFor="let subscription of subscriptions"
            [class.selected]="selectedSubscription?.id === subscription.id"
            [class.user-subscription]="hasActiveSubscription && userSubscription?.subscriptionId === subscription.id"
-           (click)="selectSubscription(subscription)">
+           [class.mobile-tooltip-visible]="isMobileTooltipVisible(subscription.id)"
+           (click)="selectSubscription(subscription)"
+           [attr.data-tooltip]="getSubscriptionTooltip(subscription)">
         <h4>{{ subscription.name }}</h4>
-        <p>{{ subscription.description }}</p>
         <div class="discount" *ngIf="subscription.discountPercentage > 0">
           Save {{ subscription.discountPercentage }}%
         </div>
@@ -368,7 +452,7 @@
     </div>
   </section>
 
-  <!-- Step 6/4: Discounts -->
+  <!-- Step 7/5: Discounts -->
   <section class="booking-section">
     <h2>Apply Discounts</h2>
     
@@ -390,7 +474,7 @@
                 <i class="fas fa-gift"></i>
               </span>
               <div class="offer-content">
-                <h4>{{ offer.name }}</h4>
+                <h4>{{ offer.name }}:</h4>
                 <div class="offer-details">
                   <p *ngIf="offer.description">{{ offer.description }}</p>
                   <span class="offer-expiry" *ngIf="offer.expiresAt">
@@ -465,31 +549,7 @@
     </div>
   </section>
 
-  <!-- Step 7/5: Tips for Cleaners -->
-  <section class="booking-section">
-    <h2>Tips for Cleaners</h2>
-    <div class="tips-section">
-      <p>Your cleaners work hard to make your space shine!</p>
-      <div class="tip-options">
-        <button [class.selected]="tips.value === 0" 
-                (click)="tips.setValue(0)">$0</button>
-        <button [class.selected]="tips.value === 10" 
-                (click)="tips.setValue(10)">$10</button>
-        <button [class.selected]="tips.value === 15" 
-                (click)="tips.setValue(15)">$15</button>
-        <button [class.selected]="tips.value === 20" 
-                (click)="tips.setValue(20)">$20</button>
-        <button [class.selected]="tips.value === 25" 
-                (click)="tips.setValue(25)">$25</button>
-        <div class="custom-tip">
-          <input type="number" [formControl]="tips" min="0" placeholder="Custom amount">
-          <div class="error-message" *ngIf="tips.errors?.['minTipAmount']">
-            Custom tip amount must be at least $10
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+
 
   <!-- Step 8/6: Tips for Company Development -->
   <section class="booking-section" style="display: none;">
@@ -517,7 +577,7 @@
     </div>
   </section>
 
-  <!-- Step 10/8: Special Instructions -->
+  <!-- Step 9/7: Special Instructions -->
   <section class="booking-section">
     <h2>Special Instructions (Optional)</h2>
     <div class="form-group">
@@ -528,27 +588,11 @@
   </section>
 </ng-container>
 
-<!-- Entry Method - Visible for both regular and custom pricing (but not for polls) -->
-<section class="booking-section" *ngIf="selectedServiceType && !showPollForm">
-  <h2>Entry Method</h2>
-  <div class="form-group">
-    <select [formControl]="entryMethod" id="entryMethod">
-      <option value="">Select entry method</option>
-      <option *ngFor="let method of entryMethods" [value]="method">{{ method }}</option>
-    </select>
-    <div class="error-message" *ngIf="entryMethod.invalid && entryMethod.touched">
-      <div *ngIf="entryMethod.errors?.['required']">Entry method is required</div>
-    </div>
-    <input type="text" 
-            [formControl]="customEntryMethod"
-            placeholder="Please specify"
-            *ngIf="entryMethod.value === 'Other'">
-  </div>
-</section>
+
 
 <!-- Contact Information and Address - ALWAYS VISIBLE when service type is selected -->
 <ng-container *ngIf="selectedServiceType">
-  <!-- Step 11/9: Contact Information -->
+  <!-- Step 10/8: Contact Information -->
   <section class="booking-section">
     <h2>Contact Information</h2>
     <div class="form-grid">
@@ -587,7 +631,7 @@
     
   </section>
 
-  <!-- Step 12/10: Service Address -->
+  <!-- Step 11/9: Service Address -->
   <section class="booking-section">
     <h2>Service Address</h2>
     

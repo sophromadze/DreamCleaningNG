@@ -127,6 +127,9 @@ export class BookingComponent implements OnInit, OnDestroy {
   mobileTooltipTimeouts: { [key: number]: any } = {};
   mobileTooltipStates: { [key: number]: boolean } = {};
   
+  // Tip dropdown state
+  tipDropdownOpen = false;
+  
   // Booking summary collapse state
   isSummaryCollapsed = true;
   
@@ -319,6 +322,9 @@ export class BookingComponent implements OnInit, OnDestroy {
       const target = event.target as HTMLElement;
       if (!target.closest('.service-type-dropdown')) {
         this.serviceTypeDropdownOpen = false;
+      }
+      if (!target.closest('.tip-dropdown')) {
+        this.tipDropdownOpen = false;
       }
     });
   }
@@ -1099,6 +1105,9 @@ export class BookingComponent implements OnInit, OnDestroy {
   selectSubscription(subscription: Subscription) {
     this.selectedSubscription = subscription;
     this.calculateTotal();
+    
+    // Show mobile tooltip for subscription
+    this.showMobileTooltip(subscription.id);
   }
 
   applyPromoCode() {
@@ -2327,6 +2336,10 @@ export class BookingComponent implements OnInit, OnDestroy {
     return tooltip;
   }
 
+  getSubscriptionTooltip(subscription: Subscription): string {
+    return subscription.description || '';
+  }
+
   // Handle cleaning type selection
   onCleaningTypeChange(cleaningType: string) {
     // Remove any existing deep cleaning or super deep cleaning services
@@ -2360,6 +2373,19 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.calculateTotal();
     this.saveFormData();
   }
+
+  toggleTipDropdown() {
+    this.tipDropdownOpen = !this.tipDropdownOpen;
+  }
+
+  selectTipPreset(amount: number) {
+    this.tips.setValue(amount);
+    this.tipDropdownOpen = false;
+    this.calculateTotal();
+    this.saveFormData();
+  }
+
+
   
   onPollAnswerChange() {
     // Save form data when poll answers change
