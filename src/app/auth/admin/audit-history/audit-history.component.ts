@@ -340,7 +340,7 @@ export class AuditHistoryComponent implements OnInit {
       const roles = ['Customer', 'SuperAdmin', 'Admin', 'Moderator', 'Cleaner']; 
       return roles[value] || value.toString();
     }
-
+  
     // Handle TotalDuration field - format as hours:minutes
     if (fieldName === 'TotalDuration' && typeof value === 'number') {
       const hours = Math.floor(value / 60);
@@ -353,7 +353,48 @@ export class AuditHistoryComponent implements OnInit {
       return `${value} minutes`;
     }
     
-    // Handle dates - this comes AFTER the duration check
+    // Special handling for ServiceTime field to show proper time format
+    if (fieldName === 'ServiceTime') {
+      // Handle TimeSpan format (HH:mm:ss or HH:mm)
+      let timeString = value;
+      
+      // If value is an object (TimeSpan serialized as object), extract the time string
+      if (typeof value === 'object' && value !== null) {
+        // Handle different possible TimeSpan serialization formats
+        timeString = value.Hours !== undefined ? 
+          `${String(value.Hours).padStart(2, '0')}:${String(value.Minutes || 0).padStart(2, '0')}` : 
+          value.toString();
+      }
+      
+      // Convert to string if needed
+      timeString = String(timeString);
+      
+      // Parse time parts
+      const timeParts = timeString.split(':');
+      if (timeParts.length >= 2) {
+        const hours = parseInt(timeParts[0]);
+        const minutes = timeParts[1];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayHour = hours % 12 || 12;
+        return `${displayHour}:${minutes} ${ampm}`;
+      }
+      return timeString;
+    }
+    
+    // Handle ServiceDate specifically to show only the date part
+    if (fieldName === 'ServiceDate') {
+      try {
+        const date = new Date(value);
+        if (!isNaN(date.getTime())) {
+          // Format as MM/DD/YYYY without time
+          return date.toLocaleDateString();
+        }
+      } catch {
+        // Fall through to return as string
+      }
+    }
+    
+    // Handle other dates - this comes AFTER the specific field checks
     if (fieldName && (fieldName.includes('Date') || fieldName.includes('Time') || fieldName === 'CreatedAt' || fieldName === 'UpdatedAt')) {
       if (value === '0001-01-01T00:00:00Z' || value === '0001-01-01T00:00:00') {
         return 'Not set';

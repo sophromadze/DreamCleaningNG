@@ -15,7 +15,6 @@ import { StripeService } from '../../../services/stripe.service';
 interface SelectedService {
   service: Service;
   quantity: number;
-  hours?: number;  
 }
 
 interface SelectedExtraService {
@@ -306,41 +305,47 @@ export class OrderEditComponent implements OnInit, OnDestroy {
     // Clear existing controls
     this.serviceControls.clear();
     
-    // Initialize selected services with quantities from the order
+    // Initialize selected services with quantities from the order (like booking component)
     this.selectedServices = [];
     
-    // First, add all services from the service type with their original quantities
-    this.serviceType.services.forEach(service => {
-      const orderService = this.order!.services.find(s => s.serviceId === service.id);
-      let quantity = orderService ? orderService.quantity : 0;
-      let hours: number | undefined = undefined;
-      
-      // Special handling for cleaner services
-      if (service.serviceRelationType === 'cleaner') {
-        // Find the hours service in the order
-        const hoursService = this.serviceType!.services.find(s => s.serviceRelationType === 'hours' && s.serviceTypeId === service.serviceTypeId);
-        if (hoursService) {
-          const orderHoursService = this.order!.services.find(s => s.serviceId === hoursService.id);
-          hours = orderHoursService ? orderHoursService.quantity : (orderService ? orderService.duration / 60 : 2);
+    // Sort services by displayOrder before processing (like booking component)
+    const sortedServices = [...this.serviceType.services].sort((a, b) => 
+      (a.displayOrder || 999) - (b.displayOrder || 999)
+    );
+    
+    sortedServices.forEach(service => {
+      if (service.isActive !== false) {
+        const orderService = this.order!.services.find(s => s.serviceId === service.id);
+        
+        let quantity = orderService ? orderService.quantity : (service.minValue ?? 0);
+        
+        // Special handling for Hours service when not found in database
+        if (service.serviceRelationType === 'hours' && !orderService) {
+          // Try to calculate hours from cleaner service duration
+          const cleanerService = this.order!.services.find(s => 
+            s.serviceName.toLowerCase().includes('cleaner')
+          );
+          if (cleanerService && cleanerService.duration) {
+            // Calculate hours from duration (duration is in minutes)
+            quantity = Math.floor(cleanerService.duration / 60);
+          } else {
+            // Fallback to default hours
+            quantity = service.minValue ?? 3;
+          }
         }
-      }
-      
-      // For hours service, use 0 as default if not found
-      if (service.serviceRelationType === 'hours') {
-        quantity = quantity || 2; // Default to 2 hours if not found
-      }
-      
-      this.selectedServices.push({
-        service: service,
-        quantity: quantity,
-        hours: hours
-      });
-      
-      // Store original quantity
-      this.originalServiceQuantities.set(service.id, quantity);
+        
+        // Use the actual database value, don't override with defaults
+        this.selectedServices.push({
+          service: service,
+          quantity: quantity
+        });
+        
+        // Store original quantity
+        this.originalServiceQuantities.set(service.id, quantity);
 
-      // Add form control for this service
-      this.serviceControls.push(this.fb.control(quantity));
+        // Add form control for this service
+        this.serviceControls.push(this.fb.control(quantity));
+      }
     });
   }
 
@@ -375,6 +380,21 @@ export class OrderEditComponent implements OnInit, OnDestroy {
     if (index !== -1) {
       this.selectedServices[index].quantity = quantity;
       this.serviceControls.at(index).setValue(quantity);
+      
+      // If this is a cleaner service, we need to update the related hours service
+      if (service.serviceRelationType === 'cleaner') {
+        const hoursService = this.selectedServices.find(s => 
+          s.service.serviceRelationType === 'hours' && 
+          s.service.serviceTypeId === service.serviceTypeId
+        );
+        if (hoursService) {
+          // Update the form control for hours service too
+          const hoursIndex = this.selectedServices.findIndex(s => s.service.id === hoursService.service.id);
+          if (hoursIndex !== -1) {
+            this.serviceControls.at(hoursIndex).setValue(hoursService.quantity);
+          }
+        }
+      }
     }
     this.calculateNewTotal();
   }
@@ -607,7 +627,7 @@ export class OrderEditComponent implements OnInit, OnDestroy {
 
   getServiceHours(service: Service): number {
     const selected = this.selectedServices.find(s => s.service.id === service.id);
-    return selected?.hours || 0;
+    return selected?.quantity || 0;
   }
 
   getOriginalServiceQuantity(service: Service): number {
@@ -665,23 +685,7 @@ export class OrderEditComponent implements OnInit, OnDestroy {
     return 0;
   }
 
-  updateServiceHours(service: Service, hours: number): void {
-    const index = this.selectedServices.findIndex(s => s.service.id === service.id);
-    if (index !== -1) {
-      this.selectedServices[index].hours = hours;
-      
-      // Also update the hours service quantity
-      const hoursService = this.selectedServices.find(s => 
-        s.service.serviceRelationType === 'hours' && 
-        s.service.serviceTypeId === service.serviceTypeId
-      );
-      
-      if (hoursService) {
-        hoursService.quantity = hours;
-      }
-    }
-    this.calculateNewTotal();
-  }
+
 
   // Add this detailed logging to your calculateNewTotal() method in order-edit.component.ts
 
@@ -693,6 +697,7 @@ export class OrderEditComponent implements OnInit, OnDestroy {
     let deepCleaningFee = 0;
     let displayDuration = 0;
     let actualTotalDuration = 0;
+    let useExplicitHours = false;
   
     // Check for deep cleaning multipliers
     let priceMultiplier = 1;
@@ -707,8 +712,23 @@ export class OrderEditComponent implements OnInit, OnDestroy {
       deepCleaningFee = deepCleaning.extraService.price;
     }
     
-    // Calculate base price with multiplier
-    if (this.serviceType) {
+    // Check if we have cleaner-hours relationship (like booking component)
+    const hasCleanerService = this.selectedServices.some(s => 
+      s.service.serviceRelationType === 'cleaner'
+    );
+    const hoursService = this.selectedServices.find(s => 
+      s.service.serviceRelationType === 'hours'
+    );
+
+    // If we have both cleaner and hours services, use hours as the duration (like booking component)
+    if (hasCleanerService && hoursService) {
+      useExplicitHours = true;
+      actualTotalDuration = hoursService.quantity * 60;
+      totalDuration = actualTotalDuration;
+    }
+    
+    // Calculate base price with multiplier (only if not using explicit hours)
+    if (this.serviceType && !useExplicitHours) {
       const baseServiceCost = this.serviceType.basePrice * priceMultiplier;
       subtotal += baseServiceCost;
       
@@ -717,88 +737,77 @@ export class OrderEditComponent implements OnInit, OnDestroy {
       actualTotalDuration += this.serviceType.timeDuration || 0;
     }
   
-    // Process regular services
-    this.selectedServices.forEach(selectedService => {
-      const service = selectedService.service;
-      const quantity = selectedService.quantity;
-      let serviceCost = 0;
-      let serviceDuration = 0;
-  
-      // Special handling for studio apartments (bedrooms = 0)
-      if (service.serviceKey === 'bedrooms' && quantity === 0) {
-        // Studio apartment special pricing
-        serviceCost = 10 * priceMultiplier; // Studio is $10
-        serviceDuration = 20; // 20 minutes for studio
-        
-        subtotal += serviceCost;
-        totalDuration += serviceDuration;
-        actualTotalDuration += serviceDuration;
-      } else if (quantity > 0) {
-        // Calculate cost based on service type
-        if (service.serviceRelationType === 'hours') {
-          // For hours-based services, find the related cleaner service
-          const cleanerService = this.selectedServices.find(s => 
-            s.service.serviceRelationType === 'cleaner' && 
-            s.service.serviceTypeId === service.serviceTypeId
-          );
-          
-          if (cleanerService && cleanerService.quantity > 0) {
-            serviceCost = service.cost * selectedService.quantity * cleanerService.quantity * priceMultiplier;
-            serviceDuration = service.timeDuration * selectedService.quantity * cleanerService.quantity;
-          }
-        } else if (service.cost > 0) {
-          serviceCost = service.cost * selectedService.quantity * priceMultiplier;
-          serviceDuration = service.timeDuration * selectedService.quantity;
-        } else {
-          // Service with no cost (duration only)
-          serviceDuration = service.timeDuration * selectedService.quantity;
+    // Process regular services (like booking component)
+    this.selectedServices.forEach(selected => {
+      if (selected.service.serviceRelationType === 'cleaner') {
+        if (hoursService) {
+          const hours = hoursService.quantity;
+          const cleaners = selected.quantity;
+          const costPerCleanerPerHour = selected.service.cost * priceMultiplier;
+          const cost = costPerCleanerPerHour * cleaners * hours;
+          subtotal += cost;
         }
-  
-        subtotal += serviceCost;
-        totalDuration += serviceDuration;
-        actualTotalDuration += serviceDuration;
+      } else if (selected.service.serviceKey === 'bedrooms' && selected.quantity === 0) {
+        const cost = this.getServicePrice(selected.service, 0);
+        subtotal += cost;
+        if (!useExplicitHours) {
+          const studioDuration = this.getServiceDuration(selected.service);
+          totalDuration += studioDuration;
+          actualTotalDuration += studioDuration;
+        }
+      } else if (selected.service.serviceRelationType !== 'hours') {
+        const cost = selected.service.cost * selected.quantity * priceMultiplier;
+        subtotal += cost;
+        if (!useExplicitHours) {
+          const serviceDuration = selected.service.timeDuration * selected.quantity;
+          totalDuration += serviceDuration;
+          actualTotalDuration += serviceDuration;
+        }
       }
     });
   
-    // Process extra services
-    this.selectedExtraServices.forEach(selectedExtra => {
-      const extraService = selectedExtra.extraService;
-      let extraCost = 0;
-  
-      if (!extraService.isDeepCleaning && !extraService.isSuperDeepCleaning) {
-        // IMPORTANT FIX: Apply price multiplier to non-same-day extra services when deep cleaning is selected
-        // Same day services keep their own multiplier (usually 1.0 or their specific multiplier)
-        // Regular extra services get the deep cleaning multiplier applied
-        const currentMultiplier = extraService.isSameDayService ? extraService.priceMultiplier : priceMultiplier;
-  
-        if (extraService.hasHours && selectedExtra.hours > 0) {
-          extraCost = extraService.price * selectedExtra.hours * currentMultiplier;
-        } else if (extraService.hasQuantity && selectedExtra.quantity > 0) {
-          extraCost = extraService.price * selectedExtra.quantity * currentMultiplier;
-        } else if (!extraService.hasHours && !extraService.hasQuantity) {
-          extraCost = extraService.price * currentMultiplier;
+    // Process extra services (like booking component)
+    this.selectedExtraServices.forEach(selected => {
+      if (!selected.extraService.isDeepCleaning && !selected.extraService.isSuperDeepCleaning) {
+        const currentMultiplier = selected.extraService.isSameDayService ? 1 : priceMultiplier;
+        
+        if (selected.extraService.hasHours) {
+          subtotal += selected.extraService.price * selected.hours * currentMultiplier;
+          if (!useExplicitHours) {
+            const extraDuration = selected.extraService.duration * selected.hours;
+            totalDuration += extraDuration;
+            actualTotalDuration += extraDuration;
+          }
+        } else if (selected.extraService.hasQuantity) {
+          subtotal += selected.extraService.price * selected.quantity * currentMultiplier;
+          if (!useExplicitHours) {
+            const extraDuration = selected.extraService.duration * selected.quantity;
+            totalDuration += extraDuration;
+            actualTotalDuration += extraDuration;
+          }
+        } else {
+          subtotal += selected.extraService.price * currentMultiplier;
+          if (!useExplicitHours) {
+            totalDuration += selected.extraService.duration;
+            actualTotalDuration += selected.extraService.duration;
+          }
         }
-  
-        subtotal += extraCost;
-      } 
-  
-      totalDuration += extraService.duration;
-      actualTotalDuration += extraService.duration;
+      } else {
+        if (!useExplicitHours) {
+          totalDuration += selected.extraService.duration;
+          actualTotalDuration += selected.extraService.duration;
+        }
+      }
     });
   
     // Continue with your existing calculation logic...
-    
-    // Check if we have cleaner-hours relationship
-    const hasCleanerService = this.selectedServices.some(s => 
-      s.service.serviceRelationType === 'cleaner'
-    );
   
-    // Calculate maids count and display duration
+    // Calculate extra cleaners FIRST (like booking component)
+    const extraCleaners = this.getExtraCleanersCount();
+
+    // Calculate base maids count (without extra cleaners)
     let baseMaidsCount = 1;
-    const extraCleaners = this.selectedExtraServices
-      .filter(s => s.extraService.name.toLowerCase().includes('extra cleaner'))
-      .reduce((sum, s) => sum + s.quantity, 0);
-  
+
     if (hasCleanerService) {
       const cleanerService = this.selectedServices.find(s => 
         s.service.serviceRelationType === 'cleaner'
@@ -806,6 +815,7 @@ export class OrderEditComponent implements OnInit, OnDestroy {
       if (cleanerService) {
         baseMaidsCount = cleanerService.quantity;
       }
+      // When cleaners are explicitly selected, use actual duration without division initially
       displayDuration = actualTotalDuration;
     } else {
       const totalHours = totalDuration / 60;
@@ -814,22 +824,35 @@ export class OrderEditComponent implements OnInit, OnDestroy {
         displayDuration = totalDuration;
       } else {
         baseMaidsCount = Math.ceil(totalHours / 6);
-        displayDuration = totalDuration;
+        displayDuration = totalDuration; // Don't divide yet
       }
     }
-    
+
+    // NOW add extra cleaners to get total maid count
     this.calculatedMaidsCount = baseMaidsCount + extraCleaners;
-    
+      
+    // FINALLY divide duration by TOTAL maid count (including extra cleaners)
     if (this.calculatedMaidsCount > 1 && !hasCleanerService) {
+      // Only divide duration when we have multiple maids and no explicit cleaner service
       displayDuration = Math.ceil(totalDuration / this.calculatedMaidsCount);
     } else if (hasCleanerService && this.calculatedMaidsCount > baseMaidsCount) {
+      // If we have explicit cleaners AND extra cleaners, divide by total count
       displayDuration = Math.ceil(actualTotalDuration / this.calculatedMaidsCount);
     }
     
+    // Ensure display duration never goes below 1 hour (60 minutes)
     displayDuration = Math.max(displayDuration, 60);
-  
-    this.totalDuration = Math.max(displayDuration, 60);
+
+    // Store the actual total duration for backend - ensure minimum 1 hour
     this.actualTotalDuration = Math.max(actualTotalDuration, 60);
+
+    // For display, when using explicit hours, show the hours directly (like booking component)
+    if (useExplicitHours && hoursService) {
+      displayDuration = hoursService.quantity * 60;
+    }
+
+    // Set the final total duration for display
+    this.totalDuration = displayDuration;
   
     // Add deep cleaning fee AFTER all other calculations
     subtotal += deepCleaningFee;
@@ -875,43 +898,31 @@ export class OrderEditComponent implements OnInit, OnDestroy {
   prepareUpdateData(): UpdateOrder {
     const formValue = this.orderForm.value;
     
+    // Parse the date string and create a proper Date object
+    // The date string is in YYYY-MM-DD format
+    const dateParts = formValue.serviceDate.split('-');
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]) - 1; // JavaScript months are 0-indexed
+    const day = parseInt(dateParts[2]);
+    
+    // Create date at noon to avoid any timezone edge cases
+    const serviceDate = new Date(year, month, day, 12, 0, 0);
+    
     // Prepare services with special handling for cleaner/hours relationship
     const services: { serviceId: number; quantity: number }[] = [];
     
     this.selectedServices.forEach(selectedService => {
-      const { service, quantity, hours } = selectedService;
+      const { service, quantity } = selectedService;
       
-      if (service.serviceRelationType === 'cleaner' && hours !== undefined) {
-        // Add the cleaner service
-        services.push({
-          serviceId: service.id,
-          quantity: quantity
-        });
-        
-        // Find and add the hours service for this service type
-        const hoursService = this.selectedServices.find(s => 
-          s.service.serviceRelationType === 'hours' && 
-          s.service.serviceTypeId === service.serviceTypeId
-        );
-        
-        if (hoursService) {
-          services.push({
-            serviceId: hoursService.service.id,
-            quantity: hours // Use the hours value as quantity for hours service
-          });
-        }
-      } else if (service.serviceRelationType !== 'hours') {
-        // Add non-hours services normally
-        services.push({
-          serviceId: service.id,
-          quantity: quantity
-        });
-      }
-      // Skip hours services as they're handled with cleaners
+      // Add all services normally (like booking component)
+      services.push({
+        serviceId: service.id,
+        quantity: quantity
+      });
     });
     
     return {
-      serviceDate: new Date(formValue.serviceDate),
+      serviceDate: serviceDate, // Use the properly created Date object
       serviceTime: formValue.serviceTime,
       entryMethod: formValue.entryMethod === 'Other' ? 
         formValue.customEntryMethod : formValue.entryMethod,
@@ -941,6 +952,101 @@ export class OrderEditComponent implements OnInit, OnDestroy {
     };
   }
 
+  hasActualChanges(): boolean {
+    if (!this.order) return false;
+    
+    const formValue = this.orderForm.value;
+    
+    // Format times for comparison
+    const orderServiceTime = this.formatTimeForComparison(this.order.serviceTime);
+    const formServiceTime = this.formatTimeForComparison(formValue.serviceTime);
+    
+    // Check if basic fields changed
+    const basicFieldsChanged = 
+      this.formatDateForComparison(this.order.serviceDate) !== formValue.serviceDate ||
+      orderServiceTime !== formServiceTime ||
+      this.order.entryMethod !== (formValue.entryMethod === 'Other' ? formValue.customEntryMethod : formValue.entryMethod) ||
+      this.order.specialInstructions !== (formValue.specialInstructions || '') ||
+      this.order.contactFirstName !== formValue.contactFirstName ||
+      this.order.contactLastName !== formValue.contactLastName ||
+      this.order.contactEmail !== formValue.contactEmail ||
+      this.order.contactPhone !== formValue.contactPhone ||
+      this.order.serviceAddress !== formValue.serviceAddress ||
+      this.order.aptSuite !== (formValue.aptSuite || '') ||
+      this.order.city !== formValue.city ||
+      this.order.state !== formValue.state ||
+      this.order.zipCode !== formValue.zipCode ||
+      this.order.tips !== (formValue.tips || 0) ||
+      this.order.companyDevelopmentTips !== (formValue.companyDevelopmentTips || 0);
+  
+    if (basicFieldsChanged) return true;
+  
+    // Check if services changed
+    const currentServiceIds = this.order.services.map(s => s.serviceId).sort();
+    const newServiceIds = this.selectedServices
+      .filter(s => s.service.serviceRelationType !== 'hours')
+      .map(s => s.service.id).sort();
+    
+    if (JSON.stringify(currentServiceIds) !== JSON.stringify(newServiceIds)) return true;
+  
+    // Check if extra services changed
+    const currentExtraServiceIds = this.order.extraServices.map(s => s.extraServiceId).sort();
+    const newExtraServiceIds = this.selectedExtraServices.map(s => s.extraService.id).sort();
+    
+    if (JSON.stringify(currentExtraServiceIds) !== JSON.stringify(newExtraServiceIds)) return true;
+  
+    // Check quantities and hours
+    for (const service of this.order.services) {
+      const selected = this.selectedServices.find(s => s.service.id === service.serviceId);
+      if (!selected || selected.quantity !== service.quantity) return true;
+    }
+  
+    for (const extraService of this.order.extraServices) {
+      const selected = this.selectedExtraServices.find(s => s.extraService.id === extraService.extraServiceId);
+      if (!selected || selected.quantity !== extraService.quantity || selected.hours !== extraService.hours) return true;
+    }
+  
+    return false;
+  }
+  
+  formatDateForComparison(date: any): string {
+    if (typeof date === 'string') {
+      if (date.includes('T')) {
+        return date.split('T')[0];
+      }
+      return date;
+    } else {
+      const d = new Date(date);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+  }
+  
+  formatTimeForComparison(time: any): string {
+    if (!time) return '';
+    
+    // If it's already a string
+    if (typeof time === 'string') {
+      // Extract just HH:mm part (ignore seconds if present)
+      if (time.includes(':')) {
+        const parts = time.split(':');
+        return `${parts[0].padStart(2, '0')}:${parts[1].padStart(2, '0')}`;
+      }
+      return time;
+    }
+    
+    // If it's an object (like TimeSpan from backend)
+    if (typeof time === 'object' && time !== null) {
+      if (time.Hours !== undefined && time.Minutes !== undefined) {
+        return `${String(time.Hours).padStart(2, '0')}:${String(time.Minutes).padStart(2, '0')}`;
+      }
+    }
+    
+    return String(time);
+  }
+
   ngOnDestroy() {
     // Clean up Stripe elements when component is destroyed
     this.stripeService.destroyCardElement();
@@ -949,6 +1055,10 @@ export class OrderEditComponent implements OnInit, OnDestroy {
   onSubmit() {
     if (!this.orderForm.valid || !this.order) {
       this.errorMessage = 'Please fill in all required fields';
+      return;
+    }
+
+    if (!this.hasActualChanges()) {
       return;
     }
 
@@ -1120,9 +1230,14 @@ export class OrderEditComponent implements OnInit, OnDestroy {
   }
 
   formatDuration(minutes: number): string {
-    // Ensure minimum 1 hour (60 minutes) before formatting
-    const adjustedMinutes = Math.max(minutes, 60);
-    return DurationUtils.formatDurationRounded(adjustedMinutes);
+    // Use rounded duration
+    const baseFormat = DurationUtils.formatDurationRounded(minutes);
+    
+    // Add "per maid" logic (like booking component)
+    if (this.calculatedMaidsCount > 1) {
+      return `${baseFormat} per maid`;
+    }
+    return baseFormat;
   }
 
   formatTime(timeString: string): string {
@@ -1273,6 +1388,23 @@ export class OrderEditComponent implements OnInit, OnDestroy {
       s.extraService.name === 'Extra Cleaners' && s.extraService.hasQuantity
     );
     return extraCleanersService ? extraCleanersService.quantity : 0;
+  }
+
+  hasCleanerServices(): boolean {
+    return this.selectedServices.some(s => s.service.serviceRelationType === 'cleaner');
+  }
+
+  getCleanerPricingText(): string {
+    const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
+    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
+    const pricePerHour = this.getCleanerPricePerHour();
+    
+    if (superDeepCleaning) {
+      return `Hourly Service: $${pricePerHour} per hour/per cleaner <span class="cleaning-type-red">(Super Deep Cleaning)</span>`;
+    } else if (deepCleaning) {
+      return `Hourly Service: $${pricePerHour} per hour/per cleaner <span class="cleaning-type-red">(Deep Cleaning)</span>`;
+    }
+    return `Hourly Service: $${pricePerHour} per hour/per cleaner`;
   }
 
   getCleanerPricePerHour(): number {

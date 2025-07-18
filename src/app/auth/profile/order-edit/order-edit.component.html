@@ -19,60 +19,41 @@
         <!-- Services -->
         <div class="section" *ngIf="serviceType">
           <h2>Services</h2>
+          
+          <!-- Office Cleaning Pricing Text -->
+          <div class="service-pricing-info" *ngIf="hasCleanerServices()">
+            <p class="pricing-text" [innerHTML]="getCleanerPricingText()"></p>
+          </div>
+          
           <div class="services">
-            <div class="service-item" *ngFor="let service of serviceType.services; let i = index" [class.hidden]="service.serviceKey === 'hours'">
-              <label>{{ service.name }}</label>
-              <div class="service-input">
-                <div class="quantity-display">
-                  <div class="quantity-section">
-                    <h4>Original</h4>
-                    <div class="quantity-box original">
-                      <span class="value">
-                        <ng-container *ngIf="service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0">Studio</ng-container>
-                        <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && getOriginalServiceQuantity(service) === 0)">
-                          <ng-container *ngIf="service?.serviceRelationType === 'cleaner'">
-                            Cleaners: {{ getOriginalServiceQuantity(service) }}
-                            <br>
-                            Hours: {{ getOriginalServiceHours(service) }}
-                          </ng-container>
-                          <ng-container *ngIf="service?.serviceRelationType !== 'cleaner'">
-                            {{ getOriginalServiceQuantity(service) }}
-                          </ng-container>
-                        </ng-container>
-                      </span>
-                      <!-- Removed price and duration display -->
-                    </div>
-                  </div>
-                  <div class="quantity-section">
-                    <h4>New</h4>
-                    <div class="quantity-box new">
-                      <select [formControl]="getServiceControl(i)"
-                              (change)="updateServiceQuantity(service, +$any($event.target).value)">
-                        <option *ngFor="let option of getServiceOptions(service)" [value]="option">
-                          <ng-container *ngIf="service?.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
-                          <ng-container *ngIf="!(service?.serviceKey === 'bedrooms' && option === 0)">
-                            <ng-container *ngIf="service?.serviceRelationType === 'cleaner'">
-                              Cleaners: {{ option }}
-                            </ng-container>
-                            <ng-container *ngIf="service?.serviceRelationType !== 'cleaner'">
-                              {{ option }}
-                            </ng-container>
-                          </ng-container>
-                        </option>
-                      </select>
-                      <!-- Removed price and duration display -->
-                    </div>
-                  </div>
-                </div>
-                <!-- Hours input for cleaner services -->
-                <div class="hours-input" *ngIf="service?.serviceRelationType === 'cleaner'">
-                  <label>Hours:</label>
-                  <select (change)="updateServiceHours(service, +$any($event.target).value)">
-                    <option *ngFor="let hour of [1,2,3,4,5,6,7,8,9]" [value]="hour" [selected]="hour === getServiceHours(service)">
-                      {{ hour }} hour{{ hour > 1 ? 's' : '' }}
-                    </option>
-                  </select>
-                </div>
+            <div class="service-item" *ngFor="let selected of selectedServices; let i = index">
+              <label>{{ selected.service.name }}</label>
+              
+              <!-- Dropdown Input -->
+              <div class="service-input" *ngIf="selected.service.inputType === 'dropdown'">
+                <select [formControl]="getServiceControl(i)" 
+                        (change)="updateServiceQuantity(selected.service, +getServiceControl(i).value)">
+                  <option *ngFor="let option of getServiceOptions(selected.service)"
+                          [value]="option">
+                    <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
+                    <ng-container *ngIf="!(selected.service.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
+                  </option>
+                </select>
+                <!-- Removed duration and cost display -->
+              </div>
+
+              <!-- Slider Input for Square Feet -->
+              <div class="service-input slider-input" *ngIf="selected.service.isRangeInput">
+                <div class="slider-container">
+                  <input type="range"
+                        [formControl]="getServiceControl(i)"
+                        [min]="selected.service.minValue"
+                        [max]="selected.service.maxValue"
+                        [step]="selected.service.stepValue"
+                        (input)="updateServiceQuantity(selected.service, +getServiceControl(i).value)">
+                        <span class="slider-quantity">{{ getServiceControl(i).value }} sq ft</span>
+                    <!-- Removed cost display -->
+                </div>                  
               </div>
             </div>
           </div>
@@ -329,13 +310,13 @@
             </div>
 
             <div class="summary-item">
-              <span>Number of Cleaners:</span>
-              <span>{{ calculatedMaidsCount }} {{ calculatedMaidsCount > 1 ? 'Maids' : 'Maid' }}</span>
+              <span>Duration:</span>
+              <span>{{ formatDuration(totalDurationDisplay) }}</span>
             </div>
             
             <div class="summary-item">
-              <span>Total Duration:</span>
-              <span>{{ formatDuration(totalDurationDisplay) }}</span>
+              <span>Number of Cleaners:</span>
+              <span>{{ calculatedMaidsCount }}</span>
             </div>
           </div>
 

@@ -55,8 +55,16 @@ export class DateSelectorComponent implements OnInit, OnChanges {
 
   updateFromValue() {
     if (this.value) {
+      // Handle the value whether it comes as YYYY-MM-DD or as an ISO string
+      let dateString = this.value;
+      
+      // If it contains 'T', it's an ISO string, extract just the date part
+      if (dateString.includes('T')) {
+        dateString = dateString.split('T')[0];
+      }
+      
       // Create date without timezone issues by parsing the date string manually
-      const [year, month, day] = this.value.split('-').map(Number);
+      const [year, month, day] = dateString.split('-').map(Number);
       this.selectedDate = new Date(year, month - 1, day);
       this.currentMonth = new Date(this.selectedDate);
     } else {
@@ -144,6 +152,11 @@ export class DateSelectorComponent implements OnInit, OnChanges {
 
   formatDate(dateString: string): string {
     if (!dateString) return 'Select date';
+    
+    // Handle ISO string format
+    if (dateString.includes('T')) {
+      dateString = dateString.split('T')[0];
+    }
     
     // Parse date without timezone issues
     const [year, month, day] = dateString.split('-').map(Number);
