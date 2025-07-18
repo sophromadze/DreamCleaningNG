@@ -1,7 +1,6 @@
-// src/app/header/header.component.ts
-import { Component, OnInit, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef, Inject, PLATFORM_ID } from '@angular/core';
 import { RouterLink, RouterLinkActive, Router } from '@angular/router';
-import { CommonModule } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 import { combineLatest } from 'rxjs';
 
@@ -21,27 +20,107 @@ export class HeaderComponent implements OnInit {
   userInitials: string = '';
   isAuthInitialized = false;
   isMobile = false;
+  private isBrowser: boolean;
 
   constructor(
     private authService: AuthService,
     private router: Router,
-    private elementRef: ElementRef
-  ) {}
+    private elementRef: ElementRef,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
 
   ngOnInit() {
     this.checkScreenSize();
-    // Wait for both auth initialization and user data
+    
+    // IMMEDIATE UI restoration from cache
+    if (this.isBrowser) {
+      this.restoreUserFromCache();
+    }
+    
+    // Then subscribe to actual auth state for updates
     combineLatest([
       this.authService.isInitialized$,
       this.authService.currentUser
     ]).subscribe(([isInitialized, user]) => {
       this.isAuthInitialized = isInitialized;
-      this.currentUser = user;
       
+      // Update user data if changed
       if (user) {
+        this.currentUser = user;
         this.userInitials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
+        
+        // Cache the minimal user data for next refresh
+        if (this.isBrowser) {
+          this.cacheUserData(user);
+        }
+      } else {
+        // User logged out, clear cache
+        this.currentUser = null;
+        this.userInitials = '';
+        if (this.isBrowser) {
+          this.clearUserCache();
+        }
       }
     });
+  }
+
+  private restoreUserFromCache(): void {
+    try {
+      // Check if we have a token (user is logged in)
+      const token = localStorage.getItem('token');
+      if (!token) {
+        return;
+      }
+
+      // Try to get cached user data
+      const cachedData = localStorage.getItem('headerUserCache');
+      if (cachedData) {
+        const cached = JSON.parse(cachedData);
+        
+        // Verify cache is not stale (24 hours)
+        const cacheAge = Date.now() - cached.timestamp;
+        if (cacheAge < 24 * 60 * 60 * 1000) {
+          // Restore user data immediately
+          this.currentUser = cached.user;
+          this.userInitials = cached.userInitials;
+          this.isAuthInitialized = true; // Show UI immediately
+        }
+      }
+    } catch (error) {
+      console.warn('Failed to restore user from cache:', error);
+    }
+  }
+
+  private cacheUserData(user: any): void {
+    try {
+      // Cache only minimal data needed for UI
+      const cacheData = {
+        user: {
+          id: user.id,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          profilePictureUrl: user.profilePictureUrl
+        },
+        userInitials: this.userInitials,
+        timestamp: Date.now()
+      };
+      
+      localStorage.setItem('headerUserCache', JSON.stringify(cacheData));
+    } catch (error) {
+      console.warn('Failed to cache user data:', error);
+    }
+  }
+
+  private clearUserCache(): void {
+    try {
+      localStorage.removeItem('headerUserCache');
+    } catch (error) {
+      console.warn('Failed to clear user cache:', error);
+    }
   }
 
   @HostListener('window:resize')
@@ -228,6 +307,8 @@ export class HeaderComponent implements OnInit {
 
   logout() {
     const currentUrl = this.router.url;
+    // Clear the user cache on logout
+    this.clearUserCache();
     this.authService.logout();
     if (currentUrl.startsWith('/profile')) {
       this.router.navigate(['/']);

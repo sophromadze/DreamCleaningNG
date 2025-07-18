@@ -179,7 +179,7 @@ export class BookingConfirmationComponent implements OnInit, OnDestroy {
     if (selectedSubscription && selectedSubscription.subscriptionDays > 0) {
       this.bookingService.getUserSubscription().subscribe({
         next: (subscriptionData) => {
-          console.log('Subscription data refreshed:', subscriptionData);
+          // Subscription data refreshed successfully
         },
         error: (error) => {
           console.error('Failed to refresh subscription data:', error);

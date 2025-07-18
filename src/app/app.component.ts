@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
@@ -27,39 +27,49 @@ export class AppComponent implements OnInit, OnDestroy {
   title = 'DreamCleaning';
   isAuthInitialized = false;
   private subscriptions: Subscription = new Subscription();
+  private servicesInitialized = false;
 
   constructor(
     private authService: AuthService,
-    private tokenRefreshService: TokenRefreshService
+    private tokenRefreshService: TokenRefreshService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit() {
-    // Preserve all existing logic
+    // Platform check at the beginning
+    if (!isPlatformBrowser(this.platformId)) {
+      return;
+    }
+
     // Wait for auth to be initialized
     const authInitSub = this.authService.isInitialized$.subscribe(isInit => {
       this.isAuthInitialized = isInit;
-    });
-    this.subscriptions.add(authInitSub);
-
-    // NEW: Initialize token refresh service
-    this.tokenRefreshService.startTokenRefresh();
-
-    // NEW: Listen for auth state changes to manage token refresh
-    const authSub = this.authService.currentUser.subscribe(user => {
-      if (user) {
-        // User logged in, ensure token refresh is running
+      
+      // Only initialize other services after auth is ready
+      if (isInit && !this.servicesInitialized) { // This will only run once when isInit becomes true
+        this.servicesInitialized = true;
+        // Initialize token refresh service
         this.tokenRefreshService.startTokenRefresh();
-      } else {
-        // User logged out, stop token refresh
-        this.tokenRefreshService.stopTokenRefresh();
+
+        // Listen for auth state changes to manage token refresh
+        const authSub = this.authService.currentUser.subscribe(user => {
+          if (user) {
+            // User logged in, ensure token refresh is running
+            this.tokenRefreshService.startTokenRefresh();
+          } else {
+            // User logged out, stop token refresh
+            this.tokenRefreshService.stopTokenRefresh();
+          }
+        });
+        this.subscriptions.add(authSub);
+
+        // Set initial activity time if user is already logged in
+        if (this.authService.isLoggedIn()) {
+          localStorage.setItem('lastActivity', Date.now().toString());
+        }
       }
     });
-    this.subscriptions.add(authSub);
-
-    // NEW: Set initial activity time
-    if (this.authService.isLoggedIn()) {
-      localStorage.setItem('lastActivity', Date.now().toString());
-    }
+    this.subscriptions.add(authInitSub);
   }
 
   ngOnDestroy() {

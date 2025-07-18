@@ -27,8 +27,13 @@ export class AuthInterceptor implements HttpInterceptor {
                           request.url.includes('/auth/refresh-token') ||
                           request.url.includes('/auth/google');
 
-    if (!isAuthEndpoint) {
-      // Check if user has been inactive for 24 hours (only for non-auth endpoints)
+    // Skip for SignalR endpoints
+    const isSignalREndpoint = request.url.includes('/userManagementHub') || 
+                             request.url.includes('/negotiate') ||
+                             (request.url.includes('?id=') && request.url.includes('access_token='));
+
+    if (!isAuthEndpoint && !isSignalREndpoint) {
+      // Check if user has been inactive for 24 hours (only for non-auth/non-SignalR endpoints)
       if (this.isBrowser && this.checkInactivity()) {
         this.authService.logout();
         return throwError(() => new Error('Session expired due to inactivity'));
@@ -54,13 +59,15 @@ export class AuthInterceptor implements HttpInterceptor {
     }
 
     // Clone the request and add the authorization header
-    if (token && !isAuthEndpoint) {
+    // Don't add auth header to SignalR requests (they use query string)
+    if (token && !isAuthEndpoint && !isSignalREndpoint) {
       request = this.addToken(request, token);
     }
 
     return next.handle(request).pipe(
       catchError(error => {
-        if (error instanceof HttpErrorResponse && error.status === 401 && !isAuthEndpoint) {
+        // Don't handle 401 for SignalR endpoints
+        if (error instanceof HttpErrorResponse && error.status === 401 && !isAuthEndpoint && !isSignalREndpoint) {
           return this.handle401Error(request, next);
         }
         return throwError(() => error);

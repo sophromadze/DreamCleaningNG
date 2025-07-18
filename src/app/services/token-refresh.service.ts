@@ -28,20 +28,23 @@ export class TokenRefreshService {
     this.stopTokenRefresh();
 
     // Only start if user is logged in
-    if (this.authService.isLoggedIn()) {
+    if (!this.authService.isLoggedIn()) {
+      return;
+    }
+
+    // Delay the first check to avoid conflicts during page load
+    setTimeout(() => {
       // Set up periodic token refresh
       this.refreshSubscription = interval(this.TOKEN_REFRESH_INTERVAL).subscribe(() => {
         if (this.authService.isLoggedIn()) {
           // Check for inactivity before refreshing
           if (this.checkInactivity()) {
-            console.log('User inactive for 24 hours, logging out');
             this.authService.logout();
             return;
           }
 
           this.authService.refreshToken().subscribe({
             next: (response) => {
-              console.log('Token refreshed successfully');
               // Update last activity on successful refresh
               localStorage.setItem('lastActivity', Date.now().toString());
             },
@@ -56,14 +59,13 @@ export class TokenRefreshService {
       // Set up periodic inactivity check (every hour)
       this.inactivityCheckSubscription = interval(this.INACTIVITY_CHECK_INTERVAL).subscribe(() => {
         if (this.checkInactivity()) {
-          console.log('User inactive for 24 hours, logging out');
           this.authService.logout();
         }
       });
 
       // Also check token expiry on startup
       this.checkTokenExpiry();
-    }
+    }, 1000); // 1 second delay
   }
 
   stopTokenRefresh(): void {
@@ -115,7 +117,7 @@ export class TokenRefreshService {
       if (timeUntilExpiry < 5 * 60 * 1000) {
         this.authService.refreshToken().subscribe({
           next: (response) => {
-            console.log('Token refreshed on startup');
+            // Token refreshed successfully
           },
           error: (error) => {
             console.error('Token refresh failed on startup:', error);

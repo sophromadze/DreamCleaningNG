@@ -1,10 +1,10 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
+import { HubConnection, HubConnectionBuilder, LogLevel, HttpTransportType } from '@microsoft/signalr';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { environment } from '../../environments/environment';
-import { filter, skip } from 'rxjs/operators';
+import { filter, skip, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 
 export interface UserNotification {
   message: string;
@@ -50,14 +50,17 @@ export class SignalRService {
     }
   }
 
-  private initializeOnce(): void {    
-    // Wait for auth service to be fully initialized before setting up subscriptions
-    this.authService.isInitialized$.subscribe(isInitialized => {
-      if (isInitialized && !this.isInitialized) {
-        this.isInitialized = true;
-        this.setupAuthSubscription();
-      }
-    });
+  private initializeOnce(): void {
+    // Add a small delay to ensure auth service is fully ready
+    setTimeout(() => {
+      // Wait for auth service to be fully initialized before setting up subscriptions
+      this.authService.isInitialized$.subscribe(isInitialized => {
+        if (isInitialized && !this.isInitialized) {
+          this.isInitialized = true;
+          this.setupAuthSubscription();
+        }
+      });
+    }, 100);
   }
 
   private setupAuthSubscription(): void {   
@@ -67,10 +70,11 @@ export class SignalRService {
       this.connect();
     }
 
-    // Subscribe to future auth state changes, but skip the initial emission
-    // since we've already handled the current state above
+    // Subscribe to future auth state changes with debounce to avoid rapid connect/disconnect
     this.authService.currentUser.pipe(
-      skip(1) // Skip the first emission to avoid duplicate connection attempts
+      skip(1), // Skip the first emission to avoid duplicate connection attempts
+      debounceTime(300), // Add debounce to prevent rapid reconnections
+      distinctUntilChanged((prev, curr) => prev?.id === curr?.id) // Prevent duplicate connections
     ).subscribe(user => {      
       if (user && !SignalRService.hubConnection) {
         this.connect();
@@ -81,7 +85,9 @@ export class SignalRService {
   }
 
   public async connect(): Promise<void> {
-    if (SignalRService.hubConnection) {
+    // Check if already connected or connecting
+    if (SignalRService.hubConnection?.state === 'Connected' || 
+        SignalRService.hubConnection?.state === 'Connecting') {
       return;
     }
 
@@ -91,6 +97,15 @@ export class SignalRService {
       return;
     }
 
+    // Disconnect any existing connection first
+    if (SignalRService.hubConnection) {
+      try {
+        await SignalRService.hubConnection.stop();
+      } catch (e) {
+        console.warn('Error stopping existing connection:', e);
+      }
+    }
+
     // Use this.apiUrl just like other services, but remove /api for SignalR hub
     const baseUrl = this.apiUrl.replace('/api', '');
     const hubUrl = `${baseUrl}/userManagementHub`;
@@ -98,21 +113,30 @@ export class SignalRService {
     SignalRService.hubConnection = new HubConnectionBuilder()
       .withUrl(hubUrl, {
         accessTokenFactory: () => {
-          return token;
-        }
+          // Always get fresh token
+          return this.authService.getToken() || token;
+        },
+        skipNegotiation: false,
+        transport: HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents
       })
-      .withAutomaticReconnect([0, 2000, 10000, 30000])
+      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
       .configureLogging(LogLevel.None)
       .build();
 
-    // Set up event handlers
+    // Set up event handlers BEFORE starting
     this.setupEventHandlers();
 
     try {
       await SignalRService.hubConnection.start();
       SignalRService.globalConnectionState.next(true);
     } catch (error) {
+      console.error('SignalR: Connection failed:', error);
       SignalRService.globalConnectionState.next(false);
+      
+      // Retry after delay if user is still authenticated
+      if (this.authService.isLoggedIn()) {
+        setTimeout(() => this.connect(), 5000);
+      }
     }
   }
 

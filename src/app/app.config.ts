@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideZoneChangeDetection, PLATFORM_ID, APP_ID } from '@angular/core';
+import { ApplicationConfig, provideZoneChangeDetection, PLATFORM_ID, APP_ID, APP_INITIALIZER } from '@angular/core';
 import { provideRouter, withDebugTracing, withInMemoryScrolling } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { routes } from './app.routes';
@@ -6,13 +6,34 @@ import { provideClientHydration, withEventReplay } from '@angular/platform-brows
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { importProvidersFrom } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { AuthService } from './services/auth.service';
+import { filter, take } from 'rxjs/operators';
 import { 
   SocialLoginModule, 
   SocialAuthServiceConfig,
   GoogleLoginProvider,
-  GoogleSigninButtonModule 
+  GoogleSigninButtonModule
 } from '@abacritt/angularx-social-login';
 import { environment } from '../environments/environment';
+
+// App initializer factory function
+export function initializeAuth(authService: AuthService, platformId: Object): () => Promise<void> {
+  return () => new Promise((resolve) => {
+    // For SSR, resolve immediately
+    if (!isPlatformBrowser(platformId)) {
+      resolve();
+      return;
+    }
+    
+    // For browser, wait for auth to be initialized
+    authService.isInitialized$.pipe(
+      filter(initialized => initialized),
+      take(1)
+    ).subscribe(() => {
+      resolve();
+    });
+  });
+}
 
 // Environment detection for SSR
 const getSocialAuthConfig = (platformId: Object): SocialAuthServiceConfig => {
@@ -74,6 +95,14 @@ export const appConfig: ApplicationConfig = {
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
+      multi: true
+    },
+    
+    // App initializer
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeAuth,
+      deps: [AuthService, PLATFORM_ID],
       multi: true
     },
     

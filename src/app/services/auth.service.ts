@@ -83,27 +83,47 @@ export class AuthService {
 
     // Handle initialization based on platform
     if (this.isBrowser) {
-      // For social auth, we need to wait for it to initialize
-      this.socialAuthService.initState.subscribe((isReady) => {
-        if (isReady) {
-          this.isInitializedSubject.next(true);
+      // Check if we have stored user data and token
+      const token = localStorage.getItem('token');
+      const userStr = localStorage.getItem('currentUser');
+      const isSocialLogin = localStorage.getItem('isSocialLogin') === 'true';
+      
+      // IMMEDIATE initialization if we have user data and token
+      if (token && userStr && storedUser) {
+        // User is already logged in - initialize immediately
+        this.isInitializedSubject.next(true);
+        
+        // If it's a social login, still subscribe to social auth state
+        // but don't block initialization
+        if (isSocialLogin) {
+          this.socialAuthService.initState.subscribe((isReady) => {
+            // Social auth is ready, but we're already initialized
+          });
         }
-      });
+      } else if (isSocialLogin && !token) {
+        // Only wait for social auth if it's a social login without token
+        this.socialAuthService.initState.subscribe((isReady) => {
+          if (isReady) {
+            this.isInitializedSubject.next(true);
+          }
+        });
 
-      // Fallback: If social auth doesn't initialize within 2 seconds, 
-      // mark as initialized anyway (for non-social login functionality)
-      setTimeout(() => {
-        if (!this.isInitializedSubject.value) {
-          this.isInitializedSubject.next(true);
-        }
-      }, 2000);
+        // Fallback: If social auth doesn't initialize within 2 seconds, 
+        // mark as initialized anyway
+        setTimeout(() => {
+          if (!this.isInitializedSubject.value) {
+            this.isInitializedSubject.next(true);
+          }
+        }, 2000);
+      } else {
+        // No user logged in - initialize immediately
+        this.isInitializedSubject.next(true);
+      }
     } else {
       // On server-side, mark as initialized immediately
       this.isInitializedSubject.next(true);
     }
   }
-
-  
 
   public get currentUserValue(): UserDto | null {
     return this.currentUserSubject.value;
@@ -192,62 +212,6 @@ export class AuthService {
       });
     });
   }
-
-  // Google login
-  // async googleLogin(): Promise<void> {
-  //   console.log('googleLogin called');
-    
-  //   if (!this.isBrowser) {
-  //     throw new Error('Social login is only available in browser');
-  //   }
-
-  //   try {
-  //     // Check if social auth service is available
-  //     if (!this.socialAuthService) {
-  //       throw new Error('Social auth service not available');
-  //     }
-
-  //     console.log('Calling socialAuthService.signIn for Google');
-  //     const user = await this.socialAuthService.signIn(GoogleLoginProvider.PROVIDER_ID);
-  //     console.log('Google user received:', user);
-      
-  //     if (!user || !user.idToken) {
-  //       throw new Error('No ID token received from Google');
-  //     }
-      
-  //     // Send the ID token to your backend
-  //     console.log('Sending token to backend');
-  //     return new Promise((resolve, reject) => {
-  //       this.http.post<AuthResponse>(`${this.apiUrl}/auth/google-login`, { 
-  //         idToken: user.idToken 
-  //       }).subscribe({
-  //         next: (response) => {
-  //           console.log('Backend response received:', response);
-  //           this.isSocialLogin = true;
-  //           if (this.isBrowser) {
-  //             localStorage.setItem('isSocialLogin', 'true');
-  //           }
-  //           this.handleAuthResponse(response);
-  //           resolve();
-  //         },
-  //         error: (error) => {
-  //           console.error('Backend error:', error);
-  //           reject(error);
-  //         }
-  //       });
-  //     });
-  //   } catch (error: any) {
-  //     console.error('Google sign-in failed:', error);
-  //     // Provide more specific error messages
-  //     if (error.error === 'popup_closed_by_user') {
-  //       throw new Error('Login cancelled by user');
-  //     } else if (error.error === 'access_denied') {
-  //       throw new Error('Access denied. Please try again.');
-  //     } else {
-  //       throw error;
-  //     }
-  //   }
-  // }
 
   getCachedProfilePicture(url: string): string {
     if (this.profilePictureCache.has(url)) {

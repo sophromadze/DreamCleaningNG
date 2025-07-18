@@ -215,14 +215,6 @@ export class OrdersComponent implements OnInit {
             id: order.userId,
             email: order.contactEmail
           });
-
-          console.log('Order details loaded:', {
-            id: order.id,
-            initialTotal: order.initialTotal,
-            initialSubTotal: order.initialSubTotal,
-            total: order.total,
-            subTotal: order.subTotal
-          });
           
           // Only load assigned cleaners if not already cached
           if (!this.assignedCleanersCache.has(orderId)) {
@@ -264,7 +256,6 @@ export class OrdersComponent implements OnInit {
     
     this.adminService.getOrderUpdateHistory(orderId).subscribe({
       next: (history) => {
-        console.log('Update history loaded:', history);
         this.orderUpdateHistory = history;
         this.loadingUpdateHistory = false;
       },
