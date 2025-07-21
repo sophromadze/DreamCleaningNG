@@ -32,10 +32,9 @@ export class HeaderComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.checkScreenSize();
-    
-    // IMMEDIATE UI restoration from cache
+    // Only check screen size in browser environment
     if (this.isBrowser) {
+      this.checkScreenSize();
       this.restoreUserFromCache();
     }
     
@@ -125,11 +124,15 @@ export class HeaderComponent implements OnInit {
 
   @HostListener('window:resize')
   onResize() {
-    this.checkScreenSize();
+    if (this.isBrowser) {
+      this.checkScreenSize();
+    }
   }
 
   checkScreenSize() {
-    this.isMobile = window.innerWidth <= 768;
+    if (this.isBrowser) {
+      this.isMobile = window.innerWidth <= 768;
+    }
   }
 
   // Listen for clicks outside the dropdown

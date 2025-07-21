@@ -1,20 +1,20 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Inject, PLATFORM_ID, OnInit } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../services/auth.service';
-import { GoogleSigninButtonModule } from '@abacritt/angularx-social-login';
 import { passwordValidator } from '../../utils/password-validator';
+import { GoogleSigninWrapperComponent } from './google-signin-wrapper.component';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, HttpClientModule, GoogleSigninButtonModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, HttpClientModule, GoogleSigninWrapperComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   isLoginMode = true;
   loginForm: FormGroup;
   registerForm: FormGroup;
@@ -23,13 +23,16 @@ export class LoginComponent {
   returnUrl: string;
   showResendOption = false;
   resendEmail = '';
+  private isBrowser: boolean;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
     // Get return url from route parameters or default to '/'
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
     
@@ -94,14 +97,15 @@ export class LoginComponent {
   }
 
   ngOnInit() {
-    // Listen for Google sign-in success
-    if (this.authService.socialAuthService) {
+    // Only initialize Google Sign-In in browser environment
+    if (this.isBrowser && this.authService.socialAuthService) {
       this.authService.socialAuthService.authState.subscribe((user) => {
         if (user && user.provider === 'GOOGLE') {
           this.handleGoogleSignIn(user);
         }
       });
     }
+    // Force rebuild to clear cache
   }
 
   private async handleGoogleSignIn(user: any) {

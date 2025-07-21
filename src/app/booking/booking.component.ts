@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
@@ -39,6 +39,7 @@ interface SelectedExtraService {
 })
 export class BookingComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
+  private isBrowser: boolean;
   
   // Make Math available in template
   Math = Math;
@@ -110,7 +111,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   acceptedFormats = 'image/jpeg,image/jpg,image/png,image/webp,image/gif,image/bmp,image/heic,image/heif';
   isUploadingPhoto = false;
   photoUploadError = '';
-  isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  isMobileDevice = false; // Will be updated in ngOnInit
   
   // Subscription-related properties
   userSubscription: any = null;
@@ -181,8 +182,11 @@ export class BookingComponent implements OnInit, OnDestroy {
     private pollService: PollService,
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    
     this.bookingForm = this.fb.group({
       serviceDate: [{value: '', disabled: false}, Validators.required],
       serviceTime: ['', Validators.required],
@@ -225,13 +229,21 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    // Only run initialization in browser environment
+    if (!this.isBrowser) return;
+    
     // Check same day service availability
     this.checkSameDayServiceAvailability();
     
     // Set up periodic check for same day service availability (every minute)
-    setInterval(() => {
+    const intervalId = setInterval(() => {
       this.checkSameDayServiceAvailability();
     }, 60000); // Check every minute
+    
+    // Store interval ID for cleanup
+    this.destroy$.subscribe(() => {
+      clearInterval(intervalId);
+    });
     
     // Set minimum date to tomorrow (not 2 days from now)
     this.minDate = new Date();
@@ -262,12 +274,16 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
     
     // Wait for auth service to be initialized before proceeding
-    this.authService.isInitialized$.subscribe(isInitialized => {
+    this.authService.isInitialized$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(isInitialized => {
       if (isInitialized) {
         // Only refresh user profile if logged in
         if (this.authService.isLoggedIn()) {
           // Refresh user data to ensure we have the latest firstTimeOrder status
-          this.authService.refreshUserProfile().subscribe({
+          this.authService.refreshUserProfile().pipe(
+            takeUntil(this.destroy$)
+          ).subscribe({
             next: () => {
               this.loadInitialData();
               this.setupFormListeners();
@@ -335,6 +351,8 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   private setupDropdownClickOutside() {
+    if (!this.isBrowser) return;
+    
     document.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
       if (!target.closest('.service-type-dropdown')) {
@@ -406,11 +424,16 @@ export class BookingComponent implements OnInit, OnDestroy {
   }  
 
   private loadInitialData() {
+    // Only load data in browser environment
+    if (!this.isBrowser) return;
+    
     // Clear any existing error messages
     this.errorMessage = '';
     
-    // Load service types
-    this.bookingService.getServiceTypes().subscribe({
+    // Load service types with timeout
+    this.bookingService.getServiceTypes().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (serviceTypes) => {       
         // Sort service types by displayOrder
         this.serviceTypes = serviceTypes.sort((a, b) => {
@@ -502,7 +525,9 @@ export class BookingComponent implements OnInit, OnDestroy {
     });
     
     // Load location data
-    this.locationService.getStates().subscribe({
+    this.locationService.getStates().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (states) => {
         this.states = states;
         const savedState = this.bookingForm.get('state')?.value;
@@ -519,7 +544,9 @@ export class BookingComponent implements OnInit, OnDestroy {
     });
     
     // Load subscriptions
-    this.bookingService.getSubscriptions().subscribe({
+    this.bookingService.getSubscriptions().pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (subscriptions) => {
         // Sort subscriptions by displayOrder
         this.subscriptions = subscriptions.sort((a, b) => {
@@ -560,7 +587,9 @@ export class BookingComponent implements OnInit, OnDestroy {
     });
     
     // Load current user data
-    this.authService.currentUser.subscribe(user => {
+    this.authService.currentUser.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(user => {
       this.currentUser = user;
       if (user) {
         this.hasFirstTimeDiscount = user.firstTimeOrder;
@@ -579,7 +608,9 @@ export class BookingComponent implements OnInit, OnDestroy {
         }
         
         // Load user apartments
-        this.profileService.getApartments().subscribe({
+        this.profileService.getApartments().pipe(
+          takeUntil(this.destroy$)
+        ).subscribe({
           next: (apartments) => {
             this.userApartments = apartments;
             
@@ -727,7 +758,9 @@ export class BookingComponent implements OnInit, OnDestroy {
       this.formPersistenceService.clearFormData();
       this.serviceTypeControl.setValue('');
       this.router.navigate(['/booking']).then(() => {
-        window.location.reload();
+        if (this.isBrowser) {
+          window.location.reload();
+        }
       });
     }
   }
@@ -1028,7 +1061,7 @@ export class BookingComponent implements OnInit, OnDestroy {
 
   // Check if currently on mobile
   isCurrentlyMobile(): boolean {
-    return window.innerWidth <= 768;
+    return this.isBrowser ? window.innerWidth <= 768 : false;
   }
 
   updateExtraServiceQuantity(extraService: ExtraService, quantity: number) {
@@ -1937,6 +1970,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
 
     // Find the first invalid field and scroll to it
+    if (!this.isBrowser) return;
+    
     setTimeout(() => {
       // Try multiple selectors to find the first error
       let firstErrorElement = document.querySelector('.ng-invalid.ng-touched');
@@ -2591,6 +2626,10 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   private compressAndConvertToBase64(file: File): Promise<{preview: string, base64: string}> {
+    if (!this.isBrowser) {
+      return Promise.reject(new Error('Image compression not available in server environment'));
+    }
+    
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
@@ -2693,6 +2732,8 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.isSummaryCollapsed = !this.isSummaryCollapsed;
     
     // Scroll to the booking summary
+    if (!this.isBrowser) return;
+    
     setTimeout(() => {
       const summaryElement = document.querySelector('.booking-summary');
       if (summaryElement) {

@@ -1,5 +1,6 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { isPlatformBrowser } from '@angular/common';
 
 export interface BookingFormData {
   // Service Type and Services
@@ -62,13 +63,17 @@ export class FormPersistenceService {
   
   private formDataSubject = new BehaviorSubject<BookingFormData | null>(null);
   public formData$ = this.formDataSubject.asObservable();
+  private isBrowser: boolean;
 
-  constructor() {
-    // Load any existing data on service initialization
-    this.loadFormData();
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
     
-    // Listen for storage events to sync across tabs
-    if (typeof window !== 'undefined') {
+    // Only load data and set up listeners in browser environment
+    if (this.isBrowser) {
+      // Load any existing data on service initialization
+      this.loadFormData();
+      
+      // Listen for storage events to sync across tabs
       window.addEventListener('storage', (event) => {
         if (event.key === this.STORAGE_KEY) {
           this.loadFormData();
@@ -81,6 +86,8 @@ export class FormPersistenceService {
    * Save form data to sessionStorage
    */
   saveFormData(data: BookingFormData): void {
+    if (!this.isBrowser) return;
+    
     try {
       const dataToSave = {
         ...data,
@@ -98,6 +105,8 @@ export class FormPersistenceService {
    * Load form data from sessionStorage
    */
   loadFormData(): BookingFormData | null {
+    if (!this.isBrowser) return null;
+    
     try {
       const savedData = sessionStorage.getItem(this.STORAGE_KEY);
       if (!savedData) return null;
@@ -132,6 +141,8 @@ export class FormPersistenceService {
    * Clear all saved form data
    */
   clearFormData(): void {
+    if (!this.isBrowser) return;
+    
     try {
       sessionStorage.removeItem(this.STORAGE_KEY);
       this.formDataSubject.next(null);

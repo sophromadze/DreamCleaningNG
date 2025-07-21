@@ -4,6 +4,7 @@ import { authGuard } from './guards/auth.guard';
 import { noAuthGuard } from './guards/no-auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { maintenanceGuard } from './guards/maintenance.guard';
+import { clientOnlyGuard } from './guards/client-only.guard';
 import { CleanerCabinetComponent } from './auth/cleaner-cabinet/cleaner-cabinet.component';
 
 export const routes: Routes = [
@@ -89,43 +90,43 @@ export const routes: Routes = [
   },
   {
     path: 'profile',
-    canActivate: [authGuard, maintenanceGuard],
+    canActivate: [clientOnlyGuard, authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/profile/profile.component').then(m => m.ProfileComponent)
   },
   {
     path: 'change-password',
-    canActivate: [authGuard, maintenanceGuard],
+    canActivate: [clientOnlyGuard, authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/change-password/change-password.component').then(m => m.ChangePasswordComponent)
   },
   {
     path: 'admin',
-    canActivate: [adminGuard],
+    canActivate: [clientOnlyGuard, adminGuard],
     loadComponent: () => import('./auth/admin/admin.component').then(m => m.AdminComponent)
   },
 
   {
     path: 'profile/orders',
-    canActivate: [authGuard, maintenanceGuard],
+    canActivate: [clientOnlyGuard, authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/profile/order-history/order-history.component').then(m => m.OrderHistoryComponent)
   },
   {
     path: 'order/:id',
-    canActivate: [authGuard, maintenanceGuard],
+    canActivate: [clientOnlyGuard, authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/profile/order-details/order-details.component').then(m => m.OrderDetailsComponent)
   },
   {
     path: 'order/:id/edit',
-    canActivate: [authGuard, maintenanceGuard],
+    canActivate: [clientOnlyGuard, authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/profile/order-edit/order-edit.component').then(m => m.OrderEditComponent)
   },
   {
     path: 'booking-confirmation',
-    canActivate: [authGuard, maintenanceGuard],
+    canActivate: [clientOnlyGuard, authGuard, maintenanceGuard],
     loadComponent: () => import('./booking/booking-confirmation/booking-confirmation.component').then(m => m.BookingConfirmationComponent)
   },
   {
     path: 'gift-cards',
-    canActivate: [authGuard, maintenanceGuard],
+    canActivate: [clientOnlyGuard, authGuard, maintenanceGuard],
     loadComponent: () => import('./gift-cards/gift-cards.component').then(m => m.GiftCardsComponent)
   },
   {
@@ -148,12 +149,12 @@ export const routes: Routes = [
   },
   {
     path: 'cleaner/cabinet',
-    canActivate: [authGuard],
+    canActivate: [clientOnlyGuard, authGuard],
     loadComponent: () => import('./auth/cleaner-cabinet/cleaner-cabinet.component').then(m => m.CleanerCabinetComponent)
   },
   {
     path: 'change-email',
-    canActivate: [authGuard, maintenanceGuard],
+    canActivate: [clientOnlyGuard, authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/change-email/change-email.component').then(m => m.ChangeEmailComponent)
   },
   {
@@ -163,7 +164,7 @@ export const routes: Routes = [
   },
   {
     path: 'gift-card-confirmation',
-    canActivate: [authGuard, maintenanceGuard],
+    canActivate: [clientOnlyGuard, authGuard, maintenanceGuard],
     loadComponent: () => {
       return import('./gift-cards/gift-card-confirmation/gift-card-confirmation.component')
         .then(m => {
