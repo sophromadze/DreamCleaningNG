@@ -94,7 +94,17 @@
                       <div class="field-changes">
                         <ng-container *ngFor="let field of log.changedFields">
                           <div *ngIf="shouldShowField(field)" class="field-change">
-                            <div class="field-item">
+                            <!-- Special handling for combined ServiceDate&Time field -->
+                            <div *ngIf="field === 'ServiceDate&Time'" class="field-item">
+                              <div class="field-name">{{ getFieldDisplayName(field) }}:</div>
+                              <div class="field-values">
+                                <span class="old-value">{{ getCombinedServiceDateTimeDisplay(log.oldValues, 'old') }}</span>
+                                <span class="arrow">→</span>
+                                <span class="new-value">{{ getCombinedServiceDateTimeDisplay(log.newValues, 'new') }}</span>
+                              </div>
+                            </div>
+                            <!-- Regular field handling -->
+                            <div *ngIf="field !== 'ServiceDate&Time'" class="field-item">
                               <div class="field-name">{{ getFieldDisplayName(field) }}:</div>
                               <div class="field-values">
                                 <span class="old-value">{{ getFieldDisplayValue(log.oldValues[field], field) }}</span>
@@ -143,14 +153,24 @@
                       <div *ngIf="showChangedFields(log) && hasMeaningfulChangedFields(log)" class="changed-fields">
                         <h4>Changed Fields</h4>
                         <div class="field-changes">
-                          <ng-container *ngFor="let field of log.changedFields">
-                            <div *ngIf="shouldShowField(field)" class="field-change">
+                                                  <ng-container *ngFor="let field of log.changedFields">
+                          <div *ngIf="shouldShowField(field)" class="field-change">
+                            <!-- Special handling for combined ServiceDate&Time field -->
+                            <div *ngIf="field === 'ServiceDate&Time'">
+                              <div class="field-name">{{ getFieldDisplayName(field) }}:</div>
+                              <span class="old-value">{{ getCombinedServiceDateTimeDisplay(log.oldValues, 'old') }}</span>
+                              <span class="arrow">→</span>
+                              <span class="new-value">{{ getCombinedServiceDateTimeDisplay(log.newValues, 'new') }}</span>
+                            </div>
+                            <!-- Regular field handling -->
+                            <div *ngIf="field !== 'ServiceDate&Time'">
                               <div class="field-name">{{ getFieldDisplayName(field) }}:</div>
                               <span class="old-value">{{ getFieldDisplayValue(log.oldValues[field], field) }}</span>
                               <span class="arrow">→</span>
                               <span class="new-value">{{ getFieldDisplayValue(log.newValues[field], field) }}</span>
                             </div>
-                          </ng-container>
+                          </div>
+                        </ng-container>
                         </div>
                       </div>
 

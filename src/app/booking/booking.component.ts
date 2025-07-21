@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -96,6 +96,9 @@ export class BookingComponent implements OnInit, OnDestroy {
   promoIsPercentage = true;
   calculatedMaidsCount = 1;
   actualTotalDuration: number = 0;
+  
+  // Debug flags to prevent duplicate logs
+
 
   uploadedPhotos: Array<{
     file: File;
@@ -161,6 +164,10 @@ export class BookingComponent implements OnInit, OnDestroy {
   states: string[] = [];
   cities: string[] = [];
 
+  // Same Day Service availability properties
+  isSameDayServiceAvailable = true;
+  sameDayServiceDisabledReason = '';
+
   constructor(
     private fb: FormBuilder,
     private bookingService: BookingService,
@@ -172,7 +179,9 @@ export class BookingComponent implements OnInit, OnDestroy {
     private specialOfferService: SpecialOfferService,
     public formPersistenceService: FormPersistenceService,
     private pollService: PollService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
   ) {
     this.bookingForm = this.fb.group({
       serviceDate: [{value: '', disabled: false}, Validators.required],
@@ -216,9 +225,17 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    // Set minimum date to tomorrow
+    // Check same day service availability
+    this.checkSameDayServiceAvailability();
+    
+    // Set up periodic check for same day service availability (every minute)
+    setInterval(() => {
+      this.checkSameDayServiceAvailability();
+    }, 60000); // Check every minute
+    
+    // Set minimum date to tomorrow (not 2 days from now)
     this.minDate = new Date();
-    this.minDate.setDate(this.minDate.getDate() + 2);
+    this.minDate.setDate(this.minDate.getDate() + 1); // Changed from +2 to +1
     this.minDate.setHours(0, 0, 0, 0);
     
     // Set default date to tomorrow
@@ -630,10 +647,19 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.bookingForm.get('serviceDate')?.valueChanges.subscribe(newDate => {
       if (this.isSameDaySelected && newDate) {
         const today = new Date();
-        const selectedDate = new Date(newDate);
+        
+        // Parse the selected date without timezone issues
+        const [year, month, day] = newDate.split('-').map(Number);
+        const selectedDate = new Date(year, month - 1, day);
+        
+        // Compare dates using YYYY-MM-DD format to avoid timezone issues
+        const todayFormatted = today.getFullYear() + '-' + 
+          String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(today.getDate()).padStart(2, '0');
         
         // Check if the selected date is not today
-        if (selectedDate.toDateString() !== today.toDateString()) {
+        if (newDate !== todayFormatted) {
+          
           // Find and remove the same day service
           const sameDayService = this.selectedExtraServices.find(s => s.extraService.isSameDayService);
           if (sameDayService) {
@@ -892,6 +918,12 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   toggleExtraService(extraService: ExtraService, skipDateChange: boolean = false) {
+    
+    // Prevent selecting same day service if it's not available
+    if (extraService.isSameDayService && !this.isSameDayServiceAvailable) {
+      return;
+    }
+    
     const index = this.selectedExtraServices.findIndex(s => s.extraService.id === extraService.id);
     
     if (index > -1) {
@@ -1180,6 +1212,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   private updateDateRestrictions() {
     if (this.isSameDaySelected) {
       const today = new Date();
+      
       // Format date properly for HTML date input (YYYY-MM-DD)
       const year = today.getFullYear();
       const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -1187,6 +1220,15 @@ export class BookingComponent implements OnInit, OnDestroy {
       const formattedDate = `${year}-${month}-${day}`;
       
       this.serviceDate.setValue(formattedDate);
+      
+      // Update time to earliest available time for same day service
+      setTimeout(() => {
+        const availableSlots = this.getAvailableTimeSlots();
+        if (availableSlots.length > 0) {
+          const earliestTime = availableSlots[0];
+          this.serviceTime.setValue(earliestTime);
+        }
+      }, 100); // Small delay to ensure date change is processed first
     }
     // Don't automatically change the date when same day service is unchecked
     // Let the user manually select a date or uncheck the service
@@ -1961,7 +2003,7 @@ export class BookingComponent implements OnInit, OnDestroy {
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
+    const day = String(today.getDate() + 1).padStart(2, '0'); // Tomorrow
     return `${year}-${month}-${day}`;
   }
 
@@ -2321,7 +2363,12 @@ export class BookingComponent implements OnInit, OnDestroy {
     
     return this.selectedServiceType.extraServices.filter(extra => {
       // Show all extra services except deep cleaning and super deep cleaning
-      return !extra.isDeepCleaning && !extra.isSuperDeepCleaning;
+      if (extra.isDeepCleaning || extra.isSuperDeepCleaning) {
+        return false;
+      }
+      
+      // Always show same day service (it will be disabled when not available)
+      return true;
     });
   }
 
@@ -2331,6 +2378,11 @@ export class BookingComponent implements OnInit, OnDestroy {
     // Add additional info for Extra Cleaners
     if (extra.name === 'Extra Cleaners') {
       tooltip += '\n\nEach extra cleaner reduces service duration.';
+    }
+    
+    // Add disabled reason for same day service
+    if (extra.isSameDayService && !this.isSameDayServiceAvailable) {
+      tooltip = this.sameDayServiceDisabledReason;
     }
     
     return tooltip;
@@ -2405,6 +2457,24 @@ export class BookingComponent implements OnInit, OnDestroy {
       '16:00', '16:30', '17:00', '17:30', '18:00'
     ];
 
+    // If same day service is selected, filter time slots based on current time
+    if (this.isSameDaySelected) {
+      const today = new Date();
+      const selectedDateObj = new Date(selectedDate);
+      
+      // Check if selected date is today
+      if (selectedDateObj.toDateString() === today.toDateString()) {
+        const earliestTime = this.getEarliestSameDayServiceTime();
+        
+        // Filter time slots to only include times after the earliest available time
+        const filteredSlots = timeSlots.filter(timeSlot => {
+          return timeSlot >= earliestTime;
+        });
+        
+        return filteredSlots;
+      }
+    }
+
     return timeSlots;
   }
 
@@ -2416,14 +2486,14 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   onDateChange() {
-    // Reset time selection when date changes
-    const availableSlots = this.getAvailableTimeSlots();
-    if (availableSlots.length > 0) {
-      // Set to first available time slot
-      this.serviceTime.setValue(availableSlots[0]);
-    } else {
-      this.serviceTime.setValue('');
+    // Don't automatically reset time selection to avoid change detection error
+    // Let user manually select time from available slots
+    
+    // If same day service is selected, check availability again
+    if (this.isSameDaySelected) {
+      this.checkSameDayServiceAvailability();
     }
+    
     this.saveFormData();
   }
 
@@ -2436,12 +2506,15 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.serviceDate.setValue(date);
     
     // Check if the selected date is not today (same day service)
-    const selectedDate = new Date(date);
     const today = new Date();
-    const isToday = selectedDate.toDateString() === today.toDateString();
+    
+    // Compare dates using YYYY-MM-DD format to avoid timezone issues
+    const todayFormatted = today.getFullYear() + '-' + 
+      String(today.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(today.getDate()).padStart(2, '0');
     
     // If user selected a date that's not today, uncheck same day service
-    if (!isToday) {
+    if (date !== todayFormatted) {
       // Find and uncheck the same day service
       const sameDayService = this.selectedExtraServices.find(s => s.extraService.isSameDayService);
       if (sameDayService) {
@@ -2629,5 +2702,88 @@ export class BookingComponent implements OnInit, OnDestroy {
         });
       }
     }, 100);
+  }
+
+  /**
+   * Check if same day service should be available based on current time
+   * Cleaners need at least 4 hours to prepare, so same day service should be disabled
+   * if current time + 4 hours would be after 6:00 PM (18:00)
+   */
+  private checkSameDayServiceAvailability(): void {
+    const now = new Date();
+    
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Calculate current time in minutes since midnight
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+    
+    // Latest possible start time is 6:00 PM (18:00) = 1080 minutes
+    const latestStartTimeInMinutes = 18 * 60; // 6:00 PM
+    
+    // Minimum preparation time needed (4 hours = 240 minutes)
+    const minPreparationTimeInMinutes = 4 * 60;
+    
+    // Check if current time + preparation time would exceed latest start time
+    if (currentTimeInMinutes + minPreparationTimeInMinutes > latestStartTimeInMinutes) {
+      this.isSameDayServiceAvailable = false;
+      
+      // Calculate when same day service will be available again (next day)
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowString = tomorrow.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+      
+      this.sameDayServiceDisabledReason = `Same day service is not available at this time. Cleaners need at least 4 hours to prepare. Available again on ${tomorrowString}.`;
+    } else {
+      this.isSameDayServiceAvailable = true;
+      this.sameDayServiceDisabledReason = '';
+    }
+  }
+
+  /**
+   * Get the earliest available time for same day service
+   * Returns the time that gives cleaners at least 4 hours to prepare
+   */
+  private getEarliestSameDayServiceTime(): string {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Calculate current time in minutes since midnight
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+    
+    // Minimum preparation time needed (4 hours = 240 minutes)
+    const minPreparationTimeInMinutes = 4 * 60;
+    
+    // Calculate earliest possible start time
+    const earliestStartTimeInMinutes = currentTimeInMinutes + minPreparationTimeInMinutes;
+    
+    // Convert back to hours and minutes
+    const earliestHour = Math.floor(earliestStartTimeInMinutes / 60);
+    const earliestMinute = earliestStartTimeInMinutes % 60;
+    
+    // Round up to the next 30-minute slot
+    let roundedHour = earliestHour;
+    let roundedMinute = earliestMinute <= 30 ? 30 : 0;
+    
+    if (roundedMinute === 0) {
+      roundedHour += 1;
+    }
+    
+    // Ensure we don't exceed 6:00 PM (18:00)
+    if (roundedHour >= 18) {
+      return '18:00'; // 6:00 PM
+    }
+    
+    // Ensure we don't go before 8:00 AM
+    if (roundedHour < 8) {
+      return '08:00'; // 8:00 AM
+    }
+    
+    return `${roundedHour.toString().padStart(2, '0')}:${roundedMinute.toString().padStart(2, '0')}`;
   }
 }

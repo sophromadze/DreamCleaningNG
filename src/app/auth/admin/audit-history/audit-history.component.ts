@@ -112,6 +112,7 @@ export class AuditHistoryComponent implements OnInit {
       'IsPaid': 'Payment Status',
       'CancellationReason': 'Cancellation Reason',
       'CleanerEmail': 'Cleaner Email', // NEW for cleaner assignments
+      'ServiceDate&Time': 'ServiceDate&Time', // Combined field
     };
     
     return fieldMap[field] || field;
@@ -164,12 +165,101 @@ export class AuditHistoryComponent implements OnInit {
       } else if (!processedLog.changedFields) {
         processedLog.changedFields = [];
       }
+
+      // Process changed fields to combine ServiceDate and ServiceTime
+      processedLog.changedFields = this.processChangedFields(processedLog.changedFields, processedLog.oldValues, processedLog.newValues);
   
       return processedLog;
     });
 
     // Group related logs together
     return this.groupRelatedLogs(processedLogs);
+  }
+
+  // Process changed fields to combine ServiceDate and ServiceTime when both are present
+  processChangedFields(changedFields: string[], oldValues: any, newValues: any): string[] {
+    const hasServiceDate = changedFields.includes('ServiceDate');
+    const hasServiceTime = changedFields.includes('ServiceTime');
+    
+    if (hasServiceDate && hasServiceTime) {
+      // Remove individual ServiceDate and ServiceTime fields
+      const filteredFields = changedFields.filter(field => field !== 'ServiceDate' && field !== 'ServiceTime');
+      // Add combined field
+      return [...filteredFields, 'ServiceDate&Time'];
+    }
+    
+    return changedFields;
+  }
+
+  // Get combined ServiceDate&Time value for display
+  getCombinedServiceDateTimeValue(value: any): string {
+    // This method will be called for the combined field
+    // We need to extract the date and time from the old and new values
+    // For now, return a placeholder - we'll handle this in the template
+    return 'Combined Date & Time';
+  }
+
+  // Get combined ServiceDate&Time display for old/new values
+  getCombinedServiceDateTimeDisplay(values: any, type: 'old' | 'new'): string {
+    const serviceDate = values.ServiceDate;
+    const serviceTime = values.ServiceTime;
+    
+    if (!serviceDate && !serviceTime) {
+      return 'Not set';
+    }
+    
+    let dateStr = '';
+    let timeStr = '';
+    
+    // Format date
+    if (serviceDate) {
+      try {
+        const date = new Date(serviceDate);
+        if (!isNaN(date.getTime())) {
+          dateStr = date.toLocaleDateString();
+        }
+      } catch {
+        dateStr = String(serviceDate);
+      }
+    }
+    
+    // Format time
+    if (serviceTime) {
+      let timeString = serviceTime;
+      
+      // If value is an object (TimeSpan serialized as object), extract the time string
+      if (typeof serviceTime === 'object' && serviceTime !== null) {
+        timeString = serviceTime.Hours !== undefined ? 
+          `${String(serviceTime.Hours).padStart(2, '0')}:${String(serviceTime.Minutes || 0).padStart(2, '0')}` : 
+          serviceTime.toString();
+      }
+      
+      // Convert to string if needed
+      timeString = String(timeString);
+      
+      // Parse time parts
+      const timeParts = timeString.split(':');
+      if (timeParts.length >= 2) {
+        const hours = parseInt(timeParts[0]);
+        const minutes = timeParts[1];
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayHour = hours % 12 || 12;
+        timeStr = `${displayHour}:${minutes} ${ampm}`;
+      } else {
+        timeStr = timeString;
+      }
+    }
+    
+    // Combine date and time
+    if (dateStr && timeStr) {
+      return `${dateStr} at ${timeStr}`;
+    } else if (dateStr) {
+      return dateStr;
+    } else if (timeStr) {
+      return timeStr;
+    }
+    
+    return 'Not set';
   }
 
   // NEW: Group related audit logs together
@@ -377,6 +467,11 @@ export class AuditHistoryComponent implements OnInit {
     // IMPORTANT: Handle TimeDuration and Duration fields BEFORE date handling
     if (fieldName === 'TimeDuration' || fieldName === 'Duration') {
       return `${value} minutes`;
+    }
+
+    // Handle combined ServiceDate&Time field
+    if (fieldName === 'ServiceDate&Time') {
+      return this.getCombinedServiceDateTimeValue(value);
     }
     
     // Special handling for ServiceTime field to show proper time format

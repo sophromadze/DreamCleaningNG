@@ -262,18 +262,23 @@
             *ngFor="let extra of getFilteredExtraServices()"
             [class.selected]="isExtraServiceSelected(extra)"
             [class.mobile-tooltip-visible]="isMobileTooltipVisible(extra.id)"
+            [class.disabled]="extra.isSameDayService && !isSameDayServiceAvailable"
             (click)="toggleExtraService(extra)"
             [attr.data-tooltip]="getExtraServiceTooltip(extra)">
         <div class="extra-header">
-          <div class="extra-top-controls">
-            <div class="extra-icon">
-              <i [class]="getExtraServiceIcon(extra)"></i>
-            </div>
+          <div class="extra-top-controls" style="display: none;">
+            
             <div class="checkbox">
-              <input type="checkbox" [checked]="isExtraServiceSelected(extra)" style="pointer-events: none; cursor: default;">
+              <input type="checkbox" 
+                     [checked]="isExtraServiceSelected(extra)" 
+                     [disabled]="extra.isSameDayService && !isSameDayServiceAvailable"
+                     style="pointer-events: none; cursor: default;">
             </div>
           </div>
           <div class="extra-info">
+            <div class="extra-icon">
+              <i [class]="getExtraServiceIcon(extra)"></i>
+            </div>
             <h4>{{ extra.name }}</h4>
             <div class="extra-details">
               <!-- Removed price and duration display -->
@@ -284,7 +289,7 @@
         <!-- Quantity Control -->
         <div class="extra-controls" *ngIf="isExtraServiceSelected(extra) && (extra.hasQuantity || extra.hasHours)">
           <div class="quantity-control" *ngIf="extra.hasQuantity">
-            <label>Qty:</label>
+            <label>Quantity:</label>
             <div class="control-buttons">
               <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
                       [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
@@ -319,7 +324,7 @@
         <label>Service Date <span class="required">*</span></label>
         <app-date-selector 
           [value]="serviceDate.value" 
-          [minDate]="minDate.toISOString().split('T')[0]"
+          [minDate]="getMinDateString()"
           [isSameDaySelected]="isSameDaySelected"
           (valueChange)="onDateSelectorChange($event)">
         </app-date-selector>
@@ -443,10 +448,6 @@
         <h4>{{ subscription.name }}</h4>
         <div class="discount" *ngIf="subscription.discountPercentage > 0">
           Save {{ subscription.discountPercentage }}%
-        </div>
-        <div class="current-subscription" 
-           *ngIf="hasActiveSubscription && userSubscription?.subscriptionId === subscription.id">
-          Your Current Plan
         </div>
       </div>
     </div>

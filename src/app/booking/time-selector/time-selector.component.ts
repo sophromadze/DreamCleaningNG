@@ -28,7 +28,10 @@ export class TimeSelectorComponent implements OnInit, OnChanges {
     this.updateAvailableHours();
   }
 
-  ngOnChanges() {
+  ngOnChanges(changes: any) {
+    if (changes['value'] && changes['value'].currentValue) {
+      this.updateFromValue();
+    }
     this.updateAvailableHours();
   }
 
@@ -38,11 +41,8 @@ export class TimeSelectorComponent implements OnInit, OnChanges {
       const uniqueHours = [...new Set(this.availableTimeSlots.map(slot => parseInt(slot.split(':')[0])))];
       this.hours = uniqueHours.sort((a, b) => a - b);
       
-      // If current selected hour is not available, reset to first available
-      if (!this.hours.includes(this.selectedHour)) {
-        this.selectedHour = this.hours[0] || 8;
-        this.updateValue();
-      }
+      // Don't automatically change the selected time to avoid Angular change detection errors
+      // Let the user manually select from available slots
     } else {
       // Fallback to default hours if no slots provided
       this.hours = Array.from({length: 10}, (_, i) => i + 8); // 8 to 17
@@ -119,6 +119,23 @@ export class TimeSelectorComponent implements OnInit, OnChanges {
     if (this.selectedHour === 18) {
       return [0];
     }
+    
+    // Check if this is the earliest available hour and earliest time has 30 minutes
+    if (this.availableTimeSlots.length > 0) {
+      const earliestTime = this.availableTimeSlots[0];
+      const [earliestHour, earliestMinute] = earliestTime.split(':').map(Number);
+      
+      // If selected hour is the earliest hour and earliest minute is 30, only allow 30
+      if (this.selectedHour === earliestHour && earliestMinute === 30) {
+        return [30];
+      }
+      
+      // If selected hour is the earliest hour and earliest minute is 0, allow both
+      if (this.selectedHour === earliestHour && earliestMinute === 0) {
+        return [0, 30];
+      }
+    }
+    
     // For all other hours, allow both 00 and 30 minutes
     return [0, 30];
   }

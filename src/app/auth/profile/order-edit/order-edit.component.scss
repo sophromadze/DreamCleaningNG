@@ -737,11 +737,12 @@
   // Extra Services
   .extra-services {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
     
     @media (max-width: 768px) {
       gap: 0.5rem;
+      grid-template-columns: repeat(3, 1fr);
     }
     
     @media (max-width: 534px) {
@@ -940,7 +941,6 @@
         text-align: center;
   
         h4 {
-          margin: 0 0 0.5rem;
           color: #333;
           font-size: 1rem;
           font-weight: 600;
@@ -948,12 +948,10 @@
           
           @media (max-width: 768px) {
             font-size: 0.9rem;
-            margin: 0 0 0.25rem;
           }
           
           @media (max-width: 534px) {
             font-size: 0.8rem;
-            margin: 0 0 0.25rem;
           }
         }
   

@@ -907,11 +907,12 @@
   // Extra Services
   .extra-services {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 1rem;
     
     @media (max-width: 768px) {
       gap: 0.5rem;
+      grid-template-columns: repeat(3, 1fr);
     }
     
     @media (max-width: 534px) {
@@ -1068,6 +1069,30 @@
       background-color: #f8f9ff;
       box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
     }
+
+    &.disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      background-color: #f5f5f5;
+      border-color: #ddd;
+      
+      &:hover {
+        border-color: #ddd;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      }
+      
+      .extra-icon {
+        color: #999;
+      }
+      
+      .extra-info h4 {
+        color: #999;
+      }
+      
+      .checkbox input[type="checkbox"] {
+        opacity: 0.5;
+      }
+    }
   
     // Custom tooltip styling
     &[data-tooltip]:hover::after {
@@ -1173,17 +1198,16 @@
   
     .extra-header {
       display: flex;
-      flex-direction: column;
+      flex-direction: row-reverse;
       width: 100%;
       height: 100%;
-      gap: 0.5rem;
 
-      .extra-top-controls {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
-      }
+      // .extra-top-controls {
+      //   display: flex;
+      //   justify-content: space-between;
+      //   align-items: center;
+      //   width: 100%;
+      // }
 
       .extra-icon {
         width: 18px;
@@ -1194,6 +1218,7 @@
         color: #007bff;
         font-size: 1rem;
         flex-shrink: 0;
+        width: 50%;
         
         @media (max-width: 768px) {
           width: 16px;
@@ -1217,7 +1242,6 @@
         text-align: center;
   
         h4 {
-          margin: 0 0 0.5rem;
           color: #333;
           font-size: 1rem;
           font-weight: 600;
@@ -1225,12 +1249,10 @@
           
           @media (max-width: 768px) {
             font-size: 0.9rem;
-            margin: 0 0 0.25rem;
           }
           
           @media (max-width: 534px) {
             font-size: 0.8rem;
-            margin: 0 0 0.25rem;
           }
         }
   
@@ -1284,6 +1306,9 @@
       }
   
       .checkbox {
+        max-height: 18px;
+        text-align: right;
+
         input[type="checkbox"] {
           width: 18px;
           height: 18px;

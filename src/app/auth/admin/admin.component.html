@@ -43,6 +43,28 @@
         <span class="label">Deactivate</span>
       </div>
     </div>
+    
+    <!-- Maintenance Mode Toggle (SuperAdmin Only) -->
+    <div class="maintenance-toggle" *ngIf="userRole === 'SuperAdmin'">
+      <div class="maintenance-status">
+        <span class="status-indicator" [class.enabled]="maintenanceStatus?.isEnabled">
+          {{ maintenanceStatus?.isEnabled ? '🔧' : '✅' }}
+        </span>
+        <span class="status-text">
+          {{ maintenanceStatus?.isEnabled ? 'ON' : 'OFF' }}
+        </span>
+        <span class="maintenance-info" *ngIf="maintenanceStatus && maintenanceStatus.isEnabled">
+          Started: {{ formatDate(maintenanceStatus.startedAt) }} | By: {{ maintenanceStatus.startedBy }}
+        </span>
+      </div>
+      <button 
+        class="maintenance-btn" 
+        [class.enabled]="maintenanceStatus?.isEnabled"
+        (click)="confirmToggleMaintenance()"
+        [disabled]="isTogglingMaintenance">
+        {{ maintenanceStatus?.isEnabled ? 'Stop Maintenance' : 'Start Maintenance' }}
+      </button>
+    </div>
   </div>
   
   <!-- Tab Navigation -->

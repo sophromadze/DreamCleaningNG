@@ -3,25 +3,30 @@ import { MainComponent } from './main/main.component';
 import { authGuard } from './guards/auth.guard';
 import { noAuthGuard } from './guards/no-auth.guard';
 import { adminGuard } from './guards/admin.guard';
+import { maintenanceGuard } from './guards/maintenance.guard';
 import { CleanerCabinetComponent } from './auth/cleaner-cabinet/cleaner-cabinet.component';
 
 export const routes: Routes = [
   {
+    path: 'maintenance',
+    loadComponent: () => import('./maintenance-mode/maintenance-mode.component').then(m => m.MaintenanceModeComponent)
+  },
+  {
     path: '',
-    component: MainComponent
+    component: MainComponent,
   },
   {
     path: 'about',
-    loadComponent: () => import('./about/about.component').then(m => m.AboutComponent)
+    loadComponent: () => import('./about/about.component').then(m => m.AboutComponent),
   },
   {
     path: 'service-page',
-    loadComponent: () => import('./service-page/service-page.component').then(m => m.ServicePageComponent)
+    loadComponent: () => import('./service-page/service-page.component').then(m => m.ServicePageComponent),
   },
   // Service routes
   {
     path: 'services/residential-cleaning',
-    loadComponent: () => import('./service-page/services/residential-cleaning/residential-cleaning.component').then(m => m.ResidentialCleaningComponent)
+    loadComponent: () => import('./service-page/services/residential-cleaning/residential-cleaning.component').then(m => m.ResidentialCleaningComponent),
   },
   {
     path: 'services/residential-cleaning/kitchen',
@@ -61,11 +66,13 @@ export const routes: Routes = [
   },
   {
     path: 'booking',
-    loadComponent: () => import('./booking/booking.component').then(m => m.BookingComponent)
+    loadComponent: () => import('./booking/booking.component').then(m => m.BookingComponent),
+    canActivate: [maintenanceGuard]
   },
   {
     path: 'contact',
-    loadComponent: () => import('./contact/contact.component').then(m => m.ContactComponent)
+    loadComponent: () => import('./contact/contact.component').then(m => m.ContactComponent),
+    canActivate: [maintenanceGuard]
   },
   {
     path: 'privacy-policy',
@@ -82,12 +89,12 @@ export const routes: Routes = [
   },
   {
     path: 'profile',
-    canActivate: [authGuard],
+    canActivate: [authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/profile/profile.component').then(m => m.ProfileComponent)
   },
   {
     path: 'change-password',
-    canActivate: [authGuard],
+    canActivate: [authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/change-password/change-password.component').then(m => m.ChangePasswordComponent)
   },
   {
@@ -95,34 +102,30 @@ export const routes: Routes = [
     canActivate: [adminGuard],
     loadComponent: () => import('./auth/admin/admin.component').then(m => m.AdminComponent)
   },
-  {
-    path: 'profile',
-    canActivate: [authGuard],
-    loadComponent: () => import('./auth/profile/profile.component').then(m => m.ProfileComponent)
-  },
+
   {
     path: 'profile/orders',
-    canActivate: [authGuard],
+    canActivate: [authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/profile/order-history/order-history.component').then(m => m.OrderHistoryComponent)
   },
   {
     path: 'order/:id',
-    canActivate: [authGuard],
+    canActivate: [authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/profile/order-details/order-details.component').then(m => m.OrderDetailsComponent)
   },
   {
     path: 'order/:id/edit',
-    canActivate: [authGuard],
+    canActivate: [authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/profile/order-edit/order-edit.component').then(m => m.OrderEditComponent)
   },
   {
     path: 'booking-confirmation',
-    canActivate: [authGuard],
+    canActivate: [authGuard, maintenanceGuard],
     loadComponent: () => import('./booking/booking-confirmation/booking-confirmation.component').then(m => m.BookingConfirmationComponent)
   },
   {
     path: 'gift-cards',
-    canActivate: [authGuard],
+    canActivate: [authGuard, maintenanceGuard],
     loadComponent: () => import('./gift-cards/gift-cards.component').then(m => m.GiftCardsComponent)
   },
   {
@@ -135,12 +138,12 @@ export const routes: Routes = [
   },
   {
     path: 'auth/forgot-password',
-    canActivate: [noAuthGuard],
+    canActivate: [noAuthGuard, maintenanceGuard],
     loadComponent: () => import('./auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
   },
   {
     path: 'auth/reset-password',
-    canActivate: [noAuthGuard],
+    canActivate: [noAuthGuard, maintenanceGuard],
     loadComponent: () => import('./auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
   },
   {
@@ -150,16 +153,17 @@ export const routes: Routes = [
   },
   {
     path: 'change-email',
-    canActivate: [authGuard],
+    canActivate: [authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/change-email/change-email.component').then(m => m.ChangeEmailComponent)
   },
   {
     path: 'poll-success',
-    loadComponent: () => import('./booking/poll-success/poll-success.component').then(m => m.PollSuccessComponent)
+    loadComponent: () => import('./booking/poll-success/poll-success.component').then(m => m.PollSuccessComponent),
+    canActivate: [maintenanceGuard]
   },
   {
     path: 'gift-card-confirmation',
-    canActivate: [authGuard],
+    canActivate: [authGuard, maintenanceGuard],
     loadComponent: () => {
       return import('./gift-cards/gift-card-confirmation/gift-card-confirmation.component')
         .then(m => {
@@ -170,5 +174,9 @@ export const routes: Routes = [
           throw error;
         });
     }
+  },
+  {
+    path: '**',
+    loadComponent: () => import('./not-found/not-found.component').then(m => m.NotFoundComponent)
   }
 ];

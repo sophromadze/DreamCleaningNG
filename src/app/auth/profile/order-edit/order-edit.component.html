@@ -81,15 +81,16 @@
                  (click)="toggleExtraService(extra)"
                  [attr.data-tooltip]="getExtraServiceTooltip(extra)">
               <div class="extra-header">
-                <div class="extra-top-controls">
-                  <div class="extra-icon">
-                    <i [class]="getExtraServiceIcon(extra)"></i>
-                  </div>
+                <div class="extra-top-controls" style="display: none;">
+                  
                   <div class="checkbox">
                     <input type="checkbox" [checked]="isExtraServiceSelected(extra)" style="pointer-events: none; cursor: default;">
                   </div>
                 </div>
                 <div class="extra-info">
+                  <div class="extra-icon">
+                    <i [class]="getExtraServiceIcon(extra)"></i>
+                  </div>
                   <h4>{{ extra.name }}</h4>
                   <div class="extra-details">
                     <!-- Removed price and duration display -->
