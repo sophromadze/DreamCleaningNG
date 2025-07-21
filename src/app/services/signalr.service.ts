@@ -23,6 +23,7 @@ export class SignalRService {
   private static globalNotifications = new BehaviorSubject<UserNotification | null>(null);
   
   private apiUrl = environment.apiUrl;
+  private useCookieAuth = environment.useCookieAuth || false;
   private static hubConnection?: HubConnection;
   private isInitialized = false;
   private isBrowser: boolean;
@@ -91,12 +92,6 @@ export class SignalRService {
       return;
     }
 
-    const token = this.authService.getToken();
-    if (!token) {
-      console.error('No token available for SignalR connection');
-      return;
-    }
-
     // Disconnect any existing connection first
     if (SignalRService.hubConnection) {
       try {
@@ -110,18 +105,39 @@ export class SignalRService {
     const baseUrl = this.apiUrl.replace('/api', '');
     const hubUrl = `${baseUrl}/userManagementHub`;
 
-    SignalRService.hubConnection = new HubConnectionBuilder()
-      .withUrl(hubUrl, {
-        accessTokenFactory: () => {
-          // Always get fresh token
-          return this.authService.getToken() || token;
-        },
-        skipNegotiation: false,
-        transport: HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents
-      })
-      .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-      .configureLogging(LogLevel.None)
-      .build();
+    // Configure connection based on auth method
+    if (this.useCookieAuth) {
+      // For cookie auth, use withCredentials
+      SignalRService.hubConnection = new HubConnectionBuilder()
+        .withUrl(hubUrl, {
+          withCredentials: true,
+          skipNegotiation: false,
+          transport: HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents
+        })
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+        .configureLogging(LogLevel.None)
+        .build();
+    } else {
+      // For localStorage auth, use access token
+      const token = this.authService.getToken();
+      if (!token) {
+        console.error('No token available for SignalR connection');
+        return;
+      }
+
+      SignalRService.hubConnection = new HubConnectionBuilder()
+        .withUrl(hubUrl, {
+          accessTokenFactory: () => {
+            // Always get fresh token
+            return this.authService.getToken() || token;
+          },
+          skipNegotiation: false,
+          transport: HttpTransportType.WebSockets | HttpTransportType.ServerSentEvents
+        })
+        .withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+        .configureLogging(LogLevel.None)
+        .build();
+    }
 
     // Set up event handlers BEFORE starting
     this.setupEventHandlers();

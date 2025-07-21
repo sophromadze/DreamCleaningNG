@@ -5,12 +5,14 @@ import { catchError, filter, take, switchMap } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
+import { environment } from '../../environments/environment';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
   private isBrowser: boolean;
   private isRefreshing = false;
   private refreshTokenSubject: BehaviorSubject<any> = new BehaviorSubject<any>(null);
+  private useCookieAuth = environment.useCookieAuth || false;
 
   constructor(
     @Inject(PLATFORM_ID) platformId: Object,
@@ -34,34 +36,42 @@ export class AuthInterceptor implements HttpInterceptor {
 
     if (!isAuthEndpoint && !isSignalREndpoint) {
       // Check if user has been inactive for 24 hours (only for non-auth/non-SignalR endpoints)
-      if (this.isBrowser && this.checkInactivity()) {
+      if (this.isBrowser && !this.useCookieAuth && this.checkInactivity()) {
         this.authService.logout();
         return throwError(() => new Error('Session expired due to inactivity'));
       }
 
       // Update last activity time
-      if (this.isBrowser) {
+      if (this.isBrowser && !this.useCookieAuth) {
         localStorage.setItem('lastActivity', Date.now().toString());
       }
     }
 
-    // Get the auth token from localStorage only if in browser
-    let token: string | null = null;
-    
-    if (this.isBrowser) {
-      try {
-        token = localStorage.getItem('token');
-      } catch (error) {
-        // Handle any localStorage access errors
-        console.warn('Error accessing localStorage:', error);
-        token = null;
+    // Handle based on auth method
+    if (this.useCookieAuth) {
+      // For cookie auth, always include credentials
+      request = request.clone({
+        withCredentials: true
+      });
+    } else {
+      // For localStorage auth, add bearer token
+      let token: string | null = null;
+      
+      if (this.isBrowser) {
+        try {
+          token = localStorage.getItem('token');
+        } catch (error) {
+          // Handle any localStorage access errors
+          console.warn('Error accessing localStorage:', error);
+          token = null;
+        }
       }
-    }
 
-    // Clone the request and add the authorization header
-    // Don't add auth header to SignalR requests (they use query string)
-    if (token && !isAuthEndpoint && !isSignalREndpoint) {
-      request = this.addToken(request, token);
+      // Clone the request and add the authorization header
+      // Don't add auth header to SignalR requests (they use query string)
+      if (token && !isAuthEndpoint && !isSignalREndpoint) {
+        request = this.addToken(request, token);
+      }
     }
 
     return next.handle(request).pipe(
@@ -124,10 +134,15 @@ export class AuthInterceptor implements HttpInterceptor {
       return this.authService.refreshToken().pipe(
         switchMap((response: any) => {
           this.isRefreshing = false;
-          this.refreshTokenSubject.next(response.token);
           
-          // Retry the original request with the new token
-          return next.handle(this.addToken(request, response.token));
+          if (this.useCookieAuth) {
+            // For cookie auth, just retry the request
+            return next.handle(request);
+          } else {
+            // For localStorage auth, add new token
+            this.refreshTokenSubject.next(response.token);
+            return next.handle(this.addToken(request, response.token));
+          }
         }),
         catchError((err) => {
           this.isRefreshing = false;
@@ -143,7 +158,13 @@ export class AuthInterceptor implements HttpInterceptor {
         filter(token => token != null),
         take(1),
         switchMap(token => {
-          return next.handle(this.addToken(request, token));
+          if (this.useCookieAuth) {
+            // For cookie auth, just retry
+            return next.handle(request);
+          } else {
+            // For localStorage auth, add token
+            return next.handle(this.addToken(request, token));
+          }
         })
       );
     }

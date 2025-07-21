@@ -75,8 +75,7 @@ export const appConfig: ApplicationConfig = {
     { provide: APP_ID, useValue: 'dream-cleaning-app' },
     
     provideHttpClient(
-      withFetch(),
-      withInterceptorsFromDi()
+      withFetch()
     ),
     provideZoneChangeDetection({ eventCoalescing: true }),
     

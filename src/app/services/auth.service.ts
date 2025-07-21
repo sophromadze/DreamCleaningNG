@@ -49,6 +49,7 @@ interface RegisterData {
 })
 export class AuthService {
   private apiUrl = environment.apiUrl;
+  private useCookieAuth = environment.useCookieAuth || false; // Add this to environment
   private currentUserSubject: BehaviorSubject<UserDto | null>;
   public currentUser: Observable<UserDto | null>;
   private isBrowser: boolean;
@@ -67,7 +68,7 @@ export class AuthService {
 
     // Initialize stored user
     let storedUser = null;
-    if (this.isBrowser) {
+    if (this.isBrowser && !this.useCookieAuth) {
       try {
         const userStr = localStorage.getItem('currentUser');
         storedUser = userStr ? JSON.parse(userStr) : null;
@@ -83,41 +84,46 @@ export class AuthService {
 
     // Handle initialization based on platform
     if (this.isBrowser) {
-      // Check if we have stored user data and token
-      const token = localStorage.getItem('token');
-      const userStr = localStorage.getItem('currentUser');
-      const isSocialLogin = localStorage.getItem('isSocialLogin') === 'true';
-      
-      // IMMEDIATE initialization if we have user data and token
-      if (token && userStr && storedUser) {
-        // User is already logged in - initialize immediately
-        this.isInitializedSubject.next(true);
-        
-        // If it's a social login, still subscribe to social auth state
-        // but don't block initialization
-        if (isSocialLogin) {
-          this.socialAuthService.initState.subscribe((isReady) => {
-            // Social auth is ready, but we're already initialized
-          });
-        }
-      } else if (isSocialLogin && !token) {
-        // Only wait for social auth if it's a social login without token
-        this.socialAuthService.initState.subscribe((isReady) => {
-          if (isReady) {
-            this.isInitializedSubject.next(true);
-          }
-        });
-
-        // Fallback: If social auth doesn't initialize within 2 seconds, 
-        // mark as initialized anyway
-        setTimeout(() => {
-          if (!this.isInitializedSubject.value) {
-            this.isInitializedSubject.next(true);
-          }
-        }, 2000);
+      if (this.useCookieAuth) {
+        // For cookie auth, check with server
+        this.initializeWithCookies();
       } else {
-        // No user logged in - initialize immediately
-        this.isInitializedSubject.next(true);
+        // Existing localStorage logic
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('currentUser');
+        const isSocialLogin = localStorage.getItem('isSocialLogin') === 'true';
+        
+        // IMMEDIATE initialization if we have user data and token
+        if (token && userStr && storedUser) {
+          // User is already logged in - initialize immediately
+          this.isInitializedSubject.next(true);
+          
+          // If it's a social login, still subscribe to social auth state
+          // but don't block initialization
+          if (isSocialLogin) {
+            this.socialAuthService.initState.subscribe((isReady) => {
+              // Social auth is ready, but we're already initialized
+            });
+          }
+        } else if (isSocialLogin && !token) {
+          // Only wait for social auth if it's a social login without token
+          this.socialAuthService.initState.subscribe((isReady) => {
+            if (isReady) {
+              this.isInitializedSubject.next(true);
+            }
+          });
+
+          // Fallback: If social auth doesn't initialize within 2 seconds, 
+          // mark as initialized anyway
+          setTimeout(() => {
+            if (!this.isInitializedSubject.value) {
+              this.isInitializedSubject.next(true);
+            }
+          }, 2000);
+        } else {
+          // No user logged in - initialize immediately
+          this.isInitializedSubject.next(true);
+        }
       }
     } else {
       // On server-side, mark as initialized immediately
@@ -125,18 +131,36 @@ export class AuthService {
     }
   }
 
+  private initializeWithCookies(): void {
+    // For cookie auth, check current user from server
+    this.http.get<UserDto>(`${this.apiUrl}/auth/current-user`, { withCredentials: true })
+      .subscribe({
+        next: (user) => {
+          this.currentUserSubject.next(user);
+          this.isInitializedSubject.next(true);
+        },
+        error: () => {
+          this.currentUserSubject.next(null);
+          this.isInitializedSubject.next(true);
+        }
+      });
+  }
+
   public get currentUserValue(): UserDto | null {
     return this.currentUserSubject.value;
   }
 
   login(loginData: LoginData): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, loginData)
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
+    
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/login`, loginData, options)
       .pipe(map(response => {
-        // Store user details and token in local storage
-        if (this.isBrowser) {
+        // Store user details and token based on auth method
+        if (!this.useCookieAuth && this.isBrowser) {
           localStorage.setItem('currentUser', JSON.stringify(response.user));
           localStorage.setItem('token', response.token);
           localStorage.setItem('refreshToken', response.refreshToken);
+          localStorage.setItem('lastActivity', Date.now().toString());
         }
         this.currentUserSubject.next(response.user);
         return response;
@@ -152,12 +176,14 @@ export class AuthService {
       delete dataToSend.phone;
     }
     
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, dataToSend)
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
+    
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/register`, dataToSend, options)
       .pipe(map(response => {
         // Check if email verification is required
         if (response.requiresEmailVerification) {
           // Don't store anything in localStorage - user must verify email first
-        } else if (response.token && response.refreshToken) {
+        } else if (response.token && response.refreshToken && !this.useCookieAuth) {
           // This case shouldn't happen with our new flow, but handle it just in case
           if (this.isBrowser) {
             localStorage.setItem('currentUser', JSON.stringify(response.user));
@@ -172,20 +198,24 @@ export class AuthService {
 
   // Email verification methods
   verifyEmail(token: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/verify-email`, { token });
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
+    return this.http.post(`${this.apiUrl}/auth/verify-email`, { token }, options);
   }
 
   resendVerification(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/resend-verification`, { email });
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
+    return this.http.post(`${this.apiUrl}/auth/resend-verification`, { email }, options);
   }
 
   // Password recovery methods
   forgotPassword(email: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/forgot-password`, { email });
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
+    return this.http.post(`${this.apiUrl}/auth/forgot-password`, { email }, options);
   }
 
   resetPassword(token: string, newPassword: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/reset-password`, { token, newPassword });
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
+    return this.http.post(`${this.apiUrl}/auth/reset-password`, { token, newPassword }, options);
   }
 
   async handleGoogleUser(user: SocialUser): Promise<void> {  
@@ -193,13 +223,15 @@ export class AuthService {
       throw new Error('No ID token received from Google');
     }
     
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
+    
     return new Promise((resolve, reject) => {
       this.http.post<AuthResponse>(`${this.apiUrl}/auth/google-login`, { 
         idToken: user.idToken 
-      }).subscribe({
+      }, options).subscribe({
         next: (response) => {
           this.isSocialLogin = true;
-          if (this.isBrowser) {
+          if (!this.useCookieAuth && this.isBrowser) {
             localStorage.setItem('isSocialLogin', 'true');
           }
           this.handleAuthResponse(response);
@@ -240,7 +272,7 @@ export class AuthService {
       this.router.navigate(['/auth/verify-email-notice']);
     } else {
       // Normal login flow
-      if (this.isBrowser) {
+      if (!this.useCookieAuth && this.isBrowser) {
         localStorage.setItem('currentUser', JSON.stringify(response.user));
         localStorage.setItem('token', response.token);
         localStorage.setItem('refreshToken', response.refreshToken);
@@ -250,8 +282,9 @@ export class AuthService {
       this.currentUserSubject.next(response.user);
       
       // Navigate to dashboard or home
-      const returnUrl = this.isBrowser ? localStorage.getItem('returnUrl') || '/' : '/';
-      if (this.isBrowser) {
+      const returnUrl = this.isBrowser && !this.useCookieAuth ? 
+        localStorage.getItem('returnUrl') || '/' : '/';
+      if (this.isBrowser && !this.useCookieAuth) {
         localStorage.removeItem('returnUrl');
       }
       this.router.navigateByUrl(returnUrl);
@@ -259,9 +292,27 @@ export class AuthService {
   }
 
   logout(): void {
+    if (this.useCookieAuth) {
+      // For cookie auth, call server logout endpoint
+      this.http.post(`${this.apiUrl}/auth/logout`, {}, { withCredentials: true })
+        .subscribe({
+          next: () => {
+            this.completeLogout();
+          },
+          error: () => {
+            // Even if server logout fails, clear client state
+            this.completeLogout();
+          }
+        });
+    } else {
+      this.completeLogout();
+    }
+  }
+
+  private completeLogout(): void {
     this.socialSignOut();
     // Remove user from local storage
-    if (this.isBrowser) {
+    if (this.isBrowser && !this.useCookieAuth) {
       localStorage.removeItem('currentUser');
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
@@ -273,7 +324,8 @@ export class AuthService {
   }
 
   checkEmailExists(email: string): Observable<{ exists: boolean }> {
-    return this.http.get<{ exists: boolean }>(`${this.apiUrl}/auth/check-email/${email}`);
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
+    return this.http.get<{ exists: boolean }>(`${this.apiUrl}/auth/check-email/${email}`, options);
   }
 
   isLoggedIn(): boolean {
@@ -281,6 +333,10 @@ export class AuthService {
   }
 
   getToken(): string | null {
+    if (this.useCookieAuth) {
+      // Tokens are in httpOnly cookies, not accessible via JS
+      return null;
+    }
     if (this.isBrowser) {
       return localStorage.getItem('token');
     }
@@ -288,6 +344,14 @@ export class AuthService {
   }
 
   refreshToken(): Observable<AuthResponse> {
+    if (this.useCookieAuth) {
+      return this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh-token`, {}, { withCredentials: true })
+        .pipe(map(response => {
+          this.currentUserSubject.next(response.user);
+          return response;
+        }));
+    }
+    
     const token = this.getToken();
     const refreshToken = this.isBrowser ? localStorage.getItem('refreshToken') : null;
     
@@ -310,15 +374,16 @@ export class AuthService {
   }
   
   changePassword(currentPassword: string, newPassword: string): Observable<any> {
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
     return this.http.post(`${this.apiUrl}/auth/change-password`, {
       currentPassword,
       newPassword
-    });
+    }, options);
   }
 
   // Update the current user in memory and localStorage
   updateCurrentUser(user: UserDto): void {
-    if (this.isBrowser) {
+    if (this.isBrowser && !this.useCookieAuth) {
       localStorage.setItem('currentUser', JSON.stringify(user));
     }
     this.currentUserSubject.next(user);
@@ -326,7 +391,8 @@ export class AuthService {
 
   // Refresh user data from the profile endpoint
   refreshUserProfile(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/profile`).pipe(
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
+    return this.http.get<any>(`${this.apiUrl}/profile`, options).pipe(
       tap(profile => {
         if (profile && this.currentUserValue) {
           // Update the current user with the profile data
@@ -354,8 +420,9 @@ export class AuthService {
       return new Observable(observer => observer.error('No current user'));
     }
   
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
     // Get fresh user data from the profile endpoint
-    return this.http.get<any>(`${this.apiUrl}/profile`).pipe(
+    return this.http.get<any>(`${this.apiUrl}/profile`, options).pipe(
       switchMap(profile => {
         // Update the current user with fresh data
         const updatedUser: UserDto = {
@@ -369,7 +436,7 @@ export class AuthService {
         };
   
         // Update local storage and subject
-        if (this.isBrowser) {
+        if (this.isBrowser && !this.useCookieAuth) {
           localStorage.setItem('currentUser', JSON.stringify(updatedUser));
         }
         this.currentUserSubject.next(updatedUser);
@@ -384,10 +451,11 @@ export class AuthService {
   }
 
   refreshUserToken(): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh-user-token`, {})
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
+    return this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh-user-token`, {}, options)
       .pipe(map(response => {
         // Store new token and user details
-        if (this.isBrowser) {
+        if (!this.useCookieAuth && this.isBrowser) {
           localStorage.setItem('currentUser', JSON.stringify(response.user));
           localStorage.setItem('token', response.token);
           localStorage.setItem('refreshToken', response.refreshToken);
@@ -398,13 +466,15 @@ export class AuthService {
   }
 
   initiateEmailChange(newEmail: string, currentPassword: string): Observable<any> {
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
     return this.http.post(`${this.apiUrl}/auth/initiate-email-change`, {
       newEmail,
       currentPassword
-    });
+    }, options);
   }
   
   confirmEmailChange(token: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/confirm-email-change`, { token });
+    const options = this.useCookieAuth ? { withCredentials: true } : {};
+    return this.http.post(`${this.apiUrl}/auth/confirm-email-change`, { token }, options);
   }
 }
