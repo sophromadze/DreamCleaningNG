@@ -7,6 +7,7 @@
   --main-color: #007bff;
   --secondary-color: #667eea;
   --accent-color: #764ba2;
+  --main-hero-image: url('/images/mainImage.webp');
 }
 
 *{
@@ -67,13 +68,6 @@ html {
     // -webkit-user-select: none;
 }
 
-.container {
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
 /* Google Sign-in Button Styling */
 .google-button-wrapper {
     display: flex !important;
@@ -90,4 +84,27 @@ asl-google-signin-button div[role="button"] > div > div > div {
     font-family: 'Inter', sans-serif !important;
     font-size: 14px !important;
     font-weight: 500 !important;
+}
+
+/* Main Hero Image - Global styling for immediate loading */
+.main-image-container {
+    height: 400px;
+    width: 100%;
+    max-width: 800px;
+    overflow: hidden;
+    border-radius: 20px;
+    background-image: var(--main-hero-image);
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+    background-attachment: scroll;
+}
+
+/* Mobile responsive for main image */
+@media (max-width: 768px) {
+    .main-image-container {
+        height: 250px;
+        max-width: 100%;
+        border-radius: 15px;
+    }
 }

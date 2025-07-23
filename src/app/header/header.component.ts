@@ -322,4 +322,10 @@ export class HeaderComponent implements OnInit {
       this.router.navigate(['/']);
     }
   }
+
+  // Check if current route is a service route
+  isServiceRoute(): boolean {
+    const currentUrl = this.router.url;
+    return currentUrl === '/service-page' || currentUrl.startsWith('/services/');
+  }
 }

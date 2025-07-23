@@ -90,6 +90,11 @@ export const routes: Routes = [
     loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)
   },
   {
+    path: 'auth/login',
+    redirectTo: '/login',
+    pathMatch: 'full'
+  },
+  {
     path: 'profile',
     canActivate: [clientOnlyGuard, authGuard, maintenanceGuard],
     loadComponent: () => import('./auth/profile/profile.component').then(m => m.ProfileComponent)

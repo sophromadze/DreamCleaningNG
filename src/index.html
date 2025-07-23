@@ -10,6 +10,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   
+  <!-- Preload Critical Resources -->
+  <link rel="preload" as="image" href="/images/mainImage.webp" fetchpriority="high">
+  <link rel="preload" as="font" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" crossorigin>
+  <link rel="preload" as="font" href="https://fonts.googleapis.com/css2?family=Courgette&display=swap" crossorigin>
+  
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Courgette&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://www.googletagmanager.com">
@@ -55,13 +60,13 @@
   <meta property="og:description" content="Dream Cleaning offers professional cleaning services for apartments and houses. We ensure a spotless home with our trusted and efficient cleaning team." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://dreamcleaningnearme.com/" />
-  <meta property="og:image" content="https://dreamcleaningnearme.com/images/ogLogo.png" />
+  <meta property="og:image" content="/images/logo-social.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:image:alt" content="Dream Cleaning logo" />
   <meta property="og:locale" content="en_US" />
   <meta property="og:site_name" content="Dream Cleaning" />
-  <meta property="og:image:secure_url" content="https://dreamcleaningnearme.com/images/ogLogo.png" />
+  <meta property="og:image:secure_url" content="/images/logo-social.png" />
   <meta property="og:image:type" content="image/png" />
   <meta property="fb:app_id" content="358786427282943" />
   <meta name="facebook-domain-verification" content="hthas90vcevnoxhfdril19d4ygnebt"/>
@@ -71,7 +76,7 @@
   <meta name="twitter:url" content="https://dreamcleaningnearme.com">
   <meta name="twitter:title" content="Dream Cleaning - Professional Cleaning Services NYC">
   <meta name="twitter:description" content="Dream Cleaning offers professional cleaning services for apartments and houses. We ensure a spotless home with our trusted and efficient cleaning team.">
-  <meta property="twitter:image" content="https://dreamcleaningnearme.com/images/ogLogo.png">
+  <meta property="twitter:image" content="/images/logo-social.png">
   <meta name="twitter:site" content="@thedream_cleaning">
   <meta name="twitter:creator" content="@thedream_cleaning">
   
@@ -286,7 +291,9 @@
         s1.async=true;
         s1.src='https://embed.tawk.to/682e79bc17c3c919102995c5/1irqon2ho';
         s1.charset='UTF-8';
-        s1.setAttribute('crossorigin','*');
+        s1.onerror = function() {
+          console.warn('Tawk.to script failed to load. This is normal if the service is temporarily unavailable.');
+        };
         s0.parentNode.insertBefore(s1,s0);
         })();
       }

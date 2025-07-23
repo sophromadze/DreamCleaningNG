@@ -1,11 +1,18 @@
-.header {
-    background-color: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
+header{
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+}
+
+.container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
   }
   
   .nav {
@@ -16,9 +23,6 @@
   }
   
   .logo {
-    display: flex;
-    align-items: flex-end;
-    gap: 10px;
     text-decoration: none;
     transition: all 0.3s ease;
   
@@ -27,21 +31,9 @@
     }
 
     .logo-img {
-      height: 40px;
+      height: 60px;
       width: auto;
       object-fit: contain;
-    }
-
-    .logo-text {
-      font-family: "Courgette", serif;
-      font-size: 24px;
-      font-weight: bold;
-      color: #333;
-      transition: color 0.3s ease;
-    }
-
-    &:hover .logo-text {
-      color: #007bff;
     }
   }
   
@@ -207,10 +199,8 @@
 
             // All Services link styling (mobile only)
             &.all-services-link {
-              background-color: #f8f9fa;
               border-bottom: 1px solid #e0e0e0;
               font-weight: 600;
-              color: #007bff;
 
               &:hover {
                 background-color: #e9ecef;
@@ -508,18 +498,28 @@
   }
 
   @media (max-width: 768px) {
+    .nav {
+      height: 60px;
+
+      .logo{
+        .logo-img{
+          height: 48px;
+        }
+      }
+    }
+    
     .nav-container {
               .nav-links {
           display: none;
           position: absolute;
-          top: 80px;
+          top: 60px;
           left: 0;
           right: 0;
           background-color: #ffffff;
           flex-direction: column;
           padding: 20px;
           box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-          max-height: calc(100vh - 80px);
+          max-height: calc(100vh - 60px);
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
     
@@ -655,16 +655,6 @@
 
   // Additional responsive styling for very small screens
   @media (max-width: 480px) {
-    .logo {
-      .logo-img {
-        height: 48px;
-      }
-      
-      .logo-text {
-        font-size: 18px;
-      }
-    }
-
     .nav-container {
       .login-btn {
         padding: 6px 16px;
@@ -674,15 +664,14 @@
   }
 
   @media (max-width: 350px) {
-    .logo {
-      .logo-img {
-        height: 40px;
-      }
-      
-      .logo-text {
-        font-size: 16px;
+    .nav{
+      .logo{
+        .logo-img{
+          height: 40px;
+        }
       }
     }
+    
 
     .nav-container {
       .login-btn {

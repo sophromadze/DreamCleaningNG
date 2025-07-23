@@ -917,6 +917,7 @@
     
     @media (max-width: 534px) {
       gap: 0.25rem;
+      grid-template-columns: repeat(2, 1fr);
     }
     
     @media (max-width: 420px) {
@@ -932,17 +933,17 @@
     margin-bottom: 1.5rem;
     
     @media (max-width: 768px) {
-      padding: 0.875rem;
+ 
       margin-bottom: 1.25rem;
     }
     
     @media (max-width: 534px) {
-      padding: 0.75rem;
+
       margin-bottom: 1rem;
     }
     
     @media (max-width: 500px) {
-      padding: 0.625rem;
+
       margin-bottom: 0.75rem;
     }
     
@@ -953,17 +954,17 @@
       font-size: 1rem;
       
       @media (max-width: 768px) {
-        font-size: 0.95rem;
+
         margin: 0 0 0.875rem 0;
       }
       
       @media (max-width: 534px) {
-        font-size: 0.9rem;
+
         margin: 0 0 0.75rem 0;
       }
       
       @media (max-width: 500px) {
-        font-size: 0.85rem;
+
         margin: 0 0 0.625rem 0;
       }
       
@@ -1050,12 +1051,10 @@
     }
     
     @media (max-width: 534px) {
-      padding: 0.5rem;
       border-radius: 4px;
     }
     
     @media (max-width: 420px) {
-      padding: 0.4rem;
       border-radius: 3px;
     }
   
@@ -1222,18 +1221,6 @@
         font-size: 1rem;
         flex-shrink: 0;
         width: 50%;
-        
-        @media (max-width: 768px) {
-          width: 16px;
-          height: 16px;
-          font-size: 0.9rem;
-        }
-        
-        @media (max-width: 534px) {
-          width: 14px;
-          height: 14px;
-          font-size: 0.8rem;
-        }
       }
   
       .extra-info {
@@ -1249,14 +1236,6 @@
           font-size: 1rem;
           font-weight: 600;
           text-align: center;
-          
-          @media (max-width: 768px) {
-            font-size: 0.9rem;
-          }
-          
-          @media (max-width: 534px) {
-            font-size: 0.8rem;
-          }
         }
   
         .extra-details {
@@ -2550,21 +2529,6 @@
       cursor: pointer;
       margin: 0;
       flex: 1;
-      
-      @media (max-width: 768px) {
-        font-size: 13px;
-        line-height: 1.4;
-      }
-      
-      @media (max-width: 534px) {
-        font-size: 12px;
-        line-height: 1.3;
-      }
-      
-      @media (max-width: 500px) {
-        font-size: 11px;
-        line-height: 1.3;
-      }
     }
 
     .checkbox-label a {
@@ -2676,21 +2640,6 @@
       cursor: pointer;
       margin: 0;
       flex: 1;
-      
-      @media (max-width: 768px) {
-        font-size: 13px;
-        line-height: 1.4;
-      }
-      
-      @media (max-width: 534px) {
-        font-size: 12px;
-        line-height: 1.3;
-      }
-      
-      @media (max-width: 500px) {
-        font-size: 11px;
-        line-height: 1.3;
-      }
     }
 
     .form-checkbox.error {
@@ -2752,21 +2701,6 @@
       line-height: 1.5;
       color: #333;
       text-align: left;
-      
-      @media (max-width: 768px) {
-        font-size: 13px;
-        line-height: 1.4;
-      }
-      
-      @media (max-width: 534px) {
-        font-size: 12px;
-        line-height: 1.3;
-      }
-      
-      @media (max-width: 420px) {
-        font-size: 11px;
-        line-height: 1.3;
-      }
     }
 
     .note-label {
@@ -2928,17 +2862,17 @@
     }
     
     @media (max-width: 768px) {
-      padding: 2rem 0.875rem 0.875rem 0.875rem;
+      padding: 1.1rem 0.875rem 0.875rem 0.875rem;
       border-radius: 6px;
     }
     
     @media (max-width: 534px) {
-      padding: 2rem 0.75rem 0.75rem 0.75rem;
+      padding: 1.1rem 0.75rem 0.75rem 0.75rem;
       border-radius: 4px;
     }
     
     @media (max-width: 500px) {
-      padding: 2rem 0.625rem 0.625rem 0.625rem;
+      padding: 1.1rem 0.625rem 0.625rem 0.625rem;
       border-radius: 4px;
     }
 

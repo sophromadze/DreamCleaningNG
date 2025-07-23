@@ -2,11 +2,10 @@
   <div class="container">
     <nav class="nav">
       <a routerLink="/" class="logo">
-        <img src="/images/logo.png" alt="DreamCleaning Logo" class="logo-img">
-        <span class="logo-text">DreamCleaning</span>
+        <img src="/images/logo.svg" alt="DreamCleaning Logo" class="logo-img">
       </a>
       <div class="nav-container">
-        <div class="nav-links">
+        <div class="nav-links" id="mobile-navigation">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">Home</a>
           <a routerLink="/about" routerLinkActive="active" (click)="closeMobileMenu()">About</a>
           
@@ -17,9 +16,9 @@
                (mouseleave)="hideServicesMenu()"
                (click)="toggleServicesMenu($event)">
             <a class="dropdown-toggle" 
+               href="/service-page"
                [routerLink]="!isMobile ? '/service-page' : null" 
-               routerLinkActive="active" 
-               [routerLinkActiveOptions]="{exact: false}"
+               [class.active]="isServiceRoute()"
                (click)="onServicesClick($event)">
               Services
               <svg class="chevron-down" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
@@ -73,7 +72,12 @@
           <a routerLink="/booking" routerLinkActive="active" (click)="closeMobileMenu()">Booking</a>
           <a routerLink="/contact" routerLinkActive="active" (click)="closeMobileMenu()">Contact</a>
         </div>
-        <button class="mobile-menu-btn" [class.active]="isMenuOpen" (click)="toggleMenu()">
+        <button class="mobile-menu-btn" 
+                [class.active]="isMenuOpen" 
+                (click)="toggleMenu()"
+                [attr.aria-label]="isMenuOpen ? 'Close navigation menu' : 'Open navigation menu'"
+                [attr.aria-expanded]="isMenuOpen"
+                aria-controls="mobile-navigation">
           <span></span>
           <span></span>
           <span></span>
