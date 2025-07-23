@@ -5,9 +5,34 @@
       <button class="action-btn refresh" 
               (click)="loadOrders()"
               [disabled]="loadingStates.orders">
-        <i class="fas fa-sync-alt"></i> 
         {{ loadingStates.orders ? 'Loading...' : 'Refresh' }}
       </button>
+    </div>
+  </div>
+
+  <!-- Statistics Section for SuperAdmin -->
+  <div class="stats-section" *ngIf="isSuperAdmin && !loadingStates.orders">
+    <div class="stats-cards">
+      <div class="stat-card">
+        <div class="stat-value">{{ totalOrders }}</div>
+        <div class="stat-label">Total Orders</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${{ formatCurrency(totalAmount) }}</div>
+        <div class="stat-label">Total Amount</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${{ formatCurrency(totalAmountWithoutTaxes) }}</div>
+        <div class="stat-label">Amount (No Tax)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${{ formatCurrency(totalAmountWithoutTips) }}</div>
+        <div class="stat-label">Amount (No Tips)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">{{ formatTotalDuration(totalDuration) }}</div>
+        <div class="stat-label">Total Duration</div>
+      </div>
     </div>
   </div>
 

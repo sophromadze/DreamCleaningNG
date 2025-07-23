@@ -20,6 +20,38 @@
         gap: 0.5rem;
       }
     }
+
+    // Statistics Section for SuperAdmin
+    .stats-section {
+      margin-bottom: 2rem;
+
+      .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+
+        .stat-card {
+          background: #fff;
+          padding: 16px;
+          border-radius: 8px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          text-align: center;
+
+          .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #495057;
+            margin-bottom: 4px;
+          }
+
+          .stat-label {
+            color: #666;
+            font-size: 0.875rem;
+          }
+        }
+      }
+    }
   
     // Filters Section
     .filters-section {
@@ -429,10 +461,6 @@
         &:hover {
           background: #e0a800;
         }
-      }
-  
-      i {
-        font-size: 0.875rem;
       }
     }
   

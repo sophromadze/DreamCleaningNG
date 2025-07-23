@@ -63,7 +63,36 @@ export class AdminComponent implements OnInit {
     if (savedTab) {
       this.activeTab = savedTab;
     }
-    this.loadUserPermissions();
+    
+    // Refresh token before loading permissions to ensure we have a valid token
+    this.refreshTokenAndLoadPermissions();
+  }
+
+  refreshTokenAndLoadPermissions() {
+    // Refresh token before loading permissions to ensure we have a valid token
+    this.adminService.refreshTokenIfNeeded().subscribe({
+      next: () => {
+        // Token refreshed successfully, now load permissions
+        this.loadUserPermissions();
+      },
+      error: (error: any) => {
+        console.error('Error refreshing token:', error);
+        
+        // If refresh fails, check if we need to redirect to login
+        if (error.status === 401) {
+          console.log('Token refresh failed with 401. You need to log in again.');
+          this.errorMessage = 'Your session has expired. Please log in again.';
+          // Redirect to login after a short delay
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+          return;
+        }
+        
+        // Even if refresh fails, try to load permissions anyway
+        this.loadUserPermissions();
+      }
+    });
   }
 
   loadUserPermissions() {

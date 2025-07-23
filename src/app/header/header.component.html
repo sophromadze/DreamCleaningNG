@@ -78,62 +78,58 @@
           <span></span>
           <span></span>
         </button>
-        <ng-container *ngIf="shouldShowLogin(); else userMenu">
-          <a routerLink="/login" routerLinkActive="active" class="login-btn">Login</a>
-        </ng-container>
-        <ng-template #userMenu>
-          <div class="user-menu" (click)="toggleUserMenu($event)" *ngIf="shouldShowUserMenu()">
-            <div class="user-avatar">
-              <img *ngIf="currentUser?.profilePictureUrl" 
-                   [src]="currentUser.profilePictureUrl" 
-                   [alt]="currentUser.firstName + ' ' + currentUser.lastName"
-                   class="user-avatar-img">
-              <span *ngIf="!currentUser?.profilePictureUrl" class="user-initials">
-                {{ userInitials }}
-              </span>
-              <svg class="chevron-down" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-                <g fill-rule="evenodd" transform="translate(-448 -544)">
-                  <path fill-rule="nonzero" d="M452.707 549.293a1 1 0 0 0-1.414 1.414l4 4a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414L456 552.586l-3.293-3.293z"></path>
-                </g>
-              </svg>
-            </div>
-            <div class="dropdown-menu" *ngIf="isUserMenuOpen" (click)="$event.stopPropagation()">
-              <div class="user-info">
-                {{ currentUser?.firstName }} {{ currentUser?.lastName }}
-                <small class="user-role"
-                       [class.role-superadmin]="currentUser?.role === 'SuperAdmin'"
-                       [class.role-admin]="currentUser?.role === 'Admin'"
-                       [class.role-moderator]="currentUser?.role === 'Moderator'"
-                       [class.role-cleaner]="currentUser?.role === 'Cleaner'"
-                       [class.role-customer]="currentUser?.role === 'Customer'">
-                  {{ currentUser?.role }}
-                </small>
+        <!-- Only show auth UI in the browser and when ready -->
+        <ng-container *ngIf="isBrowser && showAuthUI">
+          <ng-container *ngIf="shouldShowLogin(); else userMenu">
+            <a routerLink="/login" routerLinkActive="active" class="login-btn">Login</a>
+          </ng-container>
+          <ng-template #userMenu>
+            <div class="user-menu" (click)="toggleUserMenu($event)" *ngIf="shouldShowUserMenu()">
+              <div class="user-avatar">
+                <img *ngIf="currentUser?.profilePictureUrl" 
+                     [src]="currentUser.profilePictureUrl" 
+                     [alt]="currentUser.firstName + ' ' + currentUser.lastName"
+                     class="user-avatar-img">
+                <span *ngIf="!currentUser?.profilePictureUrl" class="user-initials">
+                  {{ userInitials }}
+                </span>
+                <svg class="chevron-down" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                  <g fill-rule="evenodd" transform="translate(-448 -544)">
+                    <path fill-rule="nonzero" d="M452.707 549.293a1 1 0 0 0-1.414 1.414l4 4a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414L456 552.586l-3.293-3.293z"></path>
+                  </g>
+                </svg>
               </div>
-              
-              <a routerLink="/profile" (click)="closeAllMenus()">Profile</a>
-              
-              <!-- Show Cabinet for Cleaners -->
-              <a routerLink="/cleaner/cabinet" 
-                 (click)="closeAllMenus()"
-                 *ngIf="currentUser?.role === 'Cleaner'">
-                Cabinet
-              </a>
-              
-              <a routerLink="/profile/orders" (click)="closeAllMenus()">My Orders</a>
-              <a routerLink="/gift-cards" (click)="closeAllMenus()">Gift Cards</a>
-              <a routerLink="/change-password" (click)="closeAllMenus()">Change Password</a>
-              
-              <!-- Show Admin Panel for SuperAdmin, Admin, and Moderator -->
-              <a routerLink="/admin"
-                 (click)="closeAllMenus()"
-                 *ngIf="currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin' || currentUser?.role === 'Moderator'">
-                Admin Panel
-              </a>
-              
-              <a (click)="logout(); closeAllMenus()">Logout</a>
+              <div class="dropdown-menu" *ngIf="isUserMenuOpen" (click)="$event.stopPropagation()">
+                <div class="user-info">
+                  {{ currentUser?.firstName }} {{ currentUser?.lastName }}
+                  <small class="user-role"
+                         [class.role-superadmin]="currentUser?.role === 'SuperAdmin'"
+                         [class.role-admin]="currentUser?.role === 'Admin'"
+                         [class.role-moderator]="currentUser?.role === 'Moderator'"
+                         [class.role-cleaner]="currentUser?.role === 'Cleaner'"
+                         [class.role-customer]="currentUser?.role === 'Customer'">
+                    {{ currentUser?.role }}
+                  </small>
+                </div>
+                <a routerLink="/profile" (click)="closeAllMenus()">Profile</a>
+                <a routerLink="/cleaner/cabinet" 
+                   (click)="closeAllMenus()"
+                   *ngIf="currentUser?.role === 'Cleaner' || currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin' || currentUser?.role === 'Moderator'">
+                  Cleaners Cabinet
+                </a>
+                <a routerLink="/profile/orders" (click)="closeAllMenus()">My Orders</a>
+                <a routerLink="/gift-cards" (click)="closeAllMenus()">Gift Cards</a>
+                <a routerLink="/change-password" (click)="closeAllMenus()">Change Password</a>
+                <a routerLink="/admin"
+                   (click)="closeAllMenus()"
+                   *ngIf="currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin' || currentUser?.role === 'Moderator'">
+                  Admin Panel
+                </a>
+                <a (click)="logout(); closeAllMenus()">Logout</a>
+              </div>
             </div>
-          </div>
-        </ng-template>
+          </ng-template>
+        </ng-container>
       </div>
     </nav>
   </div>

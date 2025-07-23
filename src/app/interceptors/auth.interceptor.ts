@@ -1,11 +1,62 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpErrorResponse } from '@angular/common/http';
+import { HttpRequest, HttpHandler, HttpEvent, HttpInterceptor, HttpErrorResponse, HttpHandlerFn } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, filter, take, switchMap } from 'rxjs/operators';
 import { isPlatformBrowser } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+
+// Functional interceptor approach for Angular 17+
+export function authInterceptor(
+  req: HttpRequest<unknown>,
+  next: HttpHandlerFn
+): Observable<HttpEvent<unknown>> {
+  const useCookieAuth = environment.useCookieAuth || false;
+  const isBrowser = typeof window !== 'undefined';
+  
+  // Skip auth checks for auth endpoints
+  const isAuthEndpoint = req.url.includes('/auth/login') || 
+                        req.url.includes('/auth/register') || 
+                        req.url.includes('/auth/refresh-token') ||
+                        req.url.includes('/auth/google');
+
+  // Skip for SignalR endpoints
+  const isSignalREndpoint = req.url.includes('/userManagementHub') || 
+                           req.url.includes('/negotiate') ||
+                           (req.url.includes('?id=') && req.url.includes('access_token='));
+
+  // Handle based on auth method
+  if (useCookieAuth) {
+    // For cookie auth, always include credentials
+    req = req.clone({
+      withCredentials: true
+    });
+  } else {
+    // For localStorage auth, add bearer token
+    let token: string | null = null;
+    
+    if (isBrowser) {
+      try {
+        token = localStorage.getItem('token');
+      } catch (error) {
+        console.warn('Error accessing localStorage:', error);
+        token = null;
+      }
+    }
+
+    // Clone the request and add the authorization header
+    if (token && !isAuthEndpoint && !isSignalREndpoint) {
+      req = req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+    }
+  }
+
+  return next(req);
+}
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
@@ -65,12 +116,6 @@ export class AuthInterceptor implements HttpInterceptor {
           console.warn('Error accessing localStorage:', error);
           token = null;
         }
-      }
-
-      // Clone the request and add the authorization header
-      // Don't add auth header to SignalR requests (they use query string)
-      if (token && !isAuthEndpoint && !isSignalREndpoint) {
-        request = this.addToken(request, token);
       }
     }
 

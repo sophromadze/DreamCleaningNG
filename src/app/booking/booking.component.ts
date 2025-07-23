@@ -950,6 +950,18 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.saveFormData();
   }
 
+  // New click handler for extra service card
+  onExtraServiceCardClick(extraService: ExtraService) {
+    // If it's a disabled same day service and on mobile, show tooltip
+    if (extraService.isSameDayService && !this.isSameDayServiceAvailable && this.isCurrentlyMobile()) {
+      this.clearAllMobileTooltips();
+      this.showMobileTooltip(extraService.id);
+      return;
+    }
+    // Otherwise, toggle the service normally
+    this.toggleExtraService(extraService);
+  }
+
   toggleExtraService(extraService: ExtraService, skipDateChange: boolean = false) {
     
     // Prevent selecting same day service if it's not available
@@ -2778,7 +2790,7 @@ export class BookingComponent implements OnInit, OnDestroy {
         day: 'numeric' 
       });
       
-      this.sameDayServiceDisabledReason = `Same day service is not available at this time. Cleaners need at least 4 hours to prepare. Available again on ${tomorrowString}.`;
+      this.sameDayServiceDisabledReason = `Same day service is not available at this time. Cleaners need at least 4 hours to prepare. Available again on ${tomorrowString} at 8:00 AM.`;
     } else {
       this.isSameDayServiceAvailable = true;
       this.sameDayServiceDisabledReason = '';

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminService, UserAdmin, UserPermissions, DetailedUser } from '../../../services/admin.service';
 import { OrderService, OrderList } from '../../../services/order.service';
 import { Apartment } from '../../../services/profile.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-user-management',
@@ -320,14 +321,28 @@ export class UserManagementComponent implements OnInit {
   }
 
   private getCurrentUserId(): number {
-    // You might get this from your auth service or JWT token
-    // This is just an example - implement based on your auth system
+    // For cookie auth, we can't access tokens from localStorage
+    // The user ID should be available from the auth service
+    if (environment.useCookieAuth) {
+      // Return a default or get from auth service
+      return 0; // You might want to get this from auth service instead
+    }
+
+    // For localStorage auth, decode from token
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
+        // Validate token format before decoding
+        const tokenParts = token.split('.');
+        if (tokenParts.length !== 3) {
+          console.warn('Invalid JWT token format');
+          return 0;
+        }
+        
+        const payload = JSON.parse(atob(tokenParts[1]));
         return parseInt(payload.UserId || payload.sub);
       } catch (e) {
+        console.warn('Error decoding token:', e);
         return 0;
       }
     }

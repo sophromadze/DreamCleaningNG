@@ -1071,11 +1071,14 @@
     }
 
     &.disabled {
-      opacity: 0.6;
       cursor: not-allowed;
       background-color: #f5f5f5;
       border-color: #ddd;
       
+      .extra-header {
+        opacity: 0.6;
+      }
+
       &:hover {
         border-color: #ddd;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -2918,14 +2921,14 @@
     
     
     @media (max-width: 1200px) {
-      padding: 1rem;
+      padding: 2rem 1rem 1rem 1rem;
       border-radius: 8px;
       background-color: #f8f9ff;
       border: 1px solid #007bff;
     }
     
     @media (max-width: 768px) {
-      padding: 1.5rem 0.875rem 0.875rem 0.875rem;
+      padding: 2rem 0.875rem 0.875rem 0.875rem;
       border-radius: 6px;
     }
     

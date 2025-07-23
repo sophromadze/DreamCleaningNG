@@ -19,6 +19,9 @@ export interface AdminOrderList {
   total: number;
   serviceAddress: string;
   orderDate: Date;
+  totalDuration: number;
+  tips: number;
+  companyDevelopmentTips: number;
 }
 
 export interface AuditLog {
@@ -574,5 +577,10 @@ export class AdminService {
 
   getOrderUpdateHistory(orderId: number): Observable<OrderUpdateHistory[]> {
     return this.http.get<OrderUpdateHistory[]>(`${this.apiUrl}/orders/${orderId}/update-history`);
+  }
+
+  refreshTokenIfNeeded(): Observable<any> {
+    // This will trigger the auth interceptor to refresh the token if needed
+    return this.http.get(`${environment.apiUrl}/auth/current-user`);
   }
 }

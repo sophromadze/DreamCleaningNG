@@ -1,6 +1,6 @@
 import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError, timeout } from 'rxjs';
 import { map, tap, catchError, switchMap, filter, take, first } from 'rxjs/operators'; 
 import { Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
@@ -79,13 +79,31 @@ export class AuthService {
       }
     }
 
-    this.currentUserSubject = new BehaviorSubject<UserDto | null>(storedUser);
+    // For cookie auth, check if we have cached user data first
+    let initialUser = storedUser;
+    if (this.isBrowser && this.useCookieAuth) {
+      try {
+        const cachedData = localStorage.getItem('headerUserCache');
+        if (cachedData) {
+          const cached = JSON.parse(cachedData);
+          const cacheAge = Date.now() - cached.timestamp;
+          if (cacheAge < 24 * 60 * 60 * 1000) {
+            initialUser = cached.user;
+          }
+        }
+      } catch (e) {
+        console.warn('Error parsing cached user data:', e);
+      }
+    }
+    
+    this.currentUserSubject = new BehaviorSubject<UserDto | null>(initialUser);
     this.currentUser = this.currentUserSubject.asObservable();
 
     // Handle initialization based on platform
     if (this.isBrowser) {
       if (this.useCookieAuth) {
-        // For cookie auth, check with server
+        // For cookie auth, don't initialize until we get response from server
+        // This prevents UI flickering by ensuring we have definitive user state
         this.initializeWithCookies();
       } else {
         // Existing localStorage logic
@@ -134,14 +152,25 @@ export class AuthService {
   private initializeWithCookies(): void {
     // For cookie auth, check current user from server
     this.http.get<UserDto>(`${this.apiUrl}/auth/current-user`, { withCredentials: true })
+      .pipe(
+        // Add timeout to prevent hanging
+        timeout(5000)
+      )
       .subscribe({
         next: (user) => {
+          // Set user data and mark as initialized
           this.currentUserSubject.next(user);
           this.isInitializedSubject.next(true);
         },
-        error: () => {
+        error: (error: any) => {
+          // Set as initialized even if no user (user is not logged in)
           this.currentUserSubject.next(null);
           this.isInitializedSubject.next(true);
+          
+          // Clear cache if it's an authentication error
+          if (error.status === 401 || error.status === 403) {
+            this.clearHeaderCache();
+          }
         }
       });
   }
@@ -318,6 +347,8 @@ export class AuthService {
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('isSocialLogin');
     }
+    // Always clear header cache on logout
+    this.clearHeaderCache();
     this.isSocialLogin = false;
     this.currentUserSubject.next(null);
     this.router.navigate(['/login']);
@@ -476,5 +507,37 @@ export class AuthService {
   confirmEmailChange(token: string): Observable<any> {
     const options = this.useCookieAuth ? { withCredentials: true } : {};
     return this.http.post(`${this.apiUrl}/auth/confirm-email-change`, { token }, options);
+  }
+
+  // Method to clear header cache (can be called from other components)
+  // This is used to clear cached user data when the session becomes invalid
+  clearHeaderCache(): void {
+    if (this.isBrowser) {
+      try {
+        localStorage.removeItem('headerUserCache');
+      } catch (error) {
+        console.warn('Failed to clear header cache:', error);
+      }
+    }
+  }
+
+  // Method to check if we have cached user data
+  hasCachedUserData(): boolean {
+    if (!this.isBrowser || !this.useCookieAuth) {
+      return false;
+    }
+    
+    try {
+      const cachedData = localStorage.getItem('headerUserCache');
+      if (cachedData) {
+        const cached = JSON.parse(cachedData);
+        const cacheAge = Date.now() - cached.timestamp;
+        return cacheAge < 24 * 60 * 60 * 1000; // 24 hours
+      }
+    } catch (error) {
+      console.warn('Error checking cached user data:', error);
+    }
+    
+    return false;
   }
 }

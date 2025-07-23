@@ -2,6 +2,7 @@ import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { interval, Subscription } from 'rxjs';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -46,7 +47,9 @@ export class TokenRefreshService {
           this.authService.refreshToken().subscribe({
             next: (response) => {
               // Update last activity on successful refresh
-              localStorage.setItem('lastActivity', Date.now().toString());
+              if (!environment.useCookieAuth) {
+                localStorage.setItem('lastActivity', Date.now().toString());
+              }
             },
             error: (error) => {
               console.error('Token refresh failed:', error);
@@ -63,8 +66,10 @@ export class TokenRefreshService {
         }
       });
 
-      // Also check token expiry on startup
-      this.checkTokenExpiry();
+      // Also check token expiry on startup (only for localStorage auth)
+      if (!environment.useCookieAuth) {
+        this.checkTokenExpiry();
+      }
     }, 1000); // 1 second delay
   }
 
@@ -81,6 +86,12 @@ export class TokenRefreshService {
 
   private checkInactivity(): boolean {
     if (!this.isBrowser) return false;
+
+    // For cookie auth, we can't track inactivity via localStorage
+    // The server will handle session expiry
+    if (environment.useCookieAuth) {
+      return false;
+    }
 
     try {
       const lastActivity = localStorage.getItem('lastActivity');
@@ -101,14 +112,21 @@ export class TokenRefreshService {
   }
 
   private checkTokenExpiry(): void {
-    if (!this.isBrowser) return;
+    if (!this.isBrowser || environment.useCookieAuth) return;
 
     const token = localStorage.getItem('token');
     if (!token) return;
 
     try {
-      // Decode JWT token
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      // Validate token format before decoding
+      const tokenParts = token.split('.');
+      if (tokenParts.length !== 3) {
+        console.warn('Invalid JWT token format');
+        return;
+      }
+
+      // Decode JWT token with proper error handling
+      const payload = JSON.parse(atob(tokenParts[1]));
       const expiryTime = payload.exp * 1000; // Convert to milliseconds
       const currentTime = Date.now();
       const timeUntilExpiry = expiryTime - currentTime;
@@ -126,6 +144,10 @@ export class TokenRefreshService {
       }
     } catch (error) {
       console.error('Error checking token expiry:', error);
+      // Clear invalid token from localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('currentUser');
     }
   }
 }

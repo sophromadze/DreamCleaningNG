@@ -13,6 +13,9 @@ export interface AdminOrderList extends OrderList {
   contactEmail: string;
   contactFirstName: string;
   contactLastName: string;
+  totalDuration: number;
+  tips: number;
+  companyDevelopmentTips: number;
 }
 
 interface AssignedCleaner {
@@ -85,6 +88,14 @@ export class OrdersComponent implements OnInit {
   orderUpdateHistory: OrderUpdateHistory[] = [];
   loadingUpdateHistory = false;
 
+  // Statistics for SuperAdmin
+  isSuperAdmin = false;
+  totalOrders = 0;
+  totalAmount = 0;
+  totalAmountWithoutTaxes = 0;
+  totalAmountWithoutTips = 0;
+  totalDuration = 0;
+
   constructor(
     private adminService: AdminService,
     private orderService: OrderService,
@@ -101,6 +112,7 @@ export class OrdersComponent implements OnInit {
       next: (response) => {
         this.userRole = response.role;
         this.userPermissions = response;
+        this.isSuperAdmin = response.role === 'SuperAdmin';
         this.loadOrders();
       },
       error: (error) => {
@@ -120,6 +132,10 @@ export class OrdersComponent implements OnInit {
           this.orders = orders as AdminOrderList[];
           // Preload assigned cleaners for all orders
           this.preloadAssignedCleaners();
+          // Calculate statistics for SuperAdmin
+          if (this.isSuperAdmin) {
+            this.calculateStatistics();
+          }
         },
         error: (error) => {
           console.error('Error loading orders:', error);
@@ -150,23 +166,28 @@ export class OrdersComponent implements OnInit {
     
     this.loadingStates.assignedCleaners = true;
     
-    // Create observables for all orders
-    const cleanerRequests = this.orders.map(order => 
+    // Only preload for the first 10 orders to avoid too many requests
+    const ordersToPreload = this.orders.slice(0, 10);
+    
+    // Create observables for limited orders
+    const cleanerRequests = ordersToPreload.map(order => 
       this.adminService.getAssignedCleanersWithIds(order.id).pipe(
         catchError((error) => {
+          console.warn(`Failed to load cleaners for order ${order.id}:`, error);
           return of([]); // Return empty array on error
         })
       )
     );
 
-    // Execute all requests in parallel
+    // Execute requests in parallel
     forkJoin(cleanerRequests).subscribe({
       next: (allCleaners) => {
         // Update cache with all results
-        this.orders.forEach((order, index) => {
+        ordersToPreload.forEach((order, index) => {
           this.assignedCleanersCache.set(order.id, allCleaners[index] || []);
         });
-        this.cdr.detectChanges();
+        // Remove manual change detection to prevent loops
+        // this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('Error preloading assigned cleaners:', error);
@@ -177,12 +198,53 @@ export class OrdersComponent implements OnInit {
     });
   }
 
+  private calculateStatistics() {
+    this.totalOrders = this.orders.length;
+    this.totalAmount = this.orders.reduce((sum, order) => sum + (order.total || 0), 0);
+    
+    // Calculate total amount without taxes (8.887%)
+    const taxRate = 0.08887;
+    this.totalAmountWithoutTaxes = this.totalAmount / (1 + taxRate);
+    
+    // Calculate total amount without tips
+    this.totalAmountWithoutTips = this.orders.reduce((sum, order) => {
+      const orderTotal = order.total || 0;
+      const orderTips = order.tips || 0;
+      const orderCompanyTips = order.companyDevelopmentTips || 0;
+      return sum + (orderTotal - orderTips - orderCompanyTips);
+    }, 0);
+    
+    // Calculate total duration from the totalDuration property
+    this.totalDuration = this.orders.reduce((sum, order) => sum + (order.totalDuration || 0), 0);
+  }
+
+  private calculateStatisticsFromFiltered(filteredOrders: AdminOrderList[]) {
+    this.totalOrders = filteredOrders.length;
+    this.totalAmount = filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+    
+    // Calculate total amount without taxes (8.887%)
+    const taxRate = 0.08887;
+    this.totalAmountWithoutTaxes = this.totalAmount / (1 + taxRate);
+    
+    // Calculate total amount without tips
+    this.totalAmountWithoutTips = filteredOrders.reduce((sum, order) => {
+      const orderTotal = order.total || 0;
+      const orderTips = order.tips || 0;
+      const orderCompanyTips = order.companyDevelopmentTips || 0;
+      return sum + (orderTotal - orderTips - orderCompanyTips);
+    }, 0);
+    
+    // Calculate total duration from the totalDuration property
+    this.totalDuration = filteredOrders.reduce((sum, order) => sum + (order.totalDuration || 0), 0);
+  }
+
   // Helper method to refresh a single order's assigned cleaners
   private refreshOrderCleaners(orderId: number): void {
     this.adminService.getAssignedCleanersWithIds(orderId).subscribe({
       next: (cleaners) => {
         this.assignedCleanersCache.set(orderId, cleaners);
-        this.cdr.detectChanges();
+        // Remove manual change detection to prevent loops
+        // this.cdr.detectChanges();
       },
       error: (error) => {
         console.error(`Error refreshing cleaners for order ${orderId}:`, error);
@@ -281,7 +343,8 @@ export class OrdersComponent implements OnInit {
     this.adminService.getAssignedCleanersWithIds(orderId).subscribe({
       next: (cleaners) => {
         this.assignedCleanersCache.set(orderId, cleaners);
-        this.cdr.detectChanges();
+        // Remove manual change detection to prevent loops
+        // this.cdr.detectChanges();
       },
       error: (error) => {
         this.assignedCleanersCache.set(orderId, []);
@@ -305,8 +368,8 @@ export class OrdersComponent implements OnInit {
               // Update cache with fresh data from server
               this.assignedCleanersCache.set(orderId, updatedCleaners);
               
-              // Force change detection
-              this.cdr.detectChanges();
+              // Remove manual change detection to prevent loops
+              // this.cdr.detectChanges();
             },
             error: (error) => {
               console.error('Error refreshing assigned cleaners after removal:', error);
@@ -314,7 +377,8 @@ export class OrdersComponent implements OnInit {
               const currentCleaners = this.assignedCleanersCache.get(orderId) || [];
               const updatedCleaners = currentCleaners.filter(c => c.id !== cleanerId);
               this.assignedCleanersCache.set(orderId, updatedCleaners);
-              this.cdr.detectChanges();
+              // Remove manual change detection to prevent loops
+              // this.cdr.detectChanges();
             }
           });
           
@@ -402,8 +466,8 @@ export class OrdersComponent implements OnInit {
               // Update cache with fresh data from server
               this.assignedCleanersCache.set(orderIdToRefresh, updatedCleaners);
               
-              // Force change detection
-              this.cdr.detectChanges();
+              // Remove manual change detection to prevent loops
+              // this.cdr.detectChanges();
             },
             error: (error) => {
               console.error('Error refreshing assigned cleaners after assignment:', error);
@@ -425,7 +489,8 @@ export class OrdersComponent implements OnInit {
               });
               
               this.assignedCleanersCache.set(orderIdToRefresh, allCleaners);
-              this.cdr.detectChanges();
+              // Remove manual change detection to prevent loops
+              // this.cdr.detectChanges();
             }
           });
         }, 500); // Wait 500ms for server to process
@@ -560,6 +625,11 @@ export class OrdersComponent implements OnInit {
     // Update pagination
     this.totalPages = Math.ceil(filtered.length / this.itemsPerPage);
     
+    // Recalculate statistics for SuperAdmin based on filtered data
+    if (this.isSuperAdmin) {
+      this.calculateStatisticsFromFiltered(filtered);
+    }
+    
     // Return paginated results
     const start = (this.currentPage - 1) * this.itemsPerPage;
     return filtered.slice(start, start + this.itemsPerPage);
@@ -638,6 +708,23 @@ export class OrdersComponent implements OnInit {
       return '1h'; // Minimum 1 hour
     } else if (hours === 0) {
       return `${mins} minutes`;
+    } else if (mins === 0) {
+      return `${hours}h`;
+    } else {
+      return `${hours}h ${mins}min`;
+    }
+  }
+
+  formatTotalDuration(minutes: number): string {
+    if (minutes === 0) {
+      return '0h';
+    }
+    
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    
+    if (hours === 0) {
+      return `${mins}min`;
     } else if (mins === 0) {
       return `${hours}h`;
     } else {

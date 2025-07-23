@@ -130,6 +130,10 @@
       font-weight: bold;
       margin-top: 0.2rem;
       opacity: 0.9;
+      
+      &.unassigned {
+        color: #ffc107;
+      }
     }
   }
 

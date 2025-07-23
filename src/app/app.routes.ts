@@ -5,6 +5,7 @@ import { noAuthGuard } from './guards/no-auth.guard';
 import { adminGuard } from './guards/admin.guard';
 import { maintenanceGuard } from './guards/maintenance.guard';
 import { clientOnlyGuard } from './guards/client-only.guard';
+import { cleanerGuard } from './guards/cleaner.guard';
 import { CleanerCabinetComponent } from './auth/cleaner-cabinet/cleaner-cabinet.component';
 
 export const routes: Routes = [
@@ -149,7 +150,7 @@ export const routes: Routes = [
   },
   {
     path: 'cleaner/cabinet',
-    canActivate: [clientOnlyGuard, authGuard],
+    canActivate: [clientOnlyGuard, authGuard, cleanerGuard],
     loadComponent: () => import('./auth/cleaner-cabinet/cleaner-cabinet.component').then(m => m.CleanerCabinetComponent)
   },
   {

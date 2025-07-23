@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { AuthService } from '../services/auth.service';
 import { combineLatest } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-header',
@@ -20,7 +21,8 @@ export class HeaderComponent implements OnInit {
   userInitials: string = '';
   isAuthInitialized = false;
   isMobile = false;
-  private isBrowser: boolean;
+  showAuthUI = false; // Only show auth UI when we have a definitive answer
+  public isBrowser: boolean;
 
   constructor(
     private authService: AuthService,
@@ -35,62 +37,49 @@ export class HeaderComponent implements OnInit {
     // Only check screen size in browser environment
     if (this.isBrowser) {
       this.checkScreenSize();
-      this.restoreUserFromCache();
     }
-    
-    // Then subscribe to actual auth state for updates
+    // Immediately restore user data from cache to prevent flickering on refresh
+    if (this.isBrowser && environment.useCookieAuth) {
+      this.restoreFromCache();
+    }
+    // Get initial values from auth service (only if we don't have cached data)
+    if (!this.currentUser) {
+      const initialUser = this.authService.currentUserValue;
+      if (initialUser) {
+        this.currentUser = initialUser;
+        this.userInitials = `${initialUser.firstName[0]}${initialUser.lastName[0]}`.toUpperCase();
+      }
+    }
+    // Subscribe to auth state for updates
     combineLatest([
       this.authService.isInitialized$,
       this.authService.currentUser
     ]).subscribe(([isInitialized, user]) => {
       this.isAuthInitialized = isInitialized;
-      
       // Update user data if changed
       if (user) {
         this.currentUser = user;
         this.userInitials = `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-        
         // Cache the minimal user data for next refresh
         if (this.isBrowser) {
           this.cacheUserData(user);
         }
-      } else {
-        // User logged out, clear cache
+      } else if (isInitialized) {
+        // Only clear user data if auth service is initialized and user is null
         this.currentUser = null;
         this.userInitials = '';
         if (this.isBrowser) {
           this.clearUserCache();
         }
       }
+      // Show auth UI if we have definitive answer from backend
+      if (isInitialized) {
+        this.showAuthUI = true;
+      }
     });
   }
 
-  private restoreUserFromCache(): void {
-    try {
-      // Check if we have a token (user is logged in)
-      const token = localStorage.getItem('token');
-      if (!token) {
-        return;
-      }
 
-      // Try to get cached user data
-      const cachedData = localStorage.getItem('headerUserCache');
-      if (cachedData) {
-        const cached = JSON.parse(cachedData);
-        
-        // Verify cache is not stale (24 hours)
-        const cacheAge = Date.now() - cached.timestamp;
-        if (cacheAge < 24 * 60 * 60 * 1000) {
-          // Restore user data immediately
-          this.currentUser = cached.user;
-          this.userInitials = cached.userInitials;
-          this.isAuthInitialized = true; // Show UI immediately
-        }
-      }
-    } catch (error) {
-      console.warn('Failed to restore user from cache:', error);
-    }
-  }
 
   private cacheUserData(user: any): void {
     try {
@@ -110,16 +99,30 @@ export class HeaderComponent implements OnInit {
       
       localStorage.setItem('headerUserCache', JSON.stringify(cacheData));
     } catch (error) {
-      console.warn('Failed to cache user data:', error);
+      // Ignore cache errors in production
+    }
+  }
+
+  private restoreFromCache(): void {
+    try {
+      const cachedData = localStorage.getItem('headerUserCache');
+      if (cachedData) {
+        const cached = JSON.parse(cachedData);
+        const cacheAge = Date.now() - cached.timestamp;
+        if (cacheAge < 24 * 60 * 60 * 1000) {
+          this.currentUser = cached.user;
+          this.userInitials = cached.userInitials;
+          this.isAuthInitialized = true;
+          this.showAuthUI = true;
+        }
+      }
+    } catch (error) {
+      // Ignore cache errors in production
     }
   }
 
   private clearUserCache(): void {
-    try {
-      localStorage.removeItem('headerUserCache');
-    } catch (error) {
-      console.warn('Failed to clear user cache:', error);
-    }
+    this.authService.clearHeaderCache();
   }
 
   @HostListener('window:resize')
@@ -154,12 +157,14 @@ export class HeaderComponent implements OnInit {
 
   // Helper method to determine if we should show login button
   shouldShowLogin(): boolean {
-    return this.isAuthInitialized && !this.currentUser;
+    // Show login button if we have no user
+    return !this.currentUser;
   }
 
   // Helper method to determine if we should show user menu
   shouldShowUserMenu(): boolean {
-    return this.isAuthInitialized && !!this.currentUser;
+    // Show user menu if we have a user (from cache or auth service)
+    return !!this.currentUser;
   }
 
   toggleMenu() {

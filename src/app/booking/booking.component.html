@@ -263,7 +263,7 @@
             [class.selected]="isExtraServiceSelected(extra)"
             [class.mobile-tooltip-visible]="isMobileTooltipVisible(extra.id)"
             [class.disabled]="extra.isSameDayService && !isSameDayServiceAvailable"
-            (click)="toggleExtraService(extra)"
+            (click)="onExtraServiceCardClick(extra)"
             [attr.data-tooltip]="getExtraServiceTooltip(extra)">
         <div class="extra-header">
           <div class="extra-top-controls" style="display: none;">

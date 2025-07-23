@@ -1,9 +1,9 @@
 import { ApplicationConfig, provideZoneChangeDetection, PLATFORM_ID, APP_ID, APP_INITIALIZER } from '@angular/core';
 import { provideRouter, withDebugTracing, withInMemoryScrolling } from '@angular/router';
-import { provideHttpClient, withFetch, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { provideHttpClient, withFetch, withInterceptorsFromDi, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
-import { AuthInterceptor } from './interceptors/auth.interceptor';
+import { authInterceptor } from './interceptors/auth.interceptor';
 import { importProvidersFrom } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { AuthService } from './services/auth.service';
@@ -75,7 +75,8 @@ export const appConfig: ApplicationConfig = {
     { provide: APP_ID, useValue: 'dream-cleaning-app' },
     
     provideHttpClient(
-      withFetch()
+      withFetch(),
+      withInterceptors([authInterceptor])
     ),
     provideZoneChangeDetection({ eventCoalescing: true }),
     
@@ -90,12 +91,7 @@ export const appConfig: ApplicationConfig = {
       }),
     ),
     
-    // Auth interceptor
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
-      multi: true
-    },
+
     
     // App initializer
     {

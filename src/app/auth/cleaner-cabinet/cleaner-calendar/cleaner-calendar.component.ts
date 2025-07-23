@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CleanerService, CleanerCalendarItem, CleanerOrderDetail } from '../../../services/cleaner.service';
+import { AuthService } from '../../../services/auth.service';
 import { DurationUtils } from '../../../utils/duration.utils';
 
 @Component({
@@ -15,10 +16,15 @@ export class CleanerCalendarComponent implements OnInit {
   calendarDays: any[] = [];
   selectedOrderDetail: CleanerOrderDetail | null = null;
   showOrderModal = false;
+  currentUserRole: string = '';
   
-  constructor(private cleanerService: CleanerService) {}
+  constructor(
+    private cleanerService: CleanerService,
+    private authService: AuthService
+  ) {}
 
   ngOnInit() {
+    this.currentUserRole = this.authService.currentUserValue?.role || '';
     this.loadCalendar();
     this.generateCalendar();
   }
@@ -26,6 +32,10 @@ export class CleanerCalendarComponent implements OnInit {
   loadCalendar() {
     this.cleanerService.getCleanerCalendar().subscribe({
       next: (items) => {
+        console.log('Received calendar items:', items);
+        if (items.length > 0) {
+          console.log('Sample item serviceDate:', items[0].serviceDate, 'Type:', typeof items[0].serviceDate);
+        }
         this.calendarItems = items;
         this.generateCalendar();
       },
@@ -43,10 +53,25 @@ export class CleanerCalendarComponent implements OnInit {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       
-      const dateString = date.toISOString().split('T')[0];
-      const ordersForDay = this.calendarItems.filter(item => 
-        item.serviceDate.split('T')[0] === dateString
-      );
+      // Use local date formatting to avoid timezone issues
+      const dateString = this.formatDateToLocalString(date);
+      const ordersForDay = this.calendarItems.filter(item => {
+        // Parse the service date and convert to local date to avoid timezone issues
+        const serviceDate = this.parseServiceDate(item.serviceDate);
+        const serviceDateString = this.formatDateToLocalString(serviceDate);
+        
+        // Debug logging for date comparison
+        if (item.orderId === 1) { // Adjust this to match a specific order ID you're testing
+          console.log(`Comparing dates for order ${item.orderId}:`);
+          console.log(`  Calendar date: ${dateString}`);
+          console.log(`  Service date original: ${item.serviceDate}`);
+          console.log(`  Service date parsed: ${serviceDate}`);
+          console.log(`  Service date formatted: ${serviceDateString}`);
+          console.log(`  Match: ${serviceDateString === dateString}`);
+        }
+        
+        return serviceDateString === dateString;
+      });
       
       calendar.push({
         date: date,
@@ -60,6 +85,23 @@ export class CleanerCalendarComponent implements OnInit {
     }
     
     this.calendarDays = calendar;
+  }
+
+  // Helper method to format date to local string (YYYY-MM-DD)
+  formatDateToLocalString(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Helper method to parse service date string and convert to local date
+  parseServiceDate(serviceDateString: string): Date {
+    // Parse the string to a Date object
+    const date = new Date(serviceDateString);
+    
+    // Create a new date using local components to avoid timezone issues
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
   }
 
   isToday(date: Date): boolean {
