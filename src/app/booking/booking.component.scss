@@ -1,6 +1,5 @@
   .booking-container {
     min-height: 100vh;
-    background-color: #f8f9fa;
     padding: 2rem 10px 2rem 10px;
     
     @media (max-width: 463px) {
@@ -18,7 +17,7 @@
 
     h1 {
       text-align: center;
-      color: #007bff;
+      color: var(--primary-color);
       margin-bottom: 2rem;
       font-size: 2.5rem;
       
@@ -35,8 +34,8 @@
   }
   
   .error-message {
-    background-color: #fee;
-    color: #c33;
+    background-color: var(--soft-red);
+    color: var(--bright-red);
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 0.5rem;
@@ -115,7 +114,7 @@
     }
 
     h2 {
-      color: #007bff;
+      color: var(--primary-color);
       margin-bottom: 1rem;
       font-size: 1.5rem;
       display: flex;
@@ -267,12 +266,12 @@
               min-width: 120px;
               
               &:hover {
-                border-color: #007bff;
+                border-color: var(--primary-color);
               }
               
               &:focus {
                 outline: none;
-                border-color: #007bff;
+                border-color: var(--primary-color);
                 box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
               }
               
@@ -313,11 +312,11 @@
                  }
                  
                  &.selected {
-                   background-color: #007bff;
+                   background-color: var(--primary-color);
                    color: white;
                    
                    &:hover {
-                     background-color: #0056b3;
+                     background-color: var(--primary-color-hover);
                    }
                  }
                  
@@ -348,7 +347,7 @@
               
               &:focus {
                 outline: none;
-                border-color: #007bff;
+                border-color: var(--primary-color);
                 box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
               }
               
@@ -363,7 +362,7 @@
 
   // Required field styling
   .required {
-    color: #dc3545;
+    color: var(--bright-red);
     font-weight: bold;
   }
 
@@ -380,7 +379,7 @@
 
   // Error message styling
   .error-message {
-    color: #dc3545;
+    color: var(--bright-red);
     font-size: 0.875rem;
     margin-top: 0.25rem;
     display: block;
@@ -388,7 +387,7 @@
   
   // Poll error message styling
   .poll-error-message {
-    color: #dc3545;
+    color: var(--bright-red);
     font-size: 0.875rem;
     margin-top: 0.25rem;
     display: block;
@@ -416,18 +415,18 @@
       
       &:focus {
         outline: none;
-        border-color: #007bff;
+        border-color: var(--primary-color);
         box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
       }
       
       &.ng-invalid {
-        border-color: #dc3545;
+        border-color: var(--bright-red);
         box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
       }
       
       // Keep red border when invalid, even when focused
       &.ng-invalid:focus {
-        border-color: #dc3545;
+        border-color: var(--bright-red);
         box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
       }
     }
@@ -446,7 +445,7 @@
           margin-right: 0.5rem;
           
           &:checked + label {
-            color: #007bff;
+            color: var(--primary-color);
             font-weight: 500;
           }
         }
@@ -507,12 +506,12 @@
       
       &:focus {
         outline: none;
-        border-color: #007bff;
+        border-color: var(--primary-color);
         box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
       }
       
       &.ng-invalid.ng-touched {
-        border-color: #dc3545;
+        border-color: var(--bright-red);
         box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25);
       }
       
@@ -556,7 +555,7 @@
 
         .dropdown-toggle {
           width: 100%;
-          background: #f8f9fa;
+          background: #fff;
           border: 1px solid #dee2e6;
           padding: 0.75rem 1rem;
           border-radius: 4px;
@@ -569,13 +568,19 @@
           transition: all 0.3s ease;
 
           &:hover:not(:disabled) {
-            background: #e9ecef;
-            border-color: #007bff;
+            border-color: var(--primary-color);
           }
 
           &:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+          }
+
+          // Pulsating animation when no service type is selected
+          &.pulsate-soft-red {
+            animation: pulsateSoftRed 2s ease-in-out infinite;
+            border-color: var(--soft-red);
+            box-shadow: 0 0 0 2px rgba(244, 230, 230, 0.5);
           }
 
           .chevron {
@@ -613,8 +618,8 @@
             transition: background-color 0.2s ease;
 
             &:hover {
-              background: #f8f9fa;
-              color: #007bff;
+              background: var(--soft-blue);
+              color: var(--primary-color);
             }
 
             &:not(:last-child) {
@@ -636,7 +641,7 @@
     }
     
     .service-type-description {
-      background: #f8f9fa;
+      background: var(--mint-fresh);
       border: 1px solid #e9ecef;
       border-radius: 8px;
       padding: 1.5rem;
@@ -667,13 +672,29 @@
             }
             
             .detail-value {
-              color: #007bff;
+              color: var(--primary-color);
               font-weight: 600;
               font-size: 1rem;
             }
           }
         }
       }
+    }
+  }
+
+  // Pulsating soft-red animation keyframes
+  @keyframes pulsateSoftRed {
+    0% {
+      border-color: var(--soft-red);
+      box-shadow: 0 0 0 2px rgba(244, 230, 230, 0.5);
+    }
+    50% {
+      border-color: var(--bright-red);
+      box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.3);
+    }
+    100% {
+      border-color: var(--soft-red);
+      box-shadow: 0 0 0 2px rgba(244, 230, 230, 0.5);
     }
   }
   
@@ -727,10 +748,15 @@
       flex-direction: column;
       justify-content: space-evenly;
       align-items: center;
-      min-width: 280px;
+      min-width: 255px;
+
+      @media (max-width: 350px) {
+        min-width: auto;
+        width: 200px;
+      }
   
       &:hover {
-        border-color: #007bff;
+        border-color: var(--primary-color);
         box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
       }
   
@@ -761,7 +787,7 @@
   
           &:focus {
             outline: none;
-            border-color: #007bff;
+            border-color: var(--primary-color);
             box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
           }
         }
@@ -773,7 +799,7 @@
           align-items: center;
           gap: 0.5rem;
           padding: 0.5rem 0.75rem;
-          background-color: #f8f9fa;
+          background-color: var(--soft-blue);
           border-radius: 4px;
           height: 40px;
           min-width: 80px;
@@ -781,16 +807,16 @@
   
           .duration-icon {
             font-size: 0.85rem;
-            color: #007bff;
+            color: var(--primary-color);
           }
         }
   
         .service-cost {
-          color: #28a745;
+          color: var(--fresh-green);
           font-weight: 600;
           font-size: 0.9rem;
           padding: 0.5rem 0.75rem;
-          background-color: #d4edda;
+          background-color: var(--mint-fresh);
           border-radius: 4px;
           border: 1px solid #c3e6cb;
           height: 40px;
@@ -806,6 +832,10 @@
           align-items: center;
           gap: 0.75rem;
           width: 100%;
+          
+          @media (max-width: 768px) {
+            flex-wrap: wrap;
+          }
 
           .slider-quantity {
             font-weight: 600;
@@ -840,7 +870,7 @@
               appearance: none;
               width: 18px;
               height: 18px;
-              background: #007bff;
+              background: var(--primary-color);
               border-radius: 50%;
               cursor: pointer;
               border: 2px solid white;
@@ -850,7 +880,7 @@
             &::-moz-range-thumb {
               width: 18px;
               height: 18px;
-              background: #007bff;
+              background: var(--primary-color);
               border-radius: 50%;
               cursor: pointer;
               border: 2px solid white;
@@ -886,8 +916,8 @@
           gap: 1rem;
 
           .service-cost {
-            color: #28a745;
-            background-color: #d4edda;
+            color: var(--fresh-green);
+            background-color: var(--mint-fresh);
             border: 1px solid #c3e6cb;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
@@ -926,7 +956,7 @@
   }
   
   .extra-services-info {
-    background: #f8f9fa;
+    background: var(--mint-fresh);
     border: 1px solid #e9ecef;
     border-radius: 8px;
     padding: 1rem;
@@ -1025,7 +1055,7 @@
     }
     
     strong {
-      color: #007bff;
+      color: var(--primary-color);
     }
   }
   
@@ -1059,13 +1089,13 @@
     }
   
     &:hover {
-      border-color: #007bff;
+      border-color: var(--primary-color);
       box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
     }
   
     &.selected {
-      border-color: #007bff;
-      background-color: #f8f9ff;
+      border-color: var(--primary-color);
+      background-color: var(--soft-blue);
       box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
     }
 
@@ -1217,7 +1247,7 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #007bff;
+        color: var(--primary-color);
         font-size: 1rem;
         flex-shrink: 0;
         width: 50%;
@@ -1246,7 +1276,7 @@
           flex-wrap: wrap;
   
           .extra-price {
-            color: #28a745;
+            color: var(--fresh-green);
             padding: 5px;
             font-size: 14px;
             
@@ -1269,7 +1299,7 @@
   
             .duration-icon {
               font-size: 0.85rem;
-              color: #007bff;
+              color: var(--primary-color);
             }
             
             @media (max-width: 768px) {
@@ -1295,7 +1325,7 @@
           width: 18px;
           height: 18px;
           cursor: pointer;
-          accent-color: #007bff;
+          accent-color: var(--primary-color);
           
           @media (max-width: 768px) {
             width: 16px;
@@ -1369,9 +1399,9 @@
             font-size: 14px;
 
             &:hover:not(:disabled) {
-              background-color: #007bff;
+              background-color: var(--primary-color);
               color: white;
-              border-color: #007bff;
+              border-color: var(--primary-color);
             }
 
             &:disabled {
@@ -1494,12 +1524,12 @@
     }
   
     &:hover {
-      border-color: #007bff;
+      border-color: var(--primary-color);
     }
   
     &.selected {
-      border-color: #007bff;
-      background-color: #f0f8ff;
+      border-color: var(--primary-color);
+      background-color: var(--soft-blue);
     }
   
     h4 {
@@ -1523,7 +1553,7 @@
 
   
     .discount {
-      background-color: #28a745;
+      background-color: var(--fresh-green);
       color: white;
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
@@ -1673,8 +1703,8 @@
         }
   
         .apply-btn {
-          background-color: #ffc107;
-          color: #212529;
+          background-color: var(--soft-yellow);
+          color: var(--soft-yellow-text);
           border: none;
           padding: 0.5rem 1rem;
           border-radius: 4px;
@@ -1703,7 +1733,7 @@
 
         .gift-card-icon {
           font-size: 1.5rem;
-          background-color: #4caf50;
+          background: var(--btn-secondary);
           color: white;
           width: 40px;
           height: 40px;
@@ -1717,7 +1747,7 @@
           flex: 1;
 
           .gift-card-title {
-            color: #2e7d32;
+            color: var(--fresh-green);
             font-weight: 600;
             margin-bottom: 0.25rem;
           }
@@ -1725,7 +1755,7 @@
           .gift-card-amounts {
             display: flex;
             gap: 1rem;
-            color: #388e3c;
+            color: var(--fresh-green);
             font-size: 0.9rem;
 
             .amount-using {
@@ -1751,6 +1781,13 @@
       .promo-input {
         display: flex;
         gap: 1rem;
+
+        @media (max-width: 400px) {
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+        }
   
         input {
           flex: 1;
@@ -1760,7 +1797,7 @@
         }
   
         button {
-          background-color: #007bff;
+          background: var(--btn-primary);
           color: white;
           border: none;
           padding: 0.5rem 1rem;
@@ -1768,7 +1805,7 @@
           cursor: pointer;
   
           &:hover {
-            background-color: #0056b3;
+            background: var(--btn-primary-hover);
           }
         }
       }
@@ -1776,13 +1813,13 @@
   
     .discount-card {
       &.applied {
-        border-color: #28a745;
-        background-color: #f0f8f0;
+        border-color: var(--fresh-green);
+        background-color: var(--mint-fresh);
       }
     }
   
     .remove-btn {
-      background-color: #dc3545;
+      background-color: var(--bright-red);
       color: white;
       border: none;
       padding: 0.5rem 1rem;
@@ -1862,7 +1899,7 @@
     }
 
     .special-offer-card {
-      background-color: #fff3cd;
+      background: var(--soft-yellow-background);
       border: 1px solid #ffeeba;
       border-radius: 8px;
       padding: 0.75rem 1rem;
@@ -1936,7 +1973,7 @@
 
           h4 {
             margin: 0;
-            color: #856404;
+            color: var(--soft-yellow-text);
             font-size: 1.1rem;
             font-weight: 600;
             line-height: 1.2;
@@ -1966,7 +2003,7 @@
 
             p {
               margin: 0;
-              color: #856404;
+              color: var(--soft-yellow-text);
               font-size: 0.95rem;
               
               @media (max-width: 768px) {
@@ -1979,7 +2016,7 @@
             }
 
             .offer-discount {
-              color: #28a745;
+              color: var(--fresh-green);
               font-weight: 600;
               font-size: 0.95rem;
               
@@ -2019,8 +2056,8 @@
         }
 
         .apply-btn {
-          background-color: #ffc107;
-          color: #212529;
+          background: var(--btn-secondary);
+          color: #fff;
           border: none;
           padding: 0.5rem 1rem;
           border-radius: 4px;
@@ -2040,7 +2077,7 @@
           }
 
           &:hover:not(:disabled) {
-            background-color: #e0a800;
+            background: var(--btn-secondary-hover);
           }
 
           &:disabled {
@@ -2050,7 +2087,7 @@
         }
 
         .remove-btn {
-          background-color: #dc3545;
+          background-color: var(--bright-red);
           color: white;
           border: none;
           padding: 0.5rem 1rem;
@@ -2070,7 +2107,7 @@
           }
 
           &:hover {
-            background-color: #c82333;
+            background: var(--btn-danger-hover);
           }
         }
       }
@@ -2181,12 +2218,12 @@
         min-width: 60px;
   
         &:hover {
-          border-color: #007bff;
+          border-color: var(--primary-color);
         }
   
         &.selected {
-          border-color: #007bff;
-          background-color: #007bff;
+          border-color: var(--primary-color);
+          background-color: var(--primary-color);
           color: white;
         }
         
@@ -2258,7 +2295,7 @@
   }
   
   .clear-all-btn {
-    background-color: #dc3545;
+    background: var(--btn-danger);
     color: white;
     border: none;
     padding: 8px 16px;
@@ -2270,7 +2307,7 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     
     &:hover {
-      background-color: #c82333;
+      background: var(--btn-danger-hover);
       transform: translateY(-1px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
@@ -2307,7 +2344,7 @@
   
       &:focus {
         outline: none;
-        border-color: #007bff;
+        border-color: var(--primary-color);
       }
     }
   }
@@ -2417,13 +2454,13 @@
           
           &:focus {
             outline: none;
-            border-color: #007bff;
+            border-color: var(--primary-color);
           }
         }
         
         .clear-btn {
           padding: 0.75rem 1rem;
-          background-color: #6c757d;
+          background: var(--btn-danger);
           color: white;
           border: none;
           border-radius: 4px;
@@ -2449,7 +2486,7 @@
           }
           
           &:hover {
-            background-color: #5a6268;
+            background: var(--btn-danger-hover);
           }
         }
       }
@@ -2460,7 +2497,7 @@
   .sms-consent-section {
     margin: 1rem 0;
     padding: 1rem;
-    background: #f8f9fa;
+    background: var(--soft-blue);
     border-radius: 8px;
     border: 1px solid #e9ecef;
     
@@ -2532,7 +2569,7 @@
     }
 
     .checkbox-label a {
-      color: #007bff;
+      color: var(--primary-color);
       text-decoration: none;
     }
 
@@ -2541,12 +2578,12 @@
     }
 
     .form-checkbox.error {
-      border-color: #dc3545;
+      border-color: var(--bright-red);
     }
 
     .error-message {
       display: block;
-      color: #dc3545;
+      color: var(--bright-red);
       font-size: 13px;
       margin-top: 5px;
       
@@ -2571,7 +2608,7 @@
   .cancellation-consent-section {
     margin: 1rem 0;
     padding: 1rem;
-    background: #f8f9fa;
+    background: var(--soft-blue);
     border-radius: 8px;
     border: 1px solid #e9ecef;
     
@@ -2643,12 +2680,12 @@
     }
 
     .form-checkbox.error {
-      border-color: #dc3545;
+      border-color: var(--bright-red);
     }
 
     .error-message {
       display: block;
-      color: #dc3545;
+      color: var(--bright-red);
       font-size: 13px;
       margin-top: 5px;
       
@@ -2673,9 +2710,22 @@
   .payment-note {
     margin-top: 1.5rem;
     padding: 1rem;
-    background: #fff3cd;
+    background: var(--soft-yellow-background);
     border-radius: 8px;
-    border: 1px solid #ffeaa7;
+    border: 1px solid var(--soft-yellow);
+    position: relative;
+    overflow: hidden;
+
+    &::before{
+      content: '';
+      position: absolute;
+      top: -80%;
+      left: -5%;
+      width: 200px;
+      height: 200px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+    }
     
     @media (max-width: 768px) {
       margin-top: 1.25rem;
@@ -2701,11 +2751,13 @@
       line-height: 1.5;
       color: #333;
       text-align: left;
+      position: relative;
     }
 
     .note-label {
-      color: #007bff;
+      color: var(--primary-color);
       font-weight: 600;
+      position: relative;
     }
   }
 
@@ -2727,7 +2779,7 @@
     }
   
       .book-now-btn {
-    background-color: #28a745;
+    background: var(--btn-secondary);
     color: white;
     border: none;
     padding: 1rem 3rem;
@@ -2757,9 +2809,9 @@
     }
   
       &:hover:not(:disabled) {
-        background-color: #218838;
+        background: var(--btn-secondary-hover);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        box-shadow: var(--btn-secondary-shadow-hover);
       }
   
       &:disabled,
@@ -2857,8 +2909,8 @@
     @media (max-width: 1200px) {
       padding: 2rem 1rem 1rem 1rem;
       border-radius: 8px;
-      background-color: #f8f9ff;
-      border: 1px solid #007bff;
+      background-color: var(--soft-blue);
+      border: 1px solid var(--primary-color);
     }
     
     @media (max-width: 768px) {
@@ -2983,7 +3035,7 @@
         }
   
         .discount {
-          color: #28a745;
+          color: var(--fresh-green);
         }
       }
   
@@ -3100,7 +3152,7 @@
       .chevron-icon {
         width: 24px;
         height: 24px;
-        color: #007bff;
+        color: var(--primary-color);
         
         @media (max-width: 768px) {
           width: 20px;
@@ -3116,7 +3168,7 @@
       .close-icon {
         width: 24px;
         height: 24px;
-        color: #dc3545;
+        color: var(--bright-red);
         
         @media (max-width: 768px) {
           width: 20px;
@@ -3152,7 +3204,7 @@
   }
 
   .cleaning-type-display {
-    background: #f8f9fa;
+    background: var(--soft-blue);
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1.5rem;
@@ -3170,13 +3222,13 @@
       font-weight: 600;
       
       &.regular {
-        background: #e7f3ff;
-        color: #007bff;
+        background: var(--soft-blue);
+        color: var(--primary-color);
       }
       
       &.deep {
-        background: #fff3cd;
-        color: #856404;
+        background: var(--soft-yellow);
+        color: var(--soft-yellow-text);
       }
       
       &.super-deep {
@@ -3187,12 +3239,12 @@
   }
 
   .active-subscription-notice {
-    background: #e3f2fd;
-    border: 1px solid #1976d2;
+    background: var(--soft-blue);
+    border: 1px solid var(--primary-color);
     border-radius: 8px;
     padding: 12px 16px;
     margin-bottom: 20px;
-    color: #1565c0;
+    color: var(--primary-color);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -3202,24 +3254,24 @@
     }
   }
 
-  .subscription-card {
-    &.user-subscription {
-      border: 2px solid #4caf50;
-      background: #f1f8e9;
+      .subscription-card {
+      &.user-subscription {
+        border: 2px solid var(--fresh-green);
+        background: var(--mint-fresh);
+      }
+      
+      .current-subscription {
+        background: var(--fresh-green);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-top: 8px;
+        display: inline-block;
+      }
     }
-    
-    .current-subscription {
-      background: #4caf50;
-      color: white;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      margin-top: 8px;
-      display: inline-block;
-    }
-  }
 
   .next-order-info { 
     display: flex;
@@ -3234,25 +3286,25 @@
     
     .next-order-title {
       font-weight: 600;
-      color: #1976d2;
+      color: var(--primary-color);
     }
     
     .next-total {
       font-weight: 600;
-      color: #4caf50;
+      color: var(--fresh-green);
     }
   }
 
   .subscription-discount {
     .discount {
-      color: #4caf50;
+      color: var(--fresh-green);
       font-weight: 600;
     }
   }
 
   // Profile page styles
   .subscription-active {
-    color: #4caf50;
+    color: var(--fresh-green);
     font-weight: 600;
     
     .subscription-details {
@@ -3284,7 +3336,7 @@
       
       &:focus {
         outline: none;
-        border-color: #007bff;
+        border-color: var(--primary-color);
       }
     }
   }
@@ -3310,7 +3362,7 @@
       color: #333;
       
       .required {
-        color: #e74c3c;
+        color: var(--bright-red);
         margin-left: 2px;
       }
     }
@@ -3327,7 +3379,7 @@
       
       &:focus {
         outline: none;
-        border-color: #007bff;
+        border-color: var(--primary-color);
         box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
       }
     }
@@ -3356,7 +3408,7 @@
   
   .poll-summary {
     .summary-card {
-      background: #f8f9fa;
+      background: var(--soft-blue);
       border: 1px solid #e9ecef;
       border-radius: 8px;
       padding: 1.5rem;
@@ -3398,7 +3450,7 @@
 .photo-upload-section {
   padding: 2rem;
   background: white;
-  border: 2px dashed #28a745;
+  border: 2px dashed var(--fresh-green);
   border-radius: 12px;
   text-align: center;
   transition: all 0.3s ease;
@@ -3426,8 +3478,8 @@
       align-items: center;
       gap: 5px;
       padding: 5px;
-      background: #f8f9fa;
-      color: #007bff;
+      background: var(--soft-blue);
+      color: var(--primary-color);
       border: 2px solid #e9ecef;
       border-radius: 8px;
       cursor: pointer;
@@ -3435,8 +3487,8 @@
       min-width: 140px;
       
       &:hover {
-        border-color: #007bff;
-        background: #e3f2fd;
+        border-color: var(--primary-color);
+        background: var(--soft-blue);
         transform: translateY(-2px);
         box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
       }
@@ -3446,12 +3498,12 @@
       }
       
       &.camera {
-        color: #28a745;
+        color: var(--fresh-green);
         border-color: #e9ecef;
         
         &:hover {
-          border-color: #28a745;
-          background: #e8f5e9;
+          border-color: var(--fresh-green);
+          background: var(--mint-fresh);
         }
       }
       
@@ -3604,11 +3656,11 @@
     font-size: 1rem;
     background: white;
     
-    &:focus {
-      outline: none;
-      border-color: #007bff;
-      box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-    }
+          &:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+      }
     
     &::placeholder {
       color: #999;
@@ -3679,5 +3731,216 @@
     margin-top: 1rem;
     padding: 0.75rem;
     font-size: 0.85rem;
+  }
+}
+
+// FAQ Button within Booking Summary
+.faq-button-container {
+  margin-top: 1rem;
+  width: 100%;
+  
+  .faq-button {
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    
+    .faq-button-content {
+      background: var(--soft-lavender);
+      color: white;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(158, 168, 223, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+      width: 100%;
+
+      &:hover{
+        background: var(--soft-lavender-background);
+      }
+      
+      @media (max-width: 768px) {
+        padding: 0.8rem;
+        font-size: 0.9rem;
+      }
+      
+      .faq-text {
+        white-space: nowrap;
+      }
+      
+      .faq-plus {
+        width: 1.2rem;
+        height: 1.2rem;
+        transition: transform 0.3s ease;
+        flex-shrink: 0;
+        
+        &.expanded {
+          transform: rotate(45deg);
+        }
+        
+        @media (max-width: 768px) {
+          width: 1rem;
+          height: 1rem;
+        }
+      }
+    }
+  }
+}
+
+.faq-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  
+  &.show {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .faq-content {
+    background: var(--soft-lavender-background-light);
+    border-radius: 12px;
+    max-width: 800px;
+    width: 90%;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    
+    @media (max-width: 768px) {
+      width: 95%;
+      max-height: 95vh;
+      border-radius: 8px;
+    }
+    
+    .faq-header {
+      background: var(--soft-lavender);
+      color: white;
+      padding: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      
+      @media (max-width: 768px) {
+        padding: 1rem;
+      }
+      
+      h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-weight: 600;
+        
+        @media (max-width: 768px) {
+          font-size: 1.2rem;
+        }
+      }
+      
+      .faq-close {
+        background: none;
+        border: none;
+        color: white;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s ease;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.1);
+        }
+        
+        svg {
+          width: 1.5rem;
+          height: 1.5rem;
+          
+          @media (max-width: 768px) {
+            width: 1.2rem;
+            height: 1.2rem;
+          }
+        }
+      }
+    }
+    
+    .faq-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+      
+      @media (max-width: 768px) {
+        padding: 1rem;
+      }
+      
+      .faq-item {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid #ccc;
+        
+        &:last-child {
+          border-bottom: none;
+          margin-bottom: 0;
+        }
+        
+        h3 {
+          color: #2c3e50;
+          font-size: 1.1rem;
+          font-weight: 600;
+          margin: 0 0 0.75rem 0;
+          line-height: 1.4;
+          
+          @media (max-width: 768px) {
+            font-size: 1rem;
+          }
+        }
+        
+        p {
+          color: #333;
+          line-height: 1.6;
+          margin: 0;
+          font-size: 0.95rem;
+          
+          @media (max-width: 768px) {
+            font-size: 0.9rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Mobile responsive improvements for FAQ
+@media (max-width: 768px) {
+  .faq-button-container {
+    .faq-button {
+      .faq-button-content {
+        box-shadow: 0 2px 6px rgba(158, 168, 223, 0.3);
+      }
+    }
+  }
+  
+  .faq-modal {
+    .faq-content {
+      .faq-body {
+        .faq-item {
+          margin-bottom: 1.5rem;
+          padding-bottom: 1rem;
+        }
+      }
+    }
   }
 }

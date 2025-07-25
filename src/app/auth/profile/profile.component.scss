@@ -11,23 +11,26 @@
     margin-bottom: 1.5rem;
   
     h1 {
-      color: #333;
+      color: var(--primary-color);
       margin: 0;
       font-size: 1.5rem;
     }
   
     .logout-btn {
-      background-color: #dc3545;
+      background: var(--btn-danger);
       color: white;
       border: none;
       padding: 0.4rem 0.8rem;
       border-radius: 4px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      transition: all 0.3s ease;
       font-size: 0.9rem;
-  
+      box-shadow: var(--btn-danger-shadow);
+
       &:hover {
-        background-color: #c82333;
+        background: var(--btn-danger-hover);
+        transform: translateY(-1px);
+        box-shadow: var(--btn-danger-shadow-hover);
       }
     }
   }
@@ -69,7 +72,7 @@
   
       h2 {
         margin: 0 0 10px 0;
-        color: #333;
+        color: var(--primary-color);
         font-size: 1.2rem;
       }
   
@@ -83,7 +86,6 @@
       .change-email-btn,
       .change-password-btn {
         padding: 0.5rem 1rem;
-        background-color: #28a745;
         color: white;
         text-decoration: none;
         border-radius: 4px;
@@ -94,7 +96,6 @@
         white-space: nowrap;
 
         &:hover {
-          background-color: #218838;
           transform: translateY(-1px);
         }
 
@@ -104,16 +105,28 @@
       }
 
       .change-email-btn {
-        background-color: #17a2b8;
+        background: var(--btn-secondary);
+        box-shadow: var(--btn-secondary-shadow);
 
         &:hover {
-          background-color: #138496;
+          background: var(--btn-secondary-hover);
+          box-shadow: var(--btn-secondary-shadow-hover);
+        }
+      }
+
+      .change-password-btn {
+        background: var(--btn-danger);
+        box-shadow: var(--btn-danger-shadow);
+
+        &:hover {
+          background: var(--btn-danger-hover);
+          box-shadow: var(--btn-danger-shadow-hover);
         }
       }
 
       .edit-btn {
         padding: 0.5rem 1rem;
-        background-color: #007bff;
+        background: var(--btn-primary);
         color: white;
         border: none;
         border-radius: 4px;
@@ -121,10 +134,12 @@
         cursor: pointer;
         transition: all 0.3s ease;
         white-space: nowrap;
+        box-shadow: var(--btn-primary-shadow);
 
         &:hover {
-          background-color: #0056b3;
+          background: var(--btn-primary-hover);
           transform: translateY(-1px);
+          box-shadow: var(--btn-primary-shadow-hover);
         }
 
         &:active {
@@ -133,31 +148,36 @@
       }
 
       .add-btn {
-        background-color: #28a745;
+        background: var(--btn-secondary);
         color: white;
         border: none;
         padding: 0.4rem 0.8rem;
         border-radius: 4px;
         cursor: pointer;
-        transition: background-color 0.3s;
+        transition: all 0.3s ease;
         font-size: 0.9rem;
+        box-shadow: var(--btn-secondary-shadow);
   
         &:hover {
-          background-color: #218838;
+          background: var(--btn-secondary-hover);
+          transform: translateY(-1px);
+          box-shadow: var(--btn-secondary-shadow-hover);
         }
 
         &:disabled {
           opacity: 0.5;
           cursor: not-allowed;
-          background-color: #ccc;
+          background: #ccc;
+          box-shadow: none;
+          transform: none;
         }
       }
     }
   }
   
   .info-message {
-    background-color: #f0f8ff;
-    color: #0066cc;
+    background-color: var(--mint-fresh);
+    color: var(--primary-color);
     padding: 0.75rem;
     border-radius: 4px;
     margin-bottom: 1rem;
@@ -193,7 +213,7 @@
       }
   
       .subscription-active {
-        color: #28a745;
+        color: var(--fresh-green);
         font-weight: 600;
       }
     }
@@ -306,7 +326,7 @@
   
         &:focus {
           outline: none;
-          border-color: #007bff;
+          border-color: var(--primary-color);
         }
       }
 
@@ -343,22 +363,25 @@
       margin-top: 1rem;
   
       .save-btn {
-        background-color: #28a745;
+        background: var(--btn-secondary);
         color: white;
         border: none;
         padding: 0.4rem 1rem;
         border-radius: 4px;
         cursor: pointer;
-        transition: background-color 0.3s;
+        transition: all 0.3s ease;
         font-size: 0.9rem;
+        box-shadow: var(--btn-secondary-shadow);
   
         &:hover {
-          background-color: #218838;
+          background: var(--btn-secondary-hover);
+          transform: translateY(-1px);
+          box-shadow: var(--btn-secondary-shadow-hover);
         }
       }
   
       .cancel-btn {
-        background-color: #6c757d;
+        background: #6c757d;
         color: white;
         border: none;
         padding: 0.4rem 1rem;
@@ -402,12 +425,12 @@
         display: flex;
         gap: 1rem;
         margin: 0.5rem 0;
-        color: #007bff;
+        color: var(--primary-color);
         font-size: 0.9rem;
   
         span {
           padding: 0.25rem 0.5rem;
-          background-color: #e7f3ff;
+          background-color: var(--mint-fresh);
           border-radius: 4px;
         }
       }
@@ -425,30 +448,36 @@
         margin-top: 1rem;
   
         .edit-btn {
-          background-color: #007bff;
+          background: var(--btn-primary);
           color: white;
           border: none;
           padding: 0.5rem 1rem;
           border-radius: 4px;
           cursor: pointer;
-          transition: background-color 0.3s;
+          transition: all 0.3s ease;
+          box-shadow: var(--btn-primary-shadow);
   
           &:hover {
-            background-color: #0056b3;
+            background: var(--btn-primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--btn-primary-shadow-hover);
           }
         }
   
         .delete-btn {
-          background-color: #dc3545;
+          background: var(--btn-danger);
           color: white;
           border: none;
           padding: 0.5rem 1rem;
           border-radius: 4px;
           cursor: pointer;
-          transition: background-color 0.3s;
+          transition: all 0.3s ease;
+          box-shadow: var(--btn-danger-shadow);
   
           &:hover {
-            background-color: #c82333;
+            background: var(--btn-danger-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--btn-danger-shadow-hover);
           }
         }
       }
@@ -487,7 +516,7 @@
 
             &:focus {
               outline: none;
-              border-color: #007bff;
+              border-color: var(--primary-color);
             }
           }
 
@@ -504,21 +533,24 @@
         margin-top: 1.5rem;
 
         .save-btn {
-          background-color: #28a745;
+          background: var(--btn-secondary);
           color: white;
           border: none;
           padding: 0.5rem 1.5rem;
           border-radius: 4px;
           cursor: pointer;
-          transition: background-color 0.3s;
+          transition: all 0.3s ease;
+          box-shadow: var(--btn-secondary-shadow);
 
           &:hover {
-            background-color: #218838;
+            background: var(--btn-secondary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--btn-secondary-shadow-hover);
           }
         }
 
         .cancel-btn {
-          background-color: #6c757d;
+          background: #6c757d;
           color: white;
           border: none;
           padding: 0.5rem 1.5rem;
@@ -546,13 +578,13 @@
     justify-content: center;
   
     .nav-link {
-      color: #007bff;
+      color: var(--primary-color);
       text-decoration: none;
       font-weight: 600;
       transition: color 0.3s;
   
       &:hover {
-        color: #0056b3;
+        color: var(--primary-color-hover);
         text-decoration: underline;
       }
     }
@@ -592,7 +624,7 @@
         }
 
         .order-amount {
-          color: #28a745;
+          color: var(--fresh-green);
           font-weight: 600;
           min-width: 80px;
         }
@@ -606,8 +638,8 @@
           text-align: center;
 
           &.active {
-            background-color: #d4edda;
-            color: #155724;
+            background-color: var(--mint-fresh);
+            color: var(--fresh-green);
           }
 
           &.done {
@@ -623,16 +655,19 @@
       }
 
       .view-details-btn {
-        background-color: #007bff;
+        background: var(--btn-primary);
         color: white;
         border: none;
         padding: 0.5rem 1rem;
         border-radius: 4px;
         cursor: pointer;
-        transition: background-color 0.3s;
+        transition: all 0.3s ease;
+        box-shadow: var(--btn-primary-shadow);
 
         &:hover {
-          background-color: #0056b3;
+          background: var(--btn-primary-hover);
+          transform: translateY(-1px);
+          box-shadow: var(--btn-primary-shadow-hover);
         }
       }
     }
@@ -649,16 +684,19 @@
       border-top: 1px solid #eee;
 
       .view-all-btn {
-        background-color: #6c757d;
+        background: var(--btn-primary);
         color: white;
         border: none;
         padding: 0.5rem 1.5rem;
         border-radius: 4px;
         cursor: pointer;
-        transition: background-color 0.3s;
+        transition: all 0.3s ease;
+        box-shadow: var(--btn-primary-shadow);
 
         &:hover {
-          background-color: #5a6268;
+          background: var(--btn-primary-hover);
+          transform: translateY(-1px);
+          box-shadow: var(--btn-primary-shadow-hover);
         }
       }
     }

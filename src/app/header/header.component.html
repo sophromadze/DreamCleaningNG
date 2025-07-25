@@ -123,7 +123,6 @@
                 </a>
                 <a routerLink="/profile/orders" (click)="closeAllMenus()">My Orders</a>
                 <a routerLink="/gift-cards" (click)="closeAllMenus()">Gift Cards</a>
-                <a routerLink="/change-password" (click)="closeAllMenus()">Change Password</a>
                 <a routerLink="/admin"
                    (click)="closeAllMenus()"
                    *ngIf="currentUser?.role === 'SuperAdmin' || currentUser?.role === 'Admin' || currentUser?.role === 'Moderator'">

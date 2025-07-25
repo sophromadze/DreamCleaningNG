@@ -4,10 +4,39 @@
 
 /* Color Variables */
 :root {
-  --main-color: #007bff;
-  --secondary-color: #667eea;
-  --accent-color: #764ba2;
   --main-hero-image: url('/images/mainImage.webp');
+  
+  /* New color palette */
+  --primary-color: #007bff;
+  --soft-lavender: #9ea8df;
+  --mint-fresh: #e6f4f1;
+  --soft-blue: #e3f2fd;
+  --soft-red: #f4e6e6;
+  --soft-yellow: #eee8a9;
+  --soft-yellow-text: #856404;
+  --bright-red: #ff6b6b;
+  --fresh-green: #28a745;
+  --mint-fresh-border: #beddd7;
+  --primary-color-hover: #0056b3;
+  --soft-lavender-background: linear-gradient(135deg, #9ea8df 0%, #b8c0e6 100%);
+  --soft-lavender-background-light: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  --soft-yellow-background: linear-gradient(135deg, #eee8a9 0%, #f5f3d8 100%);
+  
+  /* Button gradient colors */
+  --btn-primary: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  --btn-primary-hover: linear-gradient(135deg, #339cff 0%, #1a82ff 100%);
+  --btn-secondary: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+  --btn-secondary-hover: linear-gradient(135deg, #48d164 0%, #34ce57 100%);
+  --btn-danger: linear-gradient(135deg, #ff6b6b 0%, #ff5252 100%);
+  --btn-danger-hover: linear-gradient(135deg, #ff8787 0%, #ff7979 100%);
+  
+  /* Button shadow colors */
+  --btn-primary-shadow: 0 4px 5px rgba(0, 123, 255, 0.3);
+  --btn-primary-shadow-hover: 0 8px 15px rgba(0, 123, 255, 0.4);
+  --btn-secondary-shadow: 0 4px 5px rgba(40, 167, 69, 0.3);
+  --btn-secondary-shadow-hover: 0 8px 15px rgba(40, 167, 69, 0.4);
+  --btn-danger-shadow: 0 4px 5px rgba(255, 107, 107, 0.3);
+  --btn-danger-shadow-hover: 0 8px 15px rgba(255, 107, 107, 0.4);
 }
 
 *{
@@ -107,4 +136,65 @@ asl-google-signin-button div[role="button"] > div > div > div {
         max-width: 100%;
         border-radius: 15px;
     }
+}
+
+/* Button Styles */
+.btn-primary {
+    background: var(--btn-primary);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-primary:hover {
+    background: var(--btn-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--btn-primary-shadow-hover);
+}
+
+.btn-secondary {
+    background: var(--btn-secondary);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-secondary:hover {
+    background: var(--btn-secondary-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--btn-secondary-shadow-hover);
+}
+
+.btn-danger {
+    background: var(--btn-danger);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-danger:hover {
+    background: var(--btn-danger-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--btn-danger-shadow-hover);
 }

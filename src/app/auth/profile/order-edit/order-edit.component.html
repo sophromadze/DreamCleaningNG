@@ -328,7 +328,7 @@
                   [disabled]="!orderForm.valid || isSaving || additionalAmount < 0">
             {{ isSaving ? 'Saving...' : 'Save Changes' }}
           </button>
-          <a [routerLink]="['/order', order.id]" class="cancel-btn">Cancel</a>
+          <a [routerLink]="['/order', order.id]" class="btn-danger">Cancel Editing</a>
         </div>
       </form>
 
@@ -456,8 +456,8 @@
               [disabled]="isProcessingPayment || !!cardError">
         {{ isProcessingPayment ? 'Processing...' : 'Pay $' + additionalAmount.toFixed(2) }}
       </button>
-      <button class="cancel-btn" (click)="closePaymentModal()" 
-              [disabled]="isProcessingPayment">Cancel</button>
+      <button class="btn-danger" (click)="closePaymentModal()" 
+              [disabled]="isProcessingPayment">Cancel Edit</button>
     </div>
     
     <div class="error-message" *ngIf="paymentErrorMessage">

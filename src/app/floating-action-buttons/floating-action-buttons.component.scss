@@ -112,26 +112,29 @@
 }
 
 .book-button {
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  background: var(--btn-primary);
   
   &:hover {
-    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    background: var(--btn-primary-hover);
+    box-shadow: var(--btn-primary-shadow-hover);
   }
 }
 
 .call-button {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: var(--btn-secondary);
   
   &:hover {
-    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+    background: var(--btn-secondary-hover);
+    box-shadow: var(--btn-secondary-shadow-hover);
   }
 }
 
 .email-button {
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  background: var(--btn-danger);
   
   &:hover {
-    background: linear-gradient(135deg, #e55a2b 0%, #e0851a 100%);
+    background: var(--btn-danger-hover);
+    box-shadow: var(--btn-danger-shadow-hover);
   }
 }
 
@@ -157,7 +160,7 @@
 .toggle-button {
   width: 30px;
   height: 120px;
-  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  background: var(--btn-primary);
   border: none;
   border-radius: 15px 0 0 15px;
   cursor: pointer;
@@ -169,7 +172,7 @@
   color: white;
   
   &:hover {
-    background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+    background: var(--btn-primary-hover);
     box-shadow: -4px 6px 20px rgba(0, 0, 0, 0.25);
   }
   
@@ -255,20 +258,22 @@
 }
 
 .call-button {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background: var(--btn-secondary);
   color: white;
   
   &:hover {
-    background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
+    background: var(--btn-secondary-hover);
+    box-shadow: var(--btn-secondary-shadow-hover);
   }
 }
 
 .email-button {
-  background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+  background: var(--btn-danger);
   color: white;
   
   &:hover {
-    background: linear-gradient(135deg, #e55a2b 0%, #e0851a 100%);
+    background: var(--btn-danger-hover);
+    box-shadow: var(--btn-danger-shadow-hover);
   }
 }
 

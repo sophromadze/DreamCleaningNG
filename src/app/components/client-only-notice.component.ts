@@ -34,7 +34,7 @@ import { Router } from '@angular/router';
     }
     
     .btn-primary {
-      background: #007bff;
+      background: var(--primary-color);
       color: white;
       border: none;
       padding: 0.5rem 1rem;
@@ -44,7 +44,7 @@ import { Router } from '@angular/router';
     }
     
     .btn-primary:hover {
-      background: #0056b3;
+      background: var(--primary-color-hover);
     }
   `]
 })

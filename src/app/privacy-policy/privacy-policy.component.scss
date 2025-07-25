@@ -7,7 +7,7 @@
     color: #1f2937;
     font-size: 2.5rem;
     margin-bottom: 10px;
-    border-bottom: 3px solid #3b82f6;
+    border-bottom: 3px solid var(--primary-color);
     padding-bottom: 10px;
   }
 
@@ -49,7 +49,7 @@
   }
 
   a {
-    color: #3b82f6;
+    color: var(--primary-color);
     text-decoration: none;
     
     &:hover {
@@ -67,40 +67,40 @@
   }
 
   .sms-section {
-    background-color: #dcfce7;
+    background-color: var(--mint-fresh);
     padding: 20px;
     border-radius: 8px;
     margin: 20px 0;
-    border: 1px solid #86efac;
+    border: 1px solid var(--mint-fresh-border);
 
     .sms-highlight {
-      color: #065f46;
+      color: var(--fresh-green);
       font-size: 1.1rem;
       margin-bottom: 15px;
     }
   }
 
   .highlight-box {
-    background-color: #fef3c7;
+    background-color: var(--soft-yellow);
     padding: 15px;
-    border-left: 4px solid #f59e0b;
+    border-left: 4px solid var(--soft-yellow-text);
     margin: 20px 0;
     
     p {
       margin-bottom: 0;
-      color: #92400e;
+      color: var(--soft-yellow-text);
     }
   }
 
   .contact-info {
-    background-color: #e0e7ff;
+    background: var(--soft-lavender-background-light);
     padding: 20px;
     border-radius: 8px;
     margin-top: 30px;
 
     p {
       margin-bottom: 10px;
-      color: #312e81;
+      color: var(--soft-lavender-background);
       
       &:last-child {
         margin-bottom: 0;

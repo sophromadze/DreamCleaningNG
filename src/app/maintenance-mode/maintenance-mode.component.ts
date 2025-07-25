@@ -36,7 +36,7 @@ import { MaintenanceModeService, MaintenanceModeStatus } from '../services/maint
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      background: var(--soft-blue);
       padding: 20px;
     }
 
@@ -102,13 +102,13 @@ import { MaintenanceModeService, MaintenanceModeStatus } from '../services/maint
     }
 
     .contact-info a {
-      color: #007bff;
+      color: var(--primary-color);
       text-decoration: none;
       transition: color 0.3s ease;
     }
 
     .contact-info a:hover {
-      color: #0056b3;
+      color: var(--primary-color-hover);
       text-decoration: underline;
     }
 

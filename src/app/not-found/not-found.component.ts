@@ -46,7 +46,7 @@ import { RouterModule } from '@angular/router';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      background: var(--soft-blue);
       padding: 20px;
     }
 
@@ -62,7 +62,7 @@ import { RouterModule } from '@angular/router';
     .error-code {
       font-size: 120px;
       font-weight: 900;
-      color: #007bff;
+      color: var(--primary-color);
       line-height: 1;
       margin-bottom: 20px;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
@@ -112,13 +112,13 @@ import { RouterModule } from '@angular/router';
     }
 
     .btn-primary {
-      background: #007bff;
+      background: var(--btn-primary);
       color: white;
       
       &:hover {
-        background: #0056b3;
+        background: var(--btn-primary-hover);
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        box-shadow: var(--btn-primary-shadow);
       }
     }
 
@@ -162,7 +162,7 @@ import { RouterModule } from '@angular/router';
     }
 
     .helpful-links a {
-      color: #007bff;
+      color: var(--primary-color);
       text-decoration: none;
       font-weight: 500;
       padding: 8px 16px;
@@ -171,8 +171,7 @@ import { RouterModule } from '@angular/router';
       display: inline-block;
       
       &:hover {
-        background: #f8f9fa;
-        color: #0056b3;
+        color: var(--primary-color-hover);
         transform: translateY(-1px);
       }
     }

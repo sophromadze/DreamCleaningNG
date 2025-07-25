@@ -1,31 +1,54 @@
 .post-construction-cleaning-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 20px;
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 20px;
+  }
+
   font-family: 'Arial', sans-serif;
   line-height: 1.6;
   color: #333;
 
   .hero-section {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    background: var(--btn-primary);
     color: white;
     padding: 30px 20px;
     text-align: center;
     margin-bottom: 25px;
-    border-radius: 8px;
 
-    .hero-content {
-      h1 {
-        font-size: 2.5rem;
-        font-weight: 700;
-        margin-bottom: 13px;
-        line-height: 1.2;
-      }
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
 
-      .subtitle {
-        font-size: 1.2rem;
-        opacity: 0.9;
-        margin: 0;
+    .subtitle {
+      font-size: 1.3rem;
+      font-weight: 500;
+      margin-bottom: 15px;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      color: #e3f2fd;
+    }
+
+    .book-now-btn {
+      background: var(--btn-danger);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-top: 20px;
+
+      &:hover {
+        background: var(--btn-danger-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--btn-danger-shadow);
       }
     }
   }
@@ -43,7 +66,7 @@
         margin: 20px 0;
         
         h3 {
-          color: #007bff;
+          color: var(--primary-color);
           font-size: 1.4rem;
           font-weight: 600;
           font-style: italic;
@@ -54,14 +77,14 @@
     }
 
     .important-info {
-      background: #fff3cd;
-      border: 1px solid #ffeaa7;
+      background: var(--mint-fresh);
+      border: 1px solid var(--mint-fresh-border);
       border-radius: 6px;
-      padding: 17px;
-      margin: 20px 0;
+      padding: 20px;
+      margin-bottom: 25px;
       
       h2 {
-        color: #856404;
+        color: var(--primary-color);
         font-size: 1.6rem;
         margin-bottom: 17px;
         font-weight: 600;
@@ -76,13 +99,12 @@
           padding-left: 20px;
           margin-bottom: 11px;
           font-size: 1rem;
-          color: #856404;
           
           &:before {
             content: "⚠";
             position: absolute;
             left: 0;
-            color: #856404;
+            color: var(--primary-color);
             font-weight: bold;
           }
         }
@@ -93,7 +115,7 @@
       margin-bottom: 25px;
       
       h2 {
-        color: #007bff;
+        color: var(--primary-color);
         font-size: 1.8rem;
         margin-bottom: 20px;
         font-weight: 600;
@@ -101,9 +123,13 @@
 
       .service-category {
         margin-bottom: 25px;
+        background: var(--soft-blue);
+        border: 1px solid var(--primary-color);
+        border-radius: 6px;
+        padding: 17px;
         
         h3 {
-          color: #007bff;
+          color: var(--primary-color);
           font-size: 1.4rem;
           margin-bottom: 13px;
           font-weight: 600;
@@ -152,7 +178,7 @@
                 content: "✓";
                 position: absolute;
                 left: 0;
-                color: #007bff;
+                color: var(--primary-color);
                 font-weight: bold;
               }
             }
@@ -162,13 +188,14 @@
     }
 
     .pricing-section {
-      background: #f8f9fa;
+      background: var(--mint-fresh);
+      border: 1px solid var(--mint-fresh-border);
       border-radius: 6px;
       padding: 20px;
       margin-bottom: 25px;
       
       h2 {
-        color: #007bff;
+        color: var(--primary-color);
         font-size: 1.6rem;
         margin-bottom: 17px;
         font-weight: 600;
@@ -193,7 +220,7 @@
             content: "•";
             position: absolute;
             left: 0;
-            color: #007bff;
+            color: var(--primary-color);
             font-weight: bold;
           }
         }
@@ -204,15 +231,15 @@
       margin-bottom: 25px;
       
       h2 {
-        color: #007bff;
+        color: var(--primary-color);
         font-size: 1.8rem;
-        margin-bottom: 20px;
+        margin-bottom: 17px;
         font-weight: 600;
       }
 
       .benefits-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(2, 1fr);
         gap: 20px;
         
         .benefit-item {
@@ -220,29 +247,46 @@
           align-items: flex-start;
           gap: 15px;
           padding: 15px;
-          background: white;
+          background: var(--soft-lavender-background);
           border-radius: 6px;
-          border: 1px solid #e9ecef;
-          
+          border: 1px solid var(--soft-lavender);
+          position: relative;
+          overflow: hidden;
+    
+          &::after {
+            content: "";
+            position: absolute;
+            top: -10%;
+            left: -10%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+    
           .checkmark {
-            color: #007bff;
+            color: var(--primary-color);
             font-size: 1.5rem;
             font-weight: bold;
             flex-shrink: 0;
+            position: relative;
           }
-          
+    
           .benefit-content {
+            position: relative;
             h4 {
-              color: #007bff;
+              color: var(--primary-color);
               font-size: 1.2rem;
               margin-bottom: 8px;
               font-weight: 600;
+              position: relative;
             }
-            
+    
             p {
               font-size: 1rem;
               margin: 0;
               color: #666;
+              position: relative;
             }
           }
         }
@@ -251,13 +295,14 @@
 
     .cta-section {
       text-align: center;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      background: var(--soft-blue);
+      border: 1px solid var(--primary-color);
       padding: 25px;
       border-radius: 8px;
       margin-bottom: 25px;
       
       h2 {
-        color: #007bff;
+        color: var(--primary-color);
         font-size: 1.8rem;
         margin-bottom: 17px;
         font-weight: 600;
@@ -275,7 +320,7 @@
         margin: 20px 0;
         
         h3 {
-          color: #007bff;
+          color: var(--primary-color);
           font-size: 1.3rem;
           margin-bottom: 15px;
           font-weight: 600;
@@ -288,7 +333,7 @@
           
           a {
             word-break: break-all;
-            color: #007bff;
+            color: var(--primary-color);
             text-decoration: none;
             transition: text-decoration 0.3s ease;
             
@@ -301,7 +346,7 @@
 
       .tagline {
         font-size: 1.1rem;
-        color: #007bff;
+        color: var(--primary-color);
         font-weight: 600;
         font-style: italic;
         margin: 20px 0;
@@ -314,32 +359,40 @@
         flex-wrap: wrap;
         
         .btn {
-          padding: 15px 25px;
-          border-radius: 6px;
+          display: inline-block;
+          background: var(--btn-primary);
+          color: white;
+          border: none;
+          padding: 12px 30px;
+          border-radius: 25px;
           text-decoration: none;
           font-weight: 600;
-          font-size: 1rem;
           transition: all 0.3s ease;
-          border: none;
+          font-size: 1.1rem;
           cursor: pointer;
+          transition: all 0.3s ease;
+          box-shadow: var(--btn-primary-shadow);
+          margin: 0 10px;
+          text-decoration: none;
+          text-align: center;
           
           &.btn-primary {
-            background: #007bff;
+            background: var(--btn-primary);
             color: white;
             
             &:hover {
-              background: #0056b3;
+              background: var(--btn-primary-hover);
               transform: translateY(-2px);
             }
           }
           
-          &.btn-secondary {
+          &.btn-second {
             background: white;
-            color: #007bff;
-            border: 2px solid #007bff;
+            color: var(--primary-color);
+            border: 2px solid var(--primary-color);
             
             &:hover {
-              background: #007bff;
+              background: var(--primary-color);
               color: white;
               transform: translateY(-2px);
             }
@@ -353,33 +406,30 @@
 // Responsive Design
 @media (max-width: 768px) {
   .post-construction-cleaning-container {
-    padding: 0 15px;
-    
     .hero-section {
       padding: 25px 15px;
       
-      .hero-content {
         h1 {
-          font-size: 2rem;
+          font-size: 1.8rem;
         }
         
         .subtitle {
           font-size: 1.1rem;
         }
       }
-    }
+    
     
     .content-section {
       .intro-text p,
-      .important-info ul li,
+      .important-info p,
       .pricing-section p,
       .why-choose p,
       .cta-section p {
         font-size: 0.9rem;
       }
       
-      .services-included h2,
       .important-info h2,
+      .services-included h2,
       .pricing-section h2,
       .why-choose h2,
       .cta-section h2 {
@@ -416,11 +466,9 @@
           gap: 15px;
           
           .image-placeholder {
-            width: 90vw;
-            max-width: 350px;
-            height: 180px;
-            margin-left: auto;
-            margin-right: auto;
+            width: 100%;
+            height: 100px;
+            align-self: center;
             order: 0;
           }
           
@@ -438,26 +486,10 @@
             }
           }
         }
-        
-        .add-ons {
-          padding: 12px 15px;
-          margin-top: 15px;
-          
-          p {
-            font-size: 0.85rem;
-            margin: 8px 0;
-          }
-        }
       }
       
-      .important-info h2,
-      .pricing-section h2 {
-        font-size: 1.3rem;
-      }
-      
-      .important-info ul,
-      .pricing-section ul {
-        li {
+      .pricing-section {
+        ul li {
           font-size: 0.85rem;
           margin-bottom: 8px;
           padding-left: 18px;
@@ -517,14 +549,8 @@
           justify-content: center;
           
           a {
-            color: #007bff;
-            text-decoration: none;
             font-size: 0.9rem;
             word-break: break-all;
-            
-            &:hover {
-              text-decoration: underline;
-            }
           }
         }
       }
@@ -534,25 +560,22 @@
 
 @media (max-width: 480px) {
   .post-construction-cleaning-container {
-    padding: 0 10px;
-    
     .hero-section {
       padding: 25px 10px;
-      
-      .hero-content {
+
         h1 {
-          font-size: 1.8rem;
+          font-size: 1.3rem;
         }
-        
+
         .subtitle {
           font-size: 1rem;
         }
       }
-    }
+    
     
     .content-section {
-      .services-included h2,
       .important-info h2,
+      .services-included h2,
       .pricing-section h2,
       .why-choose h2,
       .cta-section h2 {
@@ -588,11 +611,7 @@
           gap: 12px;
           
           .image-placeholder {
-            width: 100vw;
-            max-width: 100%;
-            height: 140px;
-            margin-left: 0;
-            margin-right: 0;
+            height: 80px;
             order: 0;
           }
           
@@ -612,27 +631,10 @@
             }
           }
         }
-        
-        .add-ons {
-          padding: 10px 12px;
-          margin-top: 12px;
-          
-          p {
-            font-size: 0.8rem;
-            margin: 6px 0;
-            line-height: 1.3;
-          }
-        }
       }
       
-      .important-info h2,
-      .pricing-section h2 {
-        font-size: 1.2rem;
-      }
-      
-      .important-info ul,
-      .pricing-section ul {
-        li {
+      .pricing-section {
+        ul li {
           font-size: 0.8rem;
           margin-bottom: 6px;
           padding-left: 16px;
@@ -658,12 +660,15 @@
       }
       
       .cta-section {
-        padding: 20px 17px;
+        padding: 15px 10px;
         
         .cta-buttons {
+          gap: 10px;
+          
           .btn {
+            max-width: 200px;
+            padding: 10px 15px;
             font-size: 0.85rem;
-            padding: 10px 18px;
           }
         }
         
@@ -686,6 +691,118 @@
             
             a {
               font-size: 0.85rem;
+            }
+          }
+        }
+      }
+    }
+  }
+} 
+
+@media (max-width: 360px) {
+  .post-construction-cleaning-container {
+    
+    .content-section {
+      .services-included .service-category {
+        margin-bottom: 15px;
+        
+        h3 {
+          font-size: 1rem;
+          margin-bottom: 6px;
+        }
+        
+        p {
+          font-size: 0.8rem;
+          margin-bottom: 6px;
+        }
+        
+        .service-content {
+          gap: 10px;
+          
+          .image-placeholder {
+            height: 70px;
+            order: 0;
+          }
+          
+          ul {
+            order: 1;
+            
+            li {
+              font-size: 0.75rem;
+              margin-bottom: 5px;
+              padding-left: 14px;
+              
+              &:before {
+                font-size: 0.7rem;
+                left: 1px;
+              }
+            }
+          }
+        }
+      }
+      
+      .important-info {
+        ul li {
+          font-size: 0.75rem;
+          margin-bottom: 5px;
+          padding-left: 14px;
+          
+          &:before {
+            font-size: 0.7rem;
+          }
+        }
+      }
+      
+      .pricing-section {
+        ul li {
+          font-size: 0.75rem;
+          margin-bottom: 5px;
+          padding-left: 14px;
+          
+          &:before {
+            font-size: 0.7rem;
+          }
+        }
+      }
+      
+      .why-choose .benefits-grid {
+        .benefit-item {
+          .benefit-content {
+            h4 {
+              font-size: 0.9rem;
+            }
+            
+            p {
+              font-size: 0.75rem;
+            }
+          }
+        }
+      }
+      
+      .cta-section {
+        .cta-buttons {
+          .btn {
+            max-width: 180px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+          }
+        }
+        
+        .contact-info {
+          padding: 10px;
+          margin: 10px 0;
+          
+          h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+          }
+          
+          p {
+            margin: 4px 0;
+            font-size: 0.8rem;
+            
+            a {
+              font-size: 0.8rem;
             }
           }
         }

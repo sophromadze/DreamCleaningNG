@@ -16,7 +16,7 @@
     font-weight: 700;
     color: #1a1a1a;
     margin-bottom: 0.5rem;
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    background: var(--btn-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -25,7 +25,7 @@
   .header-line {
     width: 80px;
     height: 4px;
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    background: var(--btn-primary);
     margin: 0 auto;
     border-radius: 2px;
   }
@@ -49,7 +49,7 @@
         left: 0;
         width: 60px;
         height: 3px;
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        background: var(--btn-primary);
         border-radius: 2px;
       }
     }
@@ -57,7 +57,7 @@
     p {
       font-size: 1.1rem;
       margin-bottom: 0.75rem;
-      color: #555;
+      color: #333;
     }
   }
 }
@@ -66,11 +66,11 @@
   .lead-text {
     font-size: 1.3rem;
     font-weight: 500;
-    color: #444;
+    color: #333;
     margin-bottom: 1rem;
     
     .highlight {
-      color: #007bff;
+      color: var(--primary-color);
       font-weight: 600;
     }
   }
@@ -85,7 +85,7 @@
   }
   
   .value-card {
-    background: #fff;
+    background: var(--mint-fresh);
     padding: 1rem;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -94,7 +94,7 @@
     .value-icon {
       width: 60px;
       height: 60px;
-      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      background: var(--soft-lavender);
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -136,14 +136,13 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.75rem;
-    background: #f0f8ff;
+    background: var(--soft-lavender-background);
     border-radius: 12px;
-    border-left: 4px solid #007bff;
     
     .check-icon {
       width: 40px;
       height: 40px;
-      background: #007bff;
+      background: #fff;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -153,24 +152,41 @@
       svg {
         width: 20px;
         height: 20px;
-        color: white;
+        color: var(--primary-color);
       }
     }
     
     span {
       font-size: 1.1rem;
       font-weight: 500;
-      color: #333;
+      color: #fff;
     }
   }
 }
 
 .closing-section {
   text-align: center;
-  background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
+  background: var(--soft-yellow-background);
   padding: 1.5rem;
   border-radius: 20px;
   margin-top: 1.5rem;
+  position: relative;
+  overflow: hidden;
+
+  &::before{
+    content: '';
+    position: absolute;
+    top: -60%;
+    left: -5%;
+    width: 300px;
+    height: 300px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+  }
+
+  p {
+    position: relative;
+  }
   
   .closing-statement {
     font-size: 1.4rem;
@@ -178,13 +194,14 @@
     color: #1a1a1a;
     margin-top: 1rem;
     margin-bottom: 1rem;
+    position: relative;
   }
   
   .book-now-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.75rem;
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    background: var(--btn-primary);
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -193,11 +210,12 @@
     border-radius: 50px;
     cursor: pointer;
     transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    box-shadow: var(--btn-primary-shadow);
+    position: relative;
     
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(0, 123, 255, 0.4);
+      box-shadow: var(--btn-primary-shadow-hover);
     }
     
     &:active {

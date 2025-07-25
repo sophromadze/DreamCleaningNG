@@ -54,7 +54,7 @@
   
         &:focus {
           outline: none;
-          border-color: #007bff;
+          border-color: var(--primary-color);
           box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
         }
   
@@ -78,7 +78,7 @@
   .submit-btn {
     width: 100%;
     padding: 14px;
-    background-color: #007bff;
+    background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 8px;
@@ -88,7 +88,7 @@
     transition: all 0.3s ease;
   
     &:hover:not(:disabled) {
-      background-color: #0056b3;
+      background-color: var(--primary-color-hover);
       transform: translateY(-1px);
     }
   
@@ -104,7 +104,7 @@
     color: #666;
   
     .toggle-link {
-      color: #007bff;
+      color: var(--primary-color);
       text-decoration: none;
       font-weight: 500;
       cursor: pointer;
@@ -222,11 +222,11 @@
         }
   
         &.met {
-          color: #4CAF50;
+          color: var(--fresh-green);
   
           &::before {
             content: '✓';
-            color: #4CAF50;
+            color: var(--fresh-green);
           }
         }
       }
@@ -239,7 +239,7 @@
     margin-bottom: 0.5rem;
   
     .text-link {
-      color: #2196F3;
+      color: var(--primary-color);
       text-decoration: none;
       cursor: pointer;
       font-size: 0.875rem;
@@ -257,7 +257,7 @@
   .resend-link {
     background: none;
     border: none;
-    color: #007bff;
+    color: var(--primary-color);
     text-decoration: underline;
     cursor: pointer;
     font-size: 14px;

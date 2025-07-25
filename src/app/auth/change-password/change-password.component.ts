@@ -10,10 +10,11 @@ import { validatePassword } from '../../utils/password-validator';
   standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
-    <div class="change-password-container">
-      <h1>Change Password</h1>
-      <div class="change-password-content">
-        <form (ngSubmit)="onSubmit()" #passwordForm="ngForm">
+    <div class="change-password-wrapper">
+      <div class="change-password-container">
+        <h1>Change Password</h1>
+        <div class="change-password-content">
+          <form (ngSubmit)="onSubmit()" #passwordForm="ngForm">
           <div class="form-group">
             <label for="currentPassword">Current Password</label>
             <input
@@ -43,7 +44,7 @@ import { validatePassword } from '../../utils/password-validator';
             />
             
             <div class="password-requirements">
-              <small class="requirement-header">Password must contain:</small>
+              <h3 class="requirement-header">Password must contain:</h3>
               <ul class="requirements-list">
                 <li [class.met]="hasMinLength()">
                   At least 8 characters
@@ -95,14 +96,28 @@ import { validatePassword } from '../../utils/password-validator';
             {{ isSubmitting ? 'Changing Password...' : 'Change Password' }}
           </button>
         </form>
+        </div>
       </div>
     </div>
   `,
   styles: [`
+    .change-password-wrapper {
+      padding: 2rem;
+    }
+
     .change-password-container {
       padding: 2rem;
       max-width: 500px;
       margin: 0 auto;
+      background-color: var(--mint-fresh);
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);;
+    }
+
+    @media (max-width: 768px) {
+      .change-password-wrapper {
+        padding: 1rem;
+      }
     }
 
     h1 {
@@ -128,11 +143,11 @@ import { validatePassword } from '../../utils/password-validator';
     }
 
     input.ng-invalid.ng-touched {
-      border-color: #f44336;
+      border-color: var(--bright-red);
     }
 
     .error {
-      color: #f44336;
+      color: var(--bright-red);
       font-size: 0.875rem;
       margin-top: 0.5rem;
     }
@@ -146,36 +161,41 @@ import { validatePassword } from '../../utils/password-validator';
     button {
       width: 100%;
       padding: 0.75rem;
-      background-color: #2196F3;
+      background: var(--btn-primary);
       color: white;
       border: none;
       border-radius: 4px;
       font-size: 1rem;
       cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: var(--btn-primary-shadow);
     }
 
     button:hover:not(:disabled) {
-      background-color: #1976D2;
+      background: var(--btn-primary-hover);
+      transform: translateY(-2px);
+      box-shadow: var(--btn-primary-shadow-hover);
     }
 
     button:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
     }
 
     .password-requirements {
       margin-top: 0.5rem;
-      background-color: #f5f5f5;
+      background-color: var(--soft-yellow);
       padding: 0.75rem;
       border-radius: 4px;
       font-size: 0.875rem;
     }
 
     .requirement-header {
-      color: #666;
-      font-weight: 500;
-      display: block;
-      margin-bottom: 0.5rem;
+      color: var(--soft-yellow-text);
+      margin: 0 0 0.5rem 0;
+      font-size: 1rem;
     }
 
     .requirements-list {
@@ -185,7 +205,7 @@ import { validatePassword } from '../../utils/password-validator';
     }
 
     .requirements-list li {
-      color: #999;
+      color: var(--soft-yellow-text);
       margin-bottom: 0.25rem;
       padding-left: 1.25rem;
       position: relative;

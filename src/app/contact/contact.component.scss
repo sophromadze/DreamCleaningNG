@@ -1,7 +1,7 @@
 .contact-container {
     min-height: calc(100vh - 160px);
     padding: 40px 20px;
-    background-color: #f8f9fa;
+    background: #f8f9fa;
   }
   
   .contact-content {
@@ -15,7 +15,7 @@
   
   h1 {
     text-align: center;
-    color: #007bff;
+    color: var(--primary-color);
     margin-bottom: 10px;
     font-size: 32px;
   }
@@ -50,13 +50,13 @@
   }
   
   .alert-success {
-    background-color: #d4edda;
+    background: #d4edda;
     border: 1px solid #c3e6cb;
     color: #155724;
   }
   
   .alert-error {
-    background-color: #f8d7da;
+    background: #f8d7da;
     border: 1px solid #f5c6cb;
     color: #721c24;
   }
@@ -67,11 +67,11 @@
   }
 
   .success-icon {
-    color: #28a745;
+    color: var(--fresh-green);
   }
 
   .error-icon {
-    color: #dc3545;
+    color: var(--bright-red);
   }
   
   /* Form Styles */
@@ -109,12 +109,12 @@
   
   .form-control:focus {
     outline: none;
-    border-color: #007bff;
+    border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
   }
   
   .form-control.error {
-    border-color: #dc3545;
+    border-color: var(--bright-red);
   }
   
   .form-control.error:focus {
@@ -122,7 +122,7 @@
   }
   
   .form-control:disabled {
-    background-color: #f8f9fa;
+    background: #f8f9fa;
     color: #6c757d;
     cursor: not-allowed;
     opacity: 0.7;
@@ -140,7 +140,7 @@
   
   .error-message {
     display: block;
-    color: #dc3545;
+    color: var(--bright-red);
     font-size: 13px;
     margin-top: 5px;
   }
@@ -158,6 +158,9 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    padding: 10px;
+    background: var(--soft-blue);
+    border-radius: 6px;
   }
 
   .form-checkbox {
@@ -177,7 +180,7 @@
   }
 
   .checkbox-label a {
-    color: #007bff;
+    color: var(--primary-color);
     text-decoration: none;
   }
 
@@ -186,7 +189,7 @@
   }
 
   .form-checkbox.error {
-    border-color: #dc3545;
+    border-color: var(--bright-red);
   }
   
   /* Submit Button */
@@ -209,14 +212,14 @@
   }
   
   .btn-primary {
-    background-color: #007bff;
+    background: var(--btn-primary);
     color: white;
   }
   
   .btn-primary:hover:not(:disabled) {
-    background-color: #0056b3;
+    background: var(--btn-primary-hover);
     transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3);
+    box-shadow: var(--btn-primary-shadow-hover);
   }
   
   .btn:disabled {
@@ -253,7 +256,7 @@
   }
   
   .contact-info h2 {
-    color: #007bff;
+    color: var(--primary-color);
     margin-bottom: 20px;
     font-size: 20px;
   }
@@ -275,7 +278,7 @@
     font-size: 24px;
     margin-bottom: 10px;
     display: block;
-    color: #007bff;
+    color: var(--primary-color);
   }
 
   .info-item a {
@@ -304,7 +307,7 @@
   }
   
   .info-item h3 {
-    color: #007bff;
+    color: var(--primary-color);
     margin-bottom: 8px;
     font-size: 16px;
   }

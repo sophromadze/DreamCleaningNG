@@ -137,6 +137,9 @@ export class BookingComponent implements OnInit, OnDestroy {
   // Booking summary collapse state
   isSummaryCollapsed = true;
   
+  // FAQ functionality
+  showFAQ = false;
+  
   // Saved data for restoration
   savedCustomPricingData: any = null;
   savedPollData: any = null;
@@ -160,6 +163,7 @@ export class BookingComponent implements OnInit, OnDestroy {
   pollAnswers: { [key: number]: string } = {};
   showPollForm = false;
   pollFormSubmitted = false;
+  formSubmitted = false;
   
   // States and Cities - will be loaded from backend
   states: string[] = [];
@@ -1832,6 +1836,9 @@ export class BookingComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Set form submitted flag
+    this.formSubmitted = true;
+    
     // Check if the form is valid
     if (!this.bookingForm.valid || !this.selectedServiceType || !this.selectedSubscription || !this.cleaningType.value) {
       this.scrollToFirstError();
@@ -2838,5 +2845,23 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
     
     return `${roundedHour.toString().padStart(2, '0')}:${roundedMinute.toString().padStart(2, '0')}`;
+  }
+
+  // FAQ Methods
+  toggleFAQ() {
+    this.showFAQ = !this.showFAQ;
+    if (this.showFAQ) {
+      // Prevent body scroll when FAQ is open
+      document.body.style.overflow = 'hidden';
+    } else {
+      // Restore body scroll when FAQ is closed
+      document.body.style.overflow = '';
+    }
+  }
+
+  closeFAQ(event: Event) {
+    this.showFAQ = false;
+    // Restore body scroll
+    document.body.style.overflow = '';
   }
 }

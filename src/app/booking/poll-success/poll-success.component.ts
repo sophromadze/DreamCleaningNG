@@ -48,7 +48,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
     .success-icon {
       font-size: 4rem;
-      color: #28a745;
+      color: var(--fresh-green);
       margin-bottom: 1rem;
     }
 
@@ -67,7 +67,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 
     .next-steps {
       background: #f8f9fa;
-      border-left: 4px solid #007bff;
+      border-left: 4px solid var(--primary-color);
       padding: 1rem;
       margin: 1.5rem 0;
       border-radius: 0 4px 4px 0;
@@ -95,11 +95,11 @@ import { ActivatedRoute, Router } from '@angular/router';
     }
 
     .btn-primary {
-      background: #007bff;
+      background: var(--primary-color);
       color: white;
       
       &:hover {
-        background: #0056b3;
+        background: var(--primary-color-hover);
       }
     }
 

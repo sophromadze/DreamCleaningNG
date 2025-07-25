@@ -10,7 +10,7 @@
     margin-bottom: 2rem;
   
     .back-link {
-      color: #007bff;
+      color: var(--primary-color);
       text-decoration: none;
       font-size: 0.9rem;
       margin-bottom: 1rem;
@@ -34,8 +34,8 @@
   }
   
   .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
+    background-color: var(--soft-red);
+    color: var(--bright-red);
     padding: 1rem;
     border-radius: 4px;
     margin-bottom: 1rem;
@@ -70,19 +70,19 @@
         font-size: 0.9rem;
         font-weight: 600;
   
-        &.status-active {
-          background-color: #d4edda;
-          color: #155724;
+                &.status-active {
+          background-color: var(--mint-fresh);
+          color: var(--fresh-green);
         }
-  
+
         &.status-done {
-          background-color: #d1ecf1;
-          color: #0c5460;
+          background-color: var(--soft-blue);
+          color: var(--primary-color);
         }
-  
+
         &.status-cancelled {
-          background-color: #f8d7da;
-          color: #721c24;
+          background-color: var(--soft-red);
+          color: var(--bright-red);
         }
       }
     }
@@ -168,11 +168,11 @@
     }
   }
   
-  .price-breakdown {
-    background: #f8f9fa;
+    .price-breakdown {
+    background: var(--soft-blue);
     padding: 1rem;
     border-radius: 4px;
-  
+
     .price-row {
       display: flex;
       justify-content: space-between;
@@ -185,9 +185,9 @@
         font-size: 1.1rem;
         font-weight: 700;
       }
-  
+
       .discount {
-        color: #28a745;
+        color: var(--fresh-green);
       }
     }
   }
@@ -238,23 +238,29 @@
     }
 
     .edit-btn {
-      background-color: #4a90e2;
+      background: var(--btn-primary);
       color: white;
       text-decoration: none;
       text-align: center;
+      box-shadow: var(--btn-primary-shadow);
 
       &:hover:not(.disabled) {
-        background-color: #3a7bc8;
+        background: var(--btn-primary-hover);
+        box-shadow: var(--btn-primary-shadow-hover);
+        transform: translateY(-2px);
       }
     }
 
     .cancel-btn {
-      background-color: #e74c3c;
+      background: var(--btn-danger);
       color: white;
       border: none;
+      box-shadow: var(--btn-danger-shadow);
 
       &:hover:not(.disabled) {
-        background-color: #c0392b;
+        background: var(--btn-danger-hover);
+        box-shadow: var(--btn-danger-shadow-hover);
+        transform: translateY(-2px);
       }
     }
   }
@@ -293,8 +299,8 @@
     }
   
     .refund-notice {
-      background: #d4edda;
-      color: #155724;
+      background: var(--mint-fresh);
+      color: var(--fresh-green);
       padding: 0.75rem;
       border-radius: 4px;
       font-size: 0.9rem;
@@ -310,17 +316,17 @@
         margin-bottom: 0.5rem;
       }
   
-      textarea {
+            textarea {
         width: 100%;
         padding: 0.75rem;
         border: 1px solid #ddd;
         border-radius: 4px;
         font-size: 1rem;
         resize: vertical;
-  
+
         &:focus {
           outline: none;
-          border-color: #007bff;
+          border-color: var(--primary-color);
         }
       }
     }
@@ -340,14 +346,17 @@
         transition: all 0.3s;
       }
   
-      .confirm-btn {
-        background-color: #dc3545;
+            .confirm-btn {
+        background: var(--btn-danger);
         color: white;
-  
+        box-shadow: var(--btn-danger-shadow);
+
         &:hover:not(:disabled) {
-          background-color: #c82333;
+          background: var(--btn-danger-hover);
+          box-shadow: var(--btn-danger-shadow-hover);
+          transform: translateY(-2px);
         }
-  
+
         &:disabled {
           opacity: 0.5;
           cursor: not-allowed;
@@ -366,7 +375,7 @@
   }
 
   .maids-count-display {
-    background: #e7f3ff;
+    background: var(--soft-blue);
     padding: 1rem;
     border-radius: 8px;
     margin-bottom: 1rem;
@@ -379,7 +388,7 @@
     }
     
     .maids-badge {
-      background: #007bff;
+      background: var(--primary-color);
       color: white;
       padding: 0.25rem 1rem;
       border-radius: 20px;
@@ -412,7 +421,6 @@
   }
 
 .cleaning-type-display {
-  background-color: #f8f9fa;
   padding: 12px;
   border-radius: 8px;
   margin-bottom: 16px;
@@ -431,18 +439,18 @@
     font-weight: 500;
 
     &.regular {
-      background-color: #cff4fc;
-      color: #055160;
+      background-color: var(--soft-blue);
+      color: var(--primary-color);
     }
 
     &.deep {
-      background-color: #fff3cd;
-      color: #664d03;
+      background-color: var(--soft-yellow);
+      color: var(--soft-yellow-text);
     }
 
     &.super-deep {
-      background-color: #f8d7da;
-      color: #842029;
+      background-color: var(--soft-red);
+      color: var(--bright-red);
     }
   }
 }

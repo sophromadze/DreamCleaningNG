@@ -16,16 +16,19 @@
     }
   
     .new-order-btn {
-      background-color: #28a745;
+      background: var(--btn-secondary);
       color: white;
       padding: 0.75rem 1.5rem;
       border-radius: 6px;
       text-decoration: none;
       font-weight: 600;
-      transition: background-color 0.3s;
-  
+      transition: all 0.3s ease;
+      box-shadow: var(--btn-secondary-shadow);
+
       &:hover {
-        background-color: #218838;
+        background: var(--btn-secondary-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--btn-secondary-shadow-hover);
       }
     }
   }
@@ -37,8 +40,8 @@
   }
   
   .error-message {
-    background-color: #f8d7da;
-    color: #721c24;
+    background: var(--soft-red);
+    color: var(--bright-red);
     padding: 1rem;
     border-radius: 4px;
     margin-bottom: 1rem;
@@ -58,16 +61,19 @@
     }
   
     .book-now-btn {
-      background-color: #007bff;
+      background: var(--btn-primary);
       color: white;
       padding: 0.75rem 2rem;
       border-radius: 6px;
       text-decoration: none;
       font-weight: 600;
-      transition: background-color 0.3s;
-  
+      transition: all 0.3s ease;
+      box-shadow: var(--btn-primary-shadow);
+
       &:hover {
-        background-color: #0056b3;
+        background: var(--btn-primary-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--btn-primary-shadow-hover);
       }
     }
   }
@@ -79,11 +85,24 @@
   }
   
   .order-card {
-    background: white;
+    background: var(--soft-yellow-background);
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
     transition: box-shadow 0.3s;
+    position: relative;
+    overflow: hidden;
+
+    &::before{
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -10%;
+      width: 400px;
+      height: 400px;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+    }
   
     &:hover {
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -96,9 +115,12 @@
     align-items: flex-start;
     margin-bottom: 1rem;
     padding-bottom: 1rem;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid var(--soft-lavender);
+    position: relative;
+    
   
     .order-info {
+      position: relative;
       h3 {
         margin: 0 0 0.5rem 0;
         color: #333;
@@ -119,18 +141,18 @@
         font-weight: 600;
   
         &.status-active {
-          background-color: #d4edda;
-          color: #155724;
+          background: var(--mint-fresh);
+          color: var(--fresh-green);
         }
   
         &.status-done {
-          background-color: #d1ecf1;
-          color: #0c5460;
+          background: var(--soft-blue);
+          color: var(--primary-color);
         }
   
         &.status-cancelled {
-          background-color: #f8d7da;
-          color: #721c24;
+          background: var(--soft-red);
+          color: var(--bright-red);
         }
       }
     }
@@ -138,6 +160,7 @@
   
   .order-details {
     margin-bottom: 1.5rem;
+    position: relative;
   
     .detail-row {
       display: flex;
@@ -154,7 +177,7 @@
   
         &.price {
           font-weight: 600;
-          color: #28a745;
+          color: var(--fresh-green);
         }
       }
     }
@@ -163,6 +186,7 @@
   .order-actions {
     display: flex;
     gap: 1rem;
+    position: relative;
   
     .view-btn,
     .edit-btn {
@@ -170,26 +194,31 @@
       border-radius: 4px;
       text-decoration: none;
       font-weight: 500;
-      transition: all 0.3s;
+      transition: all 0.3s ease;
     }
   
     .view-btn {
-      background-color: #007bff;
+      background: var(--btn-primary);
       color: white;
-  
+      box-shadow: var(--btn-primary-shadow);
+
       &:hover {
-        background-color: #0056b3;
+        background: var(--btn-primary-hover);
+        transform: translateY(-2px);
+        box-shadow: var(--btn-primary-shadow-hover);
       }
     }
   
     .edit-btn {
-      background-color: transparent;
-      color: #007bff;
-      border: 1px solid #007bff;
-  
+      background: transparent;
+      color: var(--primary-color);
+      border: 1px solid var(--primary-color);
+
       &:hover {
-        background-color: #007bff;
+        background: var(--primary-color);
         color: white;
+        transform: translateY(-2px);
+        box-shadow: var(--btn-primary-shadow);
       }
     }
   }

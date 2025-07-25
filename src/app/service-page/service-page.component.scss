@@ -6,7 +6,7 @@
   }
 
   .hero-section {
-    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    background: var(--btn-primary);
     color: white;
     padding: 40px 0;
     text-align: center;
@@ -28,7 +28,7 @@
     }
 
     .book-now-btn {
-      background: #ff6b6b;
+      background: var(--btn-danger);
       color: white;
       border: none;
       padding: 15px 40px;
@@ -41,15 +41,15 @@
       display: inline-block;
 
       &:hover {
-        background: #ff5252;
+        background: var(--btn-danger-hover);
         transform: translateY(-2px);
-        box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        box-shadow: var(--btn-danger-shadow);
       }
     }
   }
 
   .secondary-description {
-    background: #f8f9fa;
+    background: var(--soft-blue);
     padding: 30px 0;
     text-align: center;
 
@@ -121,8 +121,8 @@
 
         .read-more-btn {
           background: transparent;
-          color: #007bff;
-          border: 2px solid #007bff;
+          color: var(--primary-color);
+          border: 2px solid var(--primary-color);
           padding: 10px 25px;
           border-radius: 25px;
           cursor: pointer;
@@ -132,7 +132,8 @@
           font-weight: 500;
 
           &:hover {
-            background: #007bff;
+            background: var(--primary-color-hover);
+            border: 2px solid var(--primary-color-hover);
             color: white;
           }
         }
@@ -153,13 +154,13 @@
       color: #333;
 
       .booking-link {
-        color: #007bff;
+        color: var(--primary-color);
         text-decoration: none;
         font-weight: 600;
         transition: all 0.3s ease;
 
         &:hover {
-          color: #0056b3;
+          color: var(--primary-color-hover);
           text-decoration: underline;
         }
       }
