@@ -665,7 +665,7 @@
       transition: color 0.2s ease;
 
       &:hover {
-        color: #1557b0;
+        color: var(--primary-color-hover);
       }
     }
   }
