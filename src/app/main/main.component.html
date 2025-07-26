@@ -20,6 +20,42 @@
         </div>
         <div class="main-image-container" role="img" aria-label="Professional cleaning service in NYC - Dream Cleaning"></div>
       </div>
+      
+      <!-- Special Offers Section -->
+      <div class="special-offers-section" *ngIf="specialOffers.length > 0">
+        <div class="offers-loading" *ngIf="isLoadingOffers">
+          <div class="loading-spinner"></div>
+          <p>Loading special offers...</p>
+        </div>
+        <div class="offers-text-container" *ngIf="!isLoadingOffers">
+                    <div class="badge-container" *ngFor="let offer of getDisplayOffers(); let i = index">
+            <div class="curved-text">
+              <svg viewBox="0 0 200 200">
+                <defs>
+                  <path [id]="'circle-path-' + i" d="M 100, 100 m -85, 0 a 85,85 0 1,1 170,0 a 85,85 0 1,1 -170,0"></path>
+                </defs>
+                <text>
+                  <textPath [attr.href]="'#circle-path-' + i" startOffset="0%">
+                    • {{ offer.description }}
+                  </textPath>
+                </text>
+              </svg>
+            </div>
+            <div class="circle" (click)="onOfferClick()">
+              <div class="circle-text">
+                <span class="main-text">{{ offer.isPercentage ? offer.discountValue + '%' : '$' + offer.discountValue }}</span>
+                <span class="alternating-text">
+                  <span class="text-1">DISCOUNT</span>
+                  <span class="text-2">{{ offer.name }}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+                  <div class="offers-note" *ngIf="!isLoggedIn && !isLoadingOffers">
+            <p>💡 <strong><a routerLink="/login" class="note-link">Sign up</a> or <a routerLink="/login" class="note-link">log in</a></strong> to see your personalized offers!</p>
+          </div>
+      </div>
     </section>
     
     <section class="services-container">

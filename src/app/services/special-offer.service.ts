@@ -35,6 +35,19 @@ export interface UserSpecialOffer {
   minimumOrderAmount?: number;
 }
 
+export interface PublicSpecialOffer {
+  id: number;
+  name: string;
+  description: string;
+  isPercentage: boolean;
+  discountValue: number;
+  type: string;
+  icon?: string;
+  badgeColor?: string;
+  minimumOrderAmount?: number;
+  requiresFirstTimeCustomer: boolean;
+}
+
 export interface CreateSpecialOffer {
   name: string;
   description: string;
@@ -111,6 +124,11 @@ export class SpecialOfferService {
   // User methods
   getMySpecialOffers(): Observable<UserSpecialOffer[]> {
     return this.http.get<UserSpecialOffer[]>(`${this.apiUrl}/profile/special-offers`);
+  }
+
+  // Public methods
+  getPublicSpecialOffers(): Observable<PublicSpecialOffer[]> {
+    return this.http.get<PublicSpecialOffer[]>(`${this.apiUrl}/special-offers/public`);
   }
 
   enableSpecialOffer(id: number): Observable<{ message: string }> {

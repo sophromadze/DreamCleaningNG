@@ -1882,3 +1882,290 @@
   }
 }
 
+// Special Offers Section (inside main container)
+.special-offers-section {
+
+  
+  .offers-loading {
+    text-align: center;
+    padding: 1rem 0;
+
+    .loading-spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid #e9ecef;
+      border-top: 3px solid var(--primary-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 0.5rem;
+    }
+
+    p {
+      color: #666;
+      font-size: 0.9rem;
+      margin: 0;
+    }
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .offers-text-container {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    padding: 0 20px;
+  }
+
+  .badge-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    cursor: pointer;
+  }
+
+  .circle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px;
+    height: 150px;
+    background: transparent;
+    border: 2px solid #FF0000;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 5px 20px rgba(255, 0, 0, 0.2);
+    transition: background-color 0.3s ease;
+  }
+
+  .circle-text {
+    color: #FF0000;
+    font-size: 28px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.2;
+  }
+
+  .circle-text .main-text {
+    display: block;
+    font-size: 50px;
+    font-weight: bold;
+  }
+
+  .circle-text .alternating-text {
+    display: block;
+    font-size: 16px;
+    font-weight: normal;
+  }
+
+  .circle-text .alternating-text .text-1 {
+    display: block;
+    opacity: 0;
+    animation: textAlternate 7s infinite;
+  }
+
+  .circle-text .alternating-text .text-2 {
+    display: block;
+    opacity: 0;
+    animation: textAlternate 7s infinite reverse;
+    margin-top: -20px;
+  }
+
+  .curved-text {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    animation: rotate 20s linear infinite;
+    overflow: visible;
+  }
+
+  .curved-text svg {
+    width: 100%;
+    height: 100%;
+    fill: #FF0000;
+    overflow: visible;
+  }
+
+  .curved-text text {
+    font-size: 14px;
+    font-weight: normal;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    fill: #FF0000;
+  }
+
+  /* Hover effect */
+  .badge-container {
+    transition: transform 0.3s ease;
+  }
+
+  .badge-container:hover {
+    transform: scale(1.1);
+  }
+
+  .badge-container:hover .circle {
+    background: rgba(255, 0, 0, 0.1);
+  }
+
+  .badge-container:hover .curved-text {
+    animation-play-state: paused;
+  }
+
+  .offers-note {
+    text-align: center;
+    margin-top: 1rem;
+
+    p {
+      margin: 0;
+      color: #495057;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      text-align: center;
+      margin: 0 auto;
+
+      .note-link {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+
+        &:hover {
+          text-decoration: underline;
+          opacity: 0.8;
+        }
+      }
+    }
+  }
+}
+
+@keyframes slideInFromLeft {
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes textAlternate {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+// Responsive design for special offers
+@media (max-width: 768px) {
+  .special-offers-section {
+    .offers-text-container {
+      gap: 1rem;
+      align-items: center;
+    }
+
+    .badge-container {
+      width: 160px;
+      height: 160px;
+    }
+
+    .circle {
+      width: 120px;
+      height: 120px;
+    }
+
+    .circle-text {
+      font-size: 24px;
+
+      .main-text {
+        font-size: 24px;
+      }
+
+      .alternating-text {
+        font-size: 16px;
+      }
+    }
+
+    .curved-text text {
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+
+    .offers-note {
+      padding: 0.8rem;
+      margin-top: 1rem;
+
+      p {
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 540px) {
+  .special-offers-section {
+    .offers-text-container {
+      gap: 0.8rem;
+    }
+
+    .badge-container {
+      width: 140px;
+      height: 140px;
+    }
+
+    .circle {
+      width: 100px;
+      height: 100px;
+    }
+
+    .circle-text {
+      font-size: 20px;
+
+      .main-text {
+        font-size: 20px;
+      }
+
+      .alternating-text {
+        font-size: 14px;
+      }
+    }
+
+    .curved-text text {
+      font-size: 14px;
+      letter-spacing: 1.5px;
+    }
+
+    .offers-note {
+      padding: 0.7rem;
+
+      p {
+        font-size: 0.85rem;
+      }
+    }
+  }
+}
+
+
