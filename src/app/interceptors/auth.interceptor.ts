@@ -86,7 +86,7 @@ export class AuthInterceptor implements HttpInterceptor {
                              (request.url.includes('?id=') && request.url.includes('access_token='));
 
     if (!isAuthEndpoint && !isSignalREndpoint) {
-      // Check if user has been inactive for 24 hours (only for non-auth/non-SignalR endpoints)
+      // Check if user has been inactive for 7 days (only for non-auth/non-SignalR endpoints)
       if (this.isBrowser && !this.useCookieAuth && this.checkInactivity()) {
         this.authService.logout();
         return throwError(() => new Error('Session expired due to inactivity'));
@@ -153,9 +153,9 @@ export class AuthInterceptor implements HttpInterceptor {
       
       const lastActivityTime = parseInt(lastActivity);
       const currentTime = Date.now();
-      const twentyFourHours = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+      const sevenDays = 7 * 24 * 60 * 60 * 1000; // 7 days in milliseconds
       
-      return (currentTime - lastActivityTime) > twentyFourHours;
+      return (currentTime - lastActivityTime) > sevenDays;
     } catch (error) {
       console.warn('Error checking inactivity:', error);
       return false;

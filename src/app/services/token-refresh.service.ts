@@ -13,9 +13,9 @@ export class TokenRefreshService {
   private inactivityCheckSubscription?: Subscription;
   private isBrowser: boolean;
   private isInitialized = false; // Add flag to prevent multiple initializations
-  private readonly TOKEN_REFRESH_INTERVAL = 23 * 60 * 60 * 1000; // 23 hours (refresh before 24 hour expiry)
-  private readonly INACTIVITY_CHECK_INTERVAL = 60 * 60 * 1000; // Check every hour
-  private readonly MAX_INACTIVITY_TIME = 24 * 60 * 60 * 1000; // 24 hours
+  private readonly TOKEN_REFRESH_INTERVAL = 6 * 24 * 60 * 60 * 1000; // 6 days (refresh before 7 day expiry)
+  private readonly INACTIVITY_CHECK_INTERVAL = 24 * 60 * 60 * 1000; // Check every day
+  private readonly MAX_INACTIVITY_TIME = 7 * 24 * 60 * 60 * 1000; // 7 days
 
   constructor(
     private authService: AuthService,
@@ -60,7 +60,7 @@ export class TokenRefreshService {
       this.inactivityCheckSubscription = interval(this.INACTIVITY_CHECK_INTERVAL).subscribe(() => {
         console.log('Inactivity check triggered');
         if (this.checkInactivity()) {
-          console.log('User inactive for 24 hours, logging out');
+          console.log('User inactive for 7 days, logging out');
           this.authService.logout();
         }
       });
@@ -140,8 +140,8 @@ export class TokenRefreshService {
       const currentTime = Date.now();
       const timeUntilExpiry = expiryTime - currentTime;
 
-      // If token expires in less than 1 hour, refresh immediately
-      if (timeUntilExpiry < 60 * 60 * 1000) {
+      // If token expires in less than 1 day, refresh immediately
+      if (timeUntilExpiry < 24 * 60 * 60 * 1000) {
         this.authService.refreshToken().subscribe({
           next: (response) => {
             // Token refreshed successfully
@@ -210,7 +210,7 @@ export class TokenRefreshService {
 
     // Check for inactivity before refreshing
     if (this.checkInactivity()) {
-      console.log('User inactive for 24 hours, logging out');
+      console.log('User inactive for 7 days, logging out');
       this.authService.logout();
       return;
     }
