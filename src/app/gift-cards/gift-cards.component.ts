@@ -1,5 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -13,7 +13,7 @@ import { AuthService } from '../services/auth.service';
   templateUrl: './gift-cards.component.html',
   styleUrls: ['./gift-cards.component.scss']
 })
-export class GiftCardsComponent implements OnInit {
+export class GiftCardsComponent implements OnInit, OnDestroy {
   giftCardForm: FormGroup;
   previewGiftCard: any = null;
   isLoading = false;
@@ -23,6 +23,7 @@ export class GiftCardsComponent implements OnInit {
   currentUser: any = null;
   giftCardBackgroundPath: string = '';
   isLoadingBackground: boolean = true;
+  private isBrowser: boolean;
 
   // Add billing details getter
   get billingDetails() {
@@ -39,8 +40,11 @@ export class GiftCardsComponent implements OnInit {
     private giftCardService: GiftCardService,
     private authService: AuthService,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    
     this.giftCardForm = this.fb.group({
       amount: ['', [Validators.required, Validators.min(50), Validators.max(10000)]],
       recipientName: ['', [Validators.required, Validators.maxLength(15)]],
@@ -57,10 +61,22 @@ export class GiftCardsComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Preload the main image as fallback, but let loadGiftCardBackground handle the actual image
+    if (this.isBrowser) {
+      this.preloadMainImage();
+    }
     this.loadCurrentUser();
     this.prefillUserData();
     this.loadGiftCardBackground();
     this.updatePreview(this.giftCardForm.value);
+  }
+
+  ngOnDestroy() {
+    // Clean up any preload links created by this component only in browser
+    if (this.isBrowser) {
+      const giftCardPreloadLinks = document.querySelectorAll('link[rel="preload"][data-gift-card="true"]');
+      giftCardPreloadLinks.forEach(link => link.remove());
+    }
   }
 
   updatePreview(formValue: any) {
@@ -147,6 +163,9 @@ export class GiftCardsComponent implements OnInit {
   }
 
   loadGiftCardBackground() {
+    // Only execute in browser environment
+    if (!this.isBrowser) return;
+    
     // Step 1: Check cache first for instant display
     const cachedPath = localStorage.getItem('giftCardBackground');
     if (cachedPath) {
@@ -180,6 +199,14 @@ export class GiftCardsComponent implements OnInit {
   }
 
   private preloadImage(imagePath: string) {
+    // Only execute in browser environment
+    if (!this.isBrowser) return;
+    
+    // Create a preload link for the dynamic image if it's different from mainImage
+    if (imagePath !== '/images/mainImage.webp') {
+      this.createPreloadLink(imagePath);
+    }
+    
     const img = new Image();
     
     img.onload = () => {
@@ -207,6 +234,35 @@ export class GiftCardsComponent implements OnInit {
 
   getGiftCardBackground(): string {
     return this.giftCardBackgroundPath;
+  }
+
+  private preloadMainImage() {
+    // Only execute in browser environment
+    if (!this.isBrowser) return;
+    
+    // Create a link element to preload the main image as fallback
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = '/images/mainImage.webp';
+    document.head.appendChild(link);
+  }
+
+  private createPreloadLink(imagePath: string) {
+    // Only execute in browser environment
+    if (!this.isBrowser) return;
+    
+    // Remove any existing preload links for gift card backgrounds to avoid duplicates
+    const existingLinks = document.querySelectorAll('link[rel="preload"][data-gift-card="true"]');
+    existingLinks.forEach(link => link.remove());
+    
+    // Create a new preload link for the dynamic image
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = imagePath;
+    link.setAttribute('data-gift-card', 'true'); // Mark it for easy removal
+    document.head.appendChild(link);
   }
 
 

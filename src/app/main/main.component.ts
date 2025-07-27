@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { GooglePlacesService, Review } from '../services/google-reviews.service';
@@ -27,14 +27,22 @@ export class MainComponent implements OnInit, OnDestroy {
   isLoggedIn: boolean = false;
   isLoadingOffers: boolean = false;
   private subscription: Subscription = new Subscription();
+  private isBrowser: boolean;
 
   constructor(
     private googlePlacesService: GooglePlacesService,
     private specialOfferService: SpecialOfferService,
-    private authService: AuthService
-  ) {}
+    private authService: AuthService,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
 
   ngOnInit() {
+    // Preload the main hero image for this component only in browser
+    if (this.isBrowser) {
+      this.preloadMainImage();
+    }
     this.loadReviews();
     this.loadSpecialOffers();
     this.checkAuthStatus();
@@ -42,6 +50,11 @@ export class MainComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+    // Clean up any preload links created by this component only in browser
+    if (this.isBrowser) {
+      const mainImagePreloadLinks = document.querySelectorAll('link[rel="preload"][data-main-image="true"]');
+      mainImagePreloadLinks.forEach(link => link.remove());
+    }
   }
 
   private loadReviews() {
@@ -92,6 +105,20 @@ export class MainComponent implements OnInit, OnDestroy {
     });
   }
 
+  private preloadMainImage() {
+    // Only execute in browser environment
+    if (!this.isBrowser) return;
+    
+    // Create a link element to preload the main image
+    const link = document.createElement('link');
+    link.rel = 'preload';
+    link.as = 'image';
+    link.href = '/images/mainImage.webp';
+    link.fetchPriority = 'high';
+    link.setAttribute('data-main-image', 'true'); // Mark it for easy removal
+    document.head.appendChild(link);
+  }
+
   getDisplayOffers(): PublicSpecialOffer[] {
     if (this.isLoggedIn) {
       // For logged users, show only their available offers
@@ -107,10 +134,14 @@ export class MainComponent implements OnInit, OnDestroy {
   onOfferClick() {
     if (this.isLoggedIn) {
       // Redirect to booking page if logged in
-      window.location.href = '/booking';
+      if (this.isBrowser) {
+        window.location.href = '/booking';
+      }
     } else {
       // Redirect to login page if not logged in
-      window.location.href = '/login';
+      if (this.isBrowser) {
+        window.location.href = '/login';
+      }
     }
   }
 }

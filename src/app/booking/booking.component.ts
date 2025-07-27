@@ -2850,18 +2850,22 @@ export class BookingComponent implements OnInit, OnDestroy {
   // FAQ Methods
   toggleFAQ() {
     this.showFAQ = !this.showFAQ;
-    if (this.showFAQ) {
-      // Prevent body scroll when FAQ is open
-      document.body.style.overflow = 'hidden';
-    } else {
-      // Restore body scroll when FAQ is closed
-      document.body.style.overflow = '';
+    if (this.isBrowser) {
+      if (this.showFAQ) {
+        // Prevent body scroll when FAQ is open
+        document.body.style.overflow = 'hidden';
+      } else {
+        // Restore body scroll when FAQ is closed
+        document.body.style.overflow = '';
+      }
     }
   }
 
   closeFAQ(event: Event) {
     this.showFAQ = false;
-    // Restore body scroll
-    document.body.style.overflow = '';
+    // Restore body scroll only in browser
+    if (this.isBrowser) {
+      document.body.style.overflow = '';
+    }
   }
 }

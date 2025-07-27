@@ -1,6 +1,6 @@
 // src/app/auth/profile/order-edit/order-edit.component.ts
-import { Component, OnDestroy, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnDestroy, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray, FormControl, Validators } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { OrderService, Order, UpdateOrder } from '../../../services/order.service';
@@ -33,6 +33,7 @@ interface SelectedExtraService {
 export class OrderEditComponent implements OnInit, OnDestroy {
   order: Order | null = null;
   orderForm: FormGroup;
+  private isBrowser: boolean;
   
   // Service data
   serviceType: ServiceType | null = null;
@@ -84,7 +85,7 @@ export class OrderEditComponent implements OnInit, OnDestroy {
   // Mobile tooltip management
   mobileTooltipTimeouts: { [key: number]: any } = {};
   mobileTooltipStates: { [key: number]: boolean } = {};
-  isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  isMobileDevice = false; // Will be updated in ngOnInit
   
   // Order summary collapse state
   isSummaryCollapsed = false;
@@ -117,8 +118,12 @@ export class OrderEditComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private authService: AuthService,
-    private stripeService: StripeService
+    private stripeService: StripeService,
+    @Inject(PLATFORM_ID) private platformId: Object
   ) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+    
+    // Initialize form
     this.orderForm = this.fb.group({
       serviceDate: ['', Validators.required],
       serviceTime: ['', Validators.required],
@@ -128,32 +133,47 @@ export class OrderEditComponent implements OnInit, OnDestroy {
       contactFirstName: ['', Validators.required],
       contactLastName: ['', Validators.required],
       contactEmail: ['', [Validators.required, Validators.email]],
-      contactPhone: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
+      contactPhone: ['', Validators.required],
       serviceAddress: ['', Validators.required],
       aptSuite: [''],
       city: ['', Validators.required],
       state: ['', Validators.required],
-      zipCode: ['', [Validators.required, Validators.pattern(/^\d{5}$/)]],
-      tips: [0, Validators.min(0)],
-      companyDevelopmentTips: [0, Validators.min(0)],
-      services: this.fb.array([]),
-      cleaningType: ['normal', Validators.required]
+      zipCode: ['', Validators.required],
+      tips: [0],
+      companyDevelopmentTips: [0],
+      cleaningType: ['regular', Validators.required]
     });
-    this.serviceControls = this.orderForm.get('services') as FormArray;
+
+    // Initialize service controls array
+    this.serviceControls = this.fb.array([]);
   }
 
   ngOnInit() {
-    const orderId = this.route.snapshot.params['id'];
+    // Set mobile device detection only in browser
+    if (this.isBrowser) {
+      this.isMobileDevice = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    }
+    
+    // Load location data
     this.loadLocationData();
-    this.loadOrder(orderId);
+    
+    // Load order data
+    this.route.params.subscribe(params => {
+      const orderId = +params['id'];
+      if (orderId) {
+        this.loadOrder(orderId);
+      }
+    });
     
     // Auto-collapse summary on mobile devices (≤1200px)
     this.updateSummaryCollapseState();
     
     // Listen to window resize events
-    window.addEventListener('resize', () => {
-      this.updateSummaryCollapseState();
-    });
+    if (this.isBrowser) {
+      window.addEventListener('resize', () => {
+        this.updateSummaryCollapseState();
+      });
+    }
     
     // Listen to tips changes
     this.orderForm.get('tips')?.valueChanges.subscribe(() => {
@@ -189,8 +209,10 @@ export class OrderEditComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Setup click outside listener for tip dropdown
-    this.setupDropdownClickOutside();
+    // Setup click outside listener for tip dropdown only in browser
+    if (this.isBrowser) {
+      this.setupDropdownClickOutside();
+    }
   }
 
   loadLocationData() {
@@ -1479,20 +1501,22 @@ export class OrderEditComponent implements OnInit, OnDestroy {
   toggleOrderSummary() {
     this.isSummaryCollapsed = !this.isSummaryCollapsed;
     
-    // Scroll to the order summary
-    setTimeout(() => {
-      const summaryElement = document.querySelector('.order-summary');
-      if (summaryElement) {
-        summaryElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
-        });
-      }
-    }, 100);
+    // Scroll to the order summary only in browser
+    if (this.isBrowser) {
+      setTimeout(() => {
+        const summaryElement = document.querySelector('.order-summary');
+        if (summaryElement) {
+          summaryElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }
+      }, 100);
+    }
   }
 
   private updateSummaryCollapseState() {
-    if (window.innerWidth <= 1200) {
+    if (this.isBrowser && window.innerWidth <= 1200) {
       this.isSummaryCollapsed = true;
     } else {
       this.isSummaryCollapsed = false;
@@ -1510,6 +1534,9 @@ export class OrderEditComponent implements OnInit, OnDestroy {
   }
 
   private setupDropdownClickOutside() {
+    // Only execute in browser environment
+    if (!this.isBrowser) return;
+    
     document.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
       if (!target.closest('.tip-dropdown')) {
