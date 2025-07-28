@@ -127,6 +127,10 @@ asl-google-signin-button div[role="button"] > div > div > div {
     background-position: center center;
     background-size: cover;
     background-attachment: scroll;
+
+    @media (max-width: 768px) {
+        display: none;
+    }
 }
 
 /* Mobile responsive for main image */

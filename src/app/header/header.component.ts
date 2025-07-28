@@ -170,7 +170,7 @@ export class HeaderComponent implements OnInit {
   toggleMenu() {
     this.isMenuOpen = !this.isMenuOpen;
     if (this.isBrowser) {
-      const navLinks = document.querySelector('.nav-links');
+      const navLinks = this.elementRef.nativeElement.querySelector('.nav-links');
       if (navLinks) {
         navLinks.classList.toggle('active');
       }
@@ -199,17 +199,17 @@ export class HeaderComponent implements OnInit {
     
     this.isUserMenuOpen = !this.isUserMenuOpen;
     // Close other menus when user menu is opened
-    if (this.isUserMenuOpen) {
-      this.isMenuOpen = false;
-      this.isServicesMenuOpen = false;
-      this.isResidentialCleaningSubmenuOpen = false;
-      if (this.isBrowser) {
-        const navLinks = document.querySelector('.nav-links');
-        if (navLinks) {
-          navLinks.classList.remove('active');
+          if (this.isUserMenuOpen) {
+        this.isMenuOpen = false;
+        this.isServicesMenuOpen = false;
+        this.isResidentialCleaningSubmenuOpen = false;
+        if (this.isBrowser) {
+          const navLinks = this.elementRef.nativeElement.querySelector('.nav-links');
+          if (navLinks) {
+            navLinks.classList.remove('active');
+          }
         }
       }
-    }
   }
 
   // Mobile-friendly services menu handlers
@@ -281,7 +281,7 @@ export class HeaderComponent implements OnInit {
     this.isUserMenuOpen = false;
     this.isMenuOpen = false;
     if (this.isBrowser) {
-      const navLinks = document.querySelector('.nav-links');
+      const navLinks = this.elementRef.nativeElement.querySelector('.nav-links');
       if (navLinks) {
         navLinks.classList.remove('active');
       }

@@ -9,14 +9,12 @@
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeMobileMenu()">Home</a>
           <a routerLink="/about" routerLinkActive="active" (click)="closeMobileMenu()">About</a>
           
-          <!-- Services Dropdown -->
-          <div class="dropdown" 
+          <!-- Services Mega Dropdown -->
+          <div class="has-dropdown" 
                [class.open]="isServicesMenuOpen"
                (mouseenter)="showServicesMenu()" 
-               (mouseleave)="hideServicesMenu()"
-               (click)="toggleServicesMenu($event)">
-            <a class="dropdown-toggle" 
-               href="/service-page"
+               (mouseleave)="hideServicesMenu()">
+            <a href="/service-page"
                [routerLink]="!isMobile ? '/service-page' : null" 
                [class.active]="isServiceRoute()"
                (click)="onServicesClick($event)">
@@ -27,45 +25,37 @@
                 </g>
               </svg>
             </a>
-            <div class="dropdown-menu services-dropdown" *ngIf="isServicesMenuOpen" (click)="$event.stopPropagation()">
-              
-              <!-- All Services link (mobile only) -->
-              <a routerLink="/service-page" 
-                 (click)="onAllServicesClick($event)" 
-                 *ngIf="isMobile" 
-                 class="all-services-link">
-                All Services
-              </a>
-              
-              <!-- Residential Cleaning with nested dropdown -->
-              <div class="nested-dropdown" 
-                   [class.open]="isResidentialCleaningSubmenuOpen"
-                   (mouseenter)="showResidentialCleaningSubmenu()" 
-                   (mouseleave)="hideResidentialCleaningSubmenu()"
-                   (click)="toggleResidentialCleaningSubmenu($event)">
-                <a [routerLink]="!isMobile ? '/services/residential-cleaning' : null" 
-                   (click)="onResidentialCleaningClick($event)">
-                  Residential Cleaning
-                  <svg class="chevron-right" viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-                    <g fill-rule="evenodd" transform="translate(-448 -544)">
-                      <path fill-rule="nonzero" d="M452.707 549.293a1 1 0 0 0-1.414 1.414l4 4a1 1 0 0 0 1.414 0l4-4a1 1 0 0 0-1.414-1.414L456 552.586l-3.293-3.293z"></path>
-                    </g>
-                  </svg>
-                </a>
-                <div class="submenu" *ngIf="isResidentialCleaningSubmenuOpen">
-                  <a routerLink="/services/residential-cleaning" (click)="closeAllMenus()" *ngIf="isMobile">Residential Cleaning</a>
-                  <a routerLink="/services/residential-cleaning/kitchen" (click)="closeAllMenus()">Kitchen Cleaning</a>
-                  <a routerLink="/services/residential-cleaning/bathroom" (click)="closeAllMenus()">Bathroom Cleaning</a>
-                  <a routerLink="/services/residential-cleaning/general" (click)="closeAllMenus()">General Cleaning</a>
-                </div>
-              </div>
-              
-              <a routerLink="/services/deep-cleaning" (click)="closeAllMenus()">Deep Cleaning</a>
-              <a routerLink="/services/office-cleaning" (click)="closeAllMenus()">Office Cleaning</a>
-              <a routerLink="/services/custom-cleaning" (click)="closeAllMenus()">Custom Cleaning</a>
-              <a routerLink="/services/move-in-out-cleaning" (click)="closeAllMenus()">Move In/Out Cleaning</a>
-              <a routerLink="/services/filthy-cleaning" (click)="closeAllMenus()">Filthy Cleaning</a>
-              <a routerLink="/services/post-construction-cleaning" (click)="closeAllMenus()">Post Construction Cleaning</a>
+            <div class="mega-dropdown" [class.open]="isServicesMenuOpen">
+                             <div class="mega-dropdown-content">
+                 <div class="dropdown-column">
+                   <p>Basics</p>
+                   <div class="sub-links">
+                    <a routerLink="/services/residential-cleaning" (click)="closeAllMenus()">Residential Cleaning</a>
+                     <a routerLink="/services/residential-cleaning/kitchen" (click)="closeAllMenus()">Kitchen Cleaning</a>
+                     <a routerLink="/services/residential-cleaning/bathroom" (click)="closeAllMenus()">Bathroom Cleaning</a>
+                     <a routerLink="/services/residential-cleaning/general" (click)="closeAllMenus()">General Cleaning</a>
+                   </div>
+                 </div>
+                 <div class="dropdown-column">
+                   <p>Specialized</p>
+                   <div class="sub-links">
+                     <a routerLink="/services/deep-cleaning" (click)="closeAllMenus()">Deep Cleaning</a>
+                     <a routerLink="/services/office-cleaning" (click)="closeAllMenus()">Office Cleaning</a>
+                     <a routerLink="/services/custom-cleaning" (click)="closeAllMenus()">Custom Cleaning</a>
+                     <a routerLink="/services/move-in-out-cleaning" (click)="closeAllMenus()">Move In/Out Cleaning</a>
+                     <a routerLink="/services/filthy-cleaning" (click)="closeAllMenus()">Filthy Cleaning</a>
+                     <a routerLink="/services/post-construction-cleaning" (click)="closeAllMenus()">Post Construction Cleaning</a>
+                   </div>
+                 </div>
+                 <div class="dropdown-column">
+                   <p>Service Areas</p>
+                   <div class="sub-links">
+                     <a routerLink="/services/brooklyn-cleaning" (click)="closeAllMenus()">Brooklyn</a>
+                     <a routerLink="/services/manhattan-cleaning" (click)="closeAllMenus()">Manhattan</a>
+                     <a routerLink="/services/queens-cleaning" (click)="closeAllMenus()">Queens</a>
+                   </div>
+                 </div>
+               </div>
             </div>
           </div>
           
