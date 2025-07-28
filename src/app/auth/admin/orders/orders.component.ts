@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminService, OrderUpdateHistory, UserPermissions } from '../../../services/admin.service';
 import { OrderService, Order, OrderList } from '../../../services/order.service';
 import { CleanerService, AvailableCleaner } from '../../../services/cleaner.service';
+import { DurationUtils } from '../../../utils/duration.utils';
 import { forkJoin, of } from 'rxjs';
 import { catchError, finalize } from 'rxjs/operators';
 
@@ -695,24 +696,9 @@ export class OrdersComponent implements OnInit {
   }
 
   formatDuration(minutes: number): string {
-    // Ensure minimum 1 hour (60 minutes)
+    // Ensure minimum 1 hour (60 minutes) before formatting
     const adjustedMinutes = Math.max(minutes, 60);
-    const hours = Math.floor(adjustedMinutes / 60);
-    let mins = adjustedMinutes % 60;
-    if (mins >= 15) {
-      mins = 30;
-    } else {
-      mins = 0;
-    }
-    if (hours === 0 && mins === 0) {
-      return '1h'; // Minimum 1 hour
-    } else if (hours === 0) {
-      return `${mins} minutes`;
-    } else if (mins === 0) {
-      return `${hours}h`;
-    } else {
-      return `${hours}h ${mins}min`;
-    }
+    return DurationUtils.formatDurationRounded(adjustedMinutes);
   }
 
   formatTotalDuration(minutes: number): string {

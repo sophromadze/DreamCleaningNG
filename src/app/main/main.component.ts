@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject, PLATFORM_ID, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
@@ -33,6 +33,7 @@ export class MainComponent implements OnInit, OnDestroy {
     private googlePlacesService: GooglePlacesService,
     private specialOfferService: SpecialOfferService,
     private authService: AuthService,
+    private cdr: ChangeDetectorRef,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -46,6 +47,11 @@ export class MainComponent implements OnInit, OnDestroy {
     this.loadReviews();
     this.loadSpecialOffers();
     this.checkAuthStatus();
+
+    // Add debug method to window
+    if (this.isBrowser) {
+      (window as any).debugMainAuth = () => this.debugAuth();
+    }
   }
 
   ngOnDestroy() {
@@ -58,51 +64,70 @@ export class MainComponent implements OnInit, OnDestroy {
   }
 
   private loadReviews() {
-    this.subscription = this.googlePlacesService.getReviews().subscribe({
-      next: (data) => {
-        this.reviews = data.reviews.map(review => ({
-          ...review,
-          isExpanded: false
-        }));
-        this.overallRating = data.overallRating;
-        this.totalReviews = data.totalReviews;
-      },
-      error: (error) => {
-        console.error('Error loading reviews:', error);
-      }
-    });
+    this.subscription.add(
+      this.googlePlacesService.getReviews().subscribe({
+        next: (data) => {
+          this.reviews = data.reviews.map(review => ({
+            ...review,
+            isExpanded: false
+          }));
+          this.overallRating = data.overallRating;
+          this.totalReviews = data.totalReviews;
+        },
+        error: (error) => {
+          console.error('Error loading reviews:', error);
+        }
+      })
+    );
   }
 
   private loadSpecialOffers() {
     this.isLoadingOffers = true;
-    this.specialOfferService.getPublicSpecialOffers().subscribe({
-      next: (offers) => {
-        this.specialOffers = offers;
-        this.isLoadingOffers = false;
-      },
-      error: (error) => {
-        console.error('Error loading special offers:', error);
-        this.isLoadingOffers = false;
-      }
-    });
+    this.subscription.add(
+      this.specialOfferService.getPublicSpecialOffers().subscribe({
+        next: (offers) => {
+          this.specialOffers = offers;
+          this.isLoadingOffers = false;
+        },
+        error: (error) => {
+          console.error('Error loading special offers:', error);
+          this.isLoadingOffers = false;
+        }
+      })
+    );
   }
 
   private checkAuthStatus() {
+    // Set initial auth state
     this.isLoggedIn = this.authService.isLoggedIn();
-    if (this.isLoggedIn) {
-      this.loadUserOffers();
-    }
+    
+    // Subscribe to authentication state changes
+    this.subscription.add(
+      this.authService.currentUser.subscribe(user => {
+        this.isLoggedIn = !!user;
+        console.log('Auth state changed - isLoggedIn:', this.isLoggedIn);
+        if (this.isLoggedIn) {
+          this.loadUserOffers();
+        } else {
+          this.userOffers = [];
+        }
+        // Force change detection
+        this.cdr.detectChanges();
+      })
+    );
   }
 
   private loadUserOffers() {
-    this.specialOfferService.getMySpecialOffers().subscribe({
-      next: (offers) => {
-        this.userOffers = offers;
-      },
-      error: (error) => {
-        console.error('Error loading user offers:', error);
-      }
-    });
+    this.subscription.add(
+      this.specialOfferService.getMySpecialOffers().subscribe({
+        next: (offers) => {
+          this.userOffers = offers;
+        },
+        error: (error) => {
+          console.error('Error loading user offers:', error);
+        }
+      })
+    );
   }
 
   private preloadMainImage() {
@@ -143,5 +168,14 @@ export class MainComponent implements OnInit, OnDestroy {
         window.location.href = '/login';
       }
     }
+  }
+
+  // Debug method to check auth state
+  debugAuth() {
+    console.log('Component isLoggedIn:', this.isLoggedIn);
+    console.log('AuthService isLoggedIn():', this.authService.isLoggedIn());
+    console.log('Current user:', this.authService.currentUserValue);
+    console.log('isLoadingOffers:', this.isLoadingOffers);
+    console.log('Condition !isLoggedIn && !isLoadingOffers:', !this.isLoggedIn && !this.isLoadingOffers);
   }
 }
