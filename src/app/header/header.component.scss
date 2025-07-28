@@ -508,6 +508,7 @@ header{
     }
     
     .nav-container {
+      flex-direction: row-reverse;
               .nav-links {
           display: none;
           position: absolute;
