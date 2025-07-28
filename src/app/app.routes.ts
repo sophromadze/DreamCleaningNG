@@ -67,6 +67,18 @@ export const routes: Routes = [
     loadComponent: () => import('./service-page/services/post-construction-cleaning/post-construction-cleaning.component').then(m => m.PostConstructionCleaningComponent)
   },
   {
+    path: 'services/brooklyn-cleaning',
+    loadComponent: () => import('./service-page/services/brooklyn-cleaning/brooklyn-cleaning.component').then(m => m.BrooklynCleaningComponent)
+  },
+  {
+    path: 'services/manhattan-cleaning',
+    loadComponent: () => import('./service-page/services/manhattan-cleaning/manhattan-cleaning.component').then(m => m.ManhattanCleaningComponent)
+  },
+  {
+    path: 'services/queens-cleaning',
+    loadComponent: () => import('./service-page/services/queens-cleaning/queens-cleaning.component').then(m => m.QueensCleaningComponent)
+  },
+  {
     path: 'booking',
     loadComponent: () => import('./booking/booking.component').then(m => m.BookingComponent),
     canActivate: [maintenanceGuard]
