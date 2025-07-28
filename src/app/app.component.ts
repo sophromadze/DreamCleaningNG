@@ -42,21 +42,7 @@ export class AppComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Add debug methods to window for testing
-    if (typeof window !== 'undefined') {
-      (window as any).debugTokenStatus = () => this.tokenRefreshService.debugTokenStatus();
-      (window as any).debugRefreshToken = () => this.tokenRefreshService.debugRefreshToken();
-      (window as any).manualRefreshToken = () => this.tokenRefreshService.manualRefreshToken();
-      (window as any).forceRefreshToken = () => this.authService.forceRefreshToken().subscribe();
-      (window as any).clearAllAuthData = () => this.authService.clearAllAuthData();
-      (window as any).checkAuthHealth = () => this.tokenRefreshService.checkAuthHealth().subscribe(health => console.log('Auth Health:', health));
-      (window as any).checkCurrentUser = () => this.authService.checkCurrentUserSession().subscribe();
-      (window as any).checkCurrentRoute = () => {
-        console.log('Current URL:', window.location.href);
-        console.log('Current pathname:', window.location.pathname);
-        console.log('Current route:', this.router.url);
-      };
-    }
+
 
     // Wait for auth to be initialized
     const authInitSub = this.authService.isInitialized$.subscribe(isInit => {

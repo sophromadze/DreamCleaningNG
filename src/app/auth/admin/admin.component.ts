@@ -80,7 +80,6 @@ export class AdminComponent implements OnInit {
         
         // If refresh fails, check if we need to redirect to login
         if (error.status === 401) {
-          console.log('Token refresh failed with 401. You need to log in again.');
           this.errorMessage = 'Your session has expired. Please log in again.';
           // Redirect to login after a short delay
           setTimeout(() => {

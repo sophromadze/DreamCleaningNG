@@ -47,11 +47,6 @@ export class MainComponent implements OnInit, OnDestroy {
     this.loadReviews();
     this.loadSpecialOffers();
     this.checkAuthStatus();
-
-    // Add debug method to window
-    if (this.isBrowser) {
-      (window as any).debugMainAuth = () => this.debugAuth();
-    }
   }
 
   ngOnDestroy() {
@@ -105,7 +100,6 @@ export class MainComponent implements OnInit, OnDestroy {
     this.subscription.add(
       this.authService.currentUser.subscribe(user => {
         this.isLoggedIn = !!user;
-        console.log('Auth state changed - isLoggedIn:', this.isLoggedIn);
         if (this.isLoggedIn) {
           this.loadUserOffers();
         } else {
@@ -168,14 +162,5 @@ export class MainComponent implements OnInit, OnDestroy {
         window.location.href = '/login';
       }
     }
-  }
-
-  // Debug method to check auth state
-  debugAuth() {
-    console.log('Component isLoggedIn:', this.isLoggedIn);
-    console.log('AuthService isLoggedIn():', this.authService.isLoggedIn());
-    console.log('Current user:', this.authService.currentUserValue);
-    console.log('isLoadingOffers:', this.isLoadingOffers);
-    console.log('Condition !isLoggedIn && !isLoadingOffers:', !this.isLoggedIn && !this.isLoadingOffers);
   }
 }

@@ -173,7 +173,6 @@ export class AuthInterceptor implements HttpInterceptor {
   private handle401Error(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // Don't try to refresh for auth endpoints
     if (request.url.includes('/auth/')) {
-      console.log('Auth endpoint returned 401, logging out user');
       this.authService.logout();
       return throwError(() => new Error('Authentication failed'));
     }
@@ -182,12 +181,9 @@ export class AuthInterceptor implements HttpInterceptor {
       this.isRefreshing = true;
       this.refreshTokenSubject.next(null);
 
-      console.log('Attempting to refresh token...');
-
       return this.authService.refreshToken().pipe(
         switchMap((response: any) => {
           this.isRefreshing = false;
-          console.log('Token refresh successful');
           
           if (this.useCookieAuth) {
             // For cookie auth, just retry the request
@@ -206,8 +202,6 @@ export class AuthInterceptor implements HttpInterceptor {
           if (err.error && err.error.message && 
               (err.error.message.includes('Invalid refresh token') || 
                err.error.message.includes('Refresh token expired'))) {
-            
-            console.log('Refresh token validation failed, attempting automatic recovery...');
             
             // The auth service should have already attempted recovery
             // If we get here, recovery failed, so logout

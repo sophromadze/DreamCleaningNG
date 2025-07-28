@@ -324,27 +324,22 @@ export class AuthService {
   private navigateToLogin(): void {
     // Try router navigation first - use the correct login route
     this.router.navigate(['/login']).then(() => {
-      console.log('Successfully redirected to login page');
     }).catch(error => {
       console.error('Error redirecting to login page:', error);
       
       // Try alternative routes
       this.router.navigate(['/auth/login']).then(() => {
-        console.log('Successfully redirected to alternative login page');
       }).catch(() => {
         // If all router navigation fails, use window.location
-        console.log('Router navigation failed, using window.location');
         window.location.href = '/login';
       });
     });
   }
 
   logout(): void {
-    console.log('Logging out user');
     
     // Prevent multiple logout calls
     if (!this.currentUserValue) {
-      console.log('User already logged out, skipping logout process');
       return;
     }
     
@@ -365,7 +360,6 @@ export class AuthService {
         // For cookie auth, also call server logout to clear cookies
         this.serverLogout().subscribe({
           next: () => {
-            console.log('Server logout successful');
           },
           error: (error) => {
             console.error('Server logout failed:', error);
@@ -416,7 +410,6 @@ export class AuthService {
 
   // Automatic recovery mechanism for refresh token failures
   private async attemptTokenRecovery(): Promise<boolean> {
-    console.log('Attempting automatic token recovery...');
     
     if (this.useCookieAuth) {
       // For cookie auth, try to validate current session
@@ -425,12 +418,10 @@ export class AuthService {
           .toPromise();
         
         if (user) {
-          console.log('Token recovery successful for cookie auth - session is valid');
           this.currentUserSubject.next(user);
           return true;
         }
       } catch (error) {
-        console.log('Token recovery failed for cookie auth:', error);
       }
       
       return false;
@@ -442,7 +433,6 @@ export class AuthService {
         .toPromise();
       
       if (response) {
-        console.log('Token recovery successful via refresh-user-token');
         if (this.isBrowser) {
           localStorage.setItem('currentUser', JSON.stringify(response.user));
           localStorage.setItem('token', response.token);
@@ -452,7 +442,6 @@ export class AuthService {
         return true;
       }
     } catch (error) {
-      console.log('Token recovery via refresh-user-token failed:', error);
     }
     
     // If that fails, try to validate current user session
@@ -460,13 +449,11 @@ export class AuthService {
       const user = await this.http.get<UserDto>(`${this.apiUrl}/auth/current-user`, {}).toPromise();
       
       if (user) {
-        console.log('Current user session is still valid, attempting to get fresh tokens...');
         // Try to get fresh tokens again
         const tokenResponse = await this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh-user-token`, {}, {})
           .toPromise();
         
         if (tokenResponse) {
-          console.log('Token recovery successful after session validation');
           if (this.isBrowser) {
             localStorage.setItem('currentUser', JSON.stringify(tokenResponse.user));
             localStorage.setItem('token', tokenResponse.token);
@@ -477,10 +464,8 @@ export class AuthService {
         }
       }
     } catch (error) {
-      console.log('Session validation failed:', error);
     }
     
-    console.log('All token recovery attempts failed');
     return false;
   }
 
@@ -490,7 +475,6 @@ export class AuthService {
       return this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh-token`, {}, { withCredentials: true })
         .pipe(
           map(response => {
-            console.log('Token refreshed successfully (cookie auth)');
             this.currentUserSubject.next(response.user);
             return response;
           }),
@@ -514,7 +498,6 @@ export class AuthService {
       RefreshToken: refreshToken
     }).pipe(
       map(response => {
-        console.log('Token refreshed successfully (localStorage auth)');
         if (this.isBrowser) {
           localStorage.setItem('currentUser', JSON.stringify(response.user));
           localStorage.setItem('token', response.token);
@@ -530,8 +513,6 @@ export class AuthService {
         if (error.error && error.error.message && 
             (error.error.message.includes('Invalid refresh token') || 
              error.error.message.includes('Refresh token expired'))) {
-          
-          console.log('Detected refresh token validation error, attempting recovery...');
           
           // Attempt automatic recovery using switchMap to handle async operation
           return from(this.attemptTokenRecovery()).pipe(
@@ -549,7 +530,6 @@ export class AuthService {
                 }
               } else {
                 // Recovery failed, clear auth data and logout
-                console.log('Token recovery failed, logging out user');
                 this.clearAllAuthData();
                 this.router.navigate(['/login']);
               }
@@ -708,7 +688,6 @@ export class AuthService {
     const options = this.useCookieAuth ? { withCredentials: true } : {};
     return this.http.get<UserDto>(`${this.apiUrl}/auth/current-user`, options).pipe(
       map(user => {
-        console.log('Current user session is valid');
         this.currentUserSubject.next(user);
         return user;
       }),
@@ -739,14 +718,12 @@ export class AuthService {
 
   // Force refresh refresh token by clearing and re-logging
   forceRefreshToken(): Observable<AuthResponse> {
-    console.log('Force refreshing refresh token...');
     
     if (this.useCookieAuth) {
       // For cookie auth, just try to refresh normally
       return this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh-token`, {}, { withCredentials: true })
         .pipe(
           map(response => {
-            console.log('Force refresh successful (cookie auth)');
             this.currentUserSubject.next(response.user);
             return response;
           }),
@@ -775,7 +752,6 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${this.apiUrl}/auth/refresh-user-token`, {}, {})
       .pipe(
         map(response => {
-          console.log('Force refresh successful (localStorage auth)');
           if (this.isBrowser) {
             localStorage.setItem('currentUser', JSON.stringify(response.user));
             localStorage.setItem('token', response.token);
@@ -795,7 +771,6 @@ export class AuthService {
 
   // Clear all authentication data and force fresh login
   clearAllAuthData(): void {
-    console.log('Clearing all authentication data...');
     
     // Clear user data
     this.currentUserSubject.next(null);
@@ -813,6 +788,5 @@ export class AuthService {
       }
     }
     
-    console.log('All authentication data cleared');
   }
 }

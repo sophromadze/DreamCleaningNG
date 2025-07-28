@@ -32,10 +32,6 @@ export class CleanerCalendarComponent implements OnInit {
   loadCalendar() {
     this.cleanerService.getCleanerCalendar().subscribe({
       next: (items) => {
-        console.log('Received calendar items:', items);
-        if (items.length > 0) {
-          console.log('Sample item serviceDate:', items[0].serviceDate, 'Type:', typeof items[0].serviceDate);
-        }
         this.calendarItems = items;
         this.generateCalendar();
       },
@@ -59,17 +55,7 @@ export class CleanerCalendarComponent implements OnInit {
         // Parse the service date and convert to local date to avoid timezone issues
         const serviceDate = this.parseServiceDate(item.serviceDate);
         const serviceDateString = this.formatDateToLocalString(serviceDate);
-        
-        // Debug logging for date comparison
-        if (item.orderId === 1) { // Adjust this to match a specific order ID you're testing
-          console.log(`Comparing dates for order ${item.orderId}:`);
-          console.log(`  Calendar date: ${dateString}`);
-          console.log(`  Service date original: ${item.serviceDate}`);
-          console.log(`  Service date parsed: ${serviceDate}`);
-          console.log(`  Service date formatted: ${serviceDateString}`);
-          console.log(`  Match: ${serviceDateString === dateString}`);
-        }
-        
+                
         return serviceDateString === dateString;
       });
       
