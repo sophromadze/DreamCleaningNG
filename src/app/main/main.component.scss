@@ -42,57 +42,30 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 15px;
-        margin: 20px 0;
-        padding: 15px 25px;
-        background: linear-gradient(135deg, var(--soft-blue) 0%, var(--mint-fresh) 100%);
-        border-radius: 50px;
-        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.15);
-        border: 1px solid rgba(0, 123, 255, 0.2);
-        position: relative;
-        overflow: hidden;
-
-        &::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
-          animation: shimmer 3s ease-in-out infinite;
-        }
+        flex-wrap: wrap;
+        padding: 5px;
+        gap: 10px;
 
         .location-btn {
-          font-size: 1.3rem;
+          font-size: 1.1rem;
           font-weight: 600;
           color: var(--primary-color);
-          margin: 0;
-          padding: 8px 16px;
-          border-radius: 25px;
-          background: rgba(255, 255, 255, 0.9);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          background: var(--soft-lavender-background-light);
+          border: 2px solid var(--primary-color);
+          padding: 10px 15px;
+          border-radius: 12px;
           transition: all 0.3s ease;
-          position: relative;
-          z-index: 1;
-          border: 1px solid rgba(0, 123, 255, 0.1);
           cursor: pointer;
           font-family: inherit;
           text-decoration: none;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-
-          &:not(:last-child) {
-            border-right: none;
-            margin-right: 5px;
-          }
+          min-width: 140px;
 
           &:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
-            background: rgba(255, 255, 255, 1);
-            color: var(--primary-color);
+            box-shadow: var(--btn-primary-shadow-hover);
           }
 
           &:active {
@@ -100,9 +73,9 @@
           }
 
           &::before {
-            content: '📍';
+            content: '🏢';
             margin-right: 8px;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
           }
         }
       }
@@ -140,7 +113,7 @@
     align-items: center;
     justify-content: center;
     gap: 15px;
-    margin: 20px 0;
+    margin: 5px 0;
 
     a {
       width: 100%;
@@ -1651,7 +1624,8 @@
       
       .main-image-container {
         height: 220px;
-        max-width: 100%;
+        width: 100%;
+        max-width: 500px;
         border-radius: 12px;
         margin: 0 15px;
       }
@@ -1670,17 +1644,19 @@
       }
       
       hgroup {
-        gap: 6px;
-        padding: 10px 16px;
-        margin: 12px 0;
+        gap: 8px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
         
         .location-btn {
-          font-size: 1rem;
-          padding: 5px 10px;
+          font-size: 0.95rem;
+          padding: 10px 16px;
+          min-width: 120px;
           
           &::before {
-            font-size: 0.9rem;
-            margin-right: 5px;
+            font-size: 1rem;
+            margin-right: 6px;
           }
         }
       }
@@ -2214,17 +2190,19 @@
     }
     
     hgroup {
-      gap: 4px;
-      padding: 8px 12px;
-      margin: 8px 0;
+      gap: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
       
       .location-btn {
-        font-size: 0.9rem;
-        padding: 4px 8px;
+        font-size: 0.85rem;
+        padding: 8px 12px;
+        min-width: 100px;
         
         &::before {
-          font-size: 0.8rem;
-          margin-right: 4px;
+          font-size: 0.9rem;
+          margin-right: 5px;
         }
       }
     }

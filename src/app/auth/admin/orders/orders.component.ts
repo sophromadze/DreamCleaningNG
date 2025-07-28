@@ -706,16 +706,9 @@ export class OrdersComponent implements OnInit {
       return '0h';
     }
     
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    
-    if (hours === 0) {
-      return `${mins}min`;
-    } else if (mins === 0) {
-      return `${hours}h`;
-    } else {
-      return `${hours}h ${mins}min`;
-    }
+    // Use the same rounding logic as other components
+    const adjustedMinutes = Math.max(minutes, 60);
+    return DurationUtils.formatDurationRounded(adjustedMinutes);
   }
 
   formatCurrency(amount: number): string {
