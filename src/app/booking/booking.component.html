@@ -54,6 +54,25 @@
                 <p>{{ selectedServiceType.description }}</p>
               </div>
             </div>
+
+            <!-- Important Notes Section -->
+            <div class="important-notes" *ngIf="selectedServiceType">
+              <!-- Move In/Out Cleaning Notes -->
+              <div class="service-notes" *ngIf="getServiceSpecificInfo() === 'move-in-out'">
+                <h4>Important Notes</h4>
+                <p>This service includes fridge interior, baseboards, and medium size, empty kitchen cabinet cleaning.</p>
+                <p><strong>Planning a move?</strong><br>
+                Don't forget to check off Extras like oven or window cleaning — they're not included by default.</p>
+                <p><strong>If your home is above average in size, please consider adding more time for detailed cleaning of cabinets and walls.</strong></p>
+              </div>
+
+              <!-- Heavy Condition Cleaning Notes -->
+              <div class="service-notes" *ngIf="getServiceSpecificInfo() === 'heavy-condition'">
+                <h4>Recommended for homes that haven't been professionally cleaned in months or need extra attention due to heavy buildup and neglected areas.</h4>
+              </div>
+
+
+            </div>
           </div>
         </section>
 
@@ -233,28 +252,78 @@
 
   <!-- Step 3: Extra Services -->
   <section class="booking-section">
-    <h2>Add Extra Services</h2>
+    <h2>Extra Services</h2>
     
-    <div class="extra-services-info">
-      <p><strong>Deep Cleaning Includes:</strong> Inside of the Fridge and inside the oven. All other services you must select by yourself.</p>
-      <p><strong>We will not be able to do the following:</strong></p>
-      <ul>
-        <li>Moving Heavy Furniture and Appliances</li>
-        <li>Exterior Window Cleaning</li>
-        <li>Pet Waste</li>
-      </ul>
-    </div>
+    
     
     <!-- Cleaning Type Selection -->
     <div class="cleaning-type-selection">
       <label>Cleaning Type <span class="required">*</span></label>
-      <select [formControl]="cleaningType" (change)="onCleaningTypeChange(cleaningType.value)" id="cleaningType">
-        <option value="normal">Regular Cleaning</option>
-        <option value="deep">Deep Cleaning</option>
-        <option value="super-deep">Super Deep Cleaning</option>
-      </select>
+      <div class="cleaning-type-buttons">
+        <button 
+          type="button"
+          class="cleaning-type-btn"
+          [class.selected]="cleaningType.value === 'normal'"
+          (click)="selectCleaningType('normal')">
+          Regular Cleaning
+        </button>
+        <button 
+          type="button"
+          class="cleaning-type-btn"
+          [class.selected]="cleaningType.value === 'deep'"
+          (click)="selectCleaningType('deep')">
+          Deep Cleaning
+        </button>
+      </div>
       <div class="error-message" *ngIf="cleaningType.invalid && cleaningType.touched">
         <div *ngIf="cleaningType.errors?.['required']">Cleaning type is required</div>
+      </div>
+    </div>
+
+    <!-- Cleaning Type Descriptions -->
+    <div class="cleaning-type-info" *ngIf="selectedServiceType">
+      <!-- Regular Cleaning Description -->
+      <div class="cleaning-info-card" *ngIf="cleaningType.value === 'normal'">
+        <h4>General surface cleaning and tidying for a well-maintained home.</h4>
+      </div>
+
+      <!-- Deep Cleaning Description -->
+      <div class="cleaning-info-card" *ngIf="cleaningType.value === 'deep'">
+        <h4>What to Expect</h4>
+        <p>Our deep cleaning package includes detailed attention to areas like baseboards and the interior of your fridge.</p>
+        <p>If you need oven scrubbing, window, or wall washing, make sure to add them from the Extras section.</p>
+        <p><strong>💡 For larger apartments or heavily used kitchens, please allow extra time for cabinet and wall care to ensure top-quality results.</strong></p>
+      </div>
+    </div>
+
+    <!-- General Information -->
+    <div class="extra-services-info" *ngIf="selectedServiceType">
+      <div class="general-info">
+        <h4>🧼 What We Bring vs What You Provide</h4>
+        <p>Need us to bring cleaning products (sprays, detergents, cloths)? Just add them through the Extras.</p>
+        <p>However, customers are responsible for providing:</p>
+        <ul>
+          <li>A vacuum cleaner or broom</li>
+          <li>Mop & bucket</li>
+          <li>A toilet brush</li>
+        </ul>
+        <p><strong>⚠️ These tools help our team work efficiently. If you don't have them, just let us know or choose in extras advance!</strong></p>
+      </div>
+      
+      <div class="additional-reminders">
+        <h4>📢 Additional Reminders</h4>
+        <p><strong>⏰ Time Matters</strong><br>
+        Our cleaning time is based on the number of hours booked.<br>
+        If your home hasn't been cleaned in a while or needs extra attention, we recommend booking more hours or requesting a walk-through estimate.</p>
+      </div>
+      
+      <div class="restrictions-info">
+        <h4>We will not be able to do the following:</h4>
+        <ul>
+          <li>Moving Heavy Furniture and Appliances</li>
+          <li>Exterior Window Cleaning</li>
+          <li>Pet Waste</li>
+        </ul>
       </div>
     </div>
 
@@ -582,6 +651,9 @@
   <!-- Step 9/7: Special Instructions -->
   <section class="booking-section">
     <h2>Special Instructions (Optional)</h2>
+    <div class="customize-cleaning-text">
+      <p>Every space is different. Want us to focus on specific areas like baseboards, inside cabinets, or pet-related mess? Be sure to leave notes when booking or contact us directly — we're happy to personalize your cleaning!</p>
+    </div>
     <div class="form-group">
       <textarea [formControl]="specialInstructions"
                 rows="4" 
@@ -1034,7 +1106,7 @@
 
         <div class="faq-item">
           <h3>🧼 Is fridge interior cleaning included?</h3>
-          <p>✅ Deep Cleaning, Move-In/Out, and Super Deep Cleaning include interior fridge cleaning.<br>
+          <p>✅ Deep Cleaning, Move-In/Out, and Heavy Condition Cleaning include interior fridge cleaning.<br>
           👉 For Standard Cleaning, it can be added as an extra.</p>
         </div>
 
@@ -1044,9 +1116,9 @@
         </div>
 
         <div class="faq-item">
-          <h3>🧽 What's the difference between Deep and Super Deep Cleaning?</h3>
+          <h3>🧽 What's the difference between Deep and Heavy Condition Cleaning?</h3>
           <p>Deep Cleaning includes baseboards, hard-to-reach areas, and dusting above head level.<br>
-          Super Deep Cleaning goes further: it covers wall washing, cabinet interiors, under sinks, and more. Perfect for neglected or high-traffic spaces.</p>
+          Heavy Condition Cleaning goes further: it covers wall washing, cabinet interiors, under sinks, and more. Perfect for neglected or high-traffic spaces.</p>
         </div>
 
         <div class="faq-item">

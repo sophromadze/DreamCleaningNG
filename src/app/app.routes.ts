@@ -59,6 +59,10 @@ export const routes: Routes = [
     loadComponent: () => import('./service-page/services/move-in-out-cleaning/move-in-out-cleaning.component').then(m => m.MoveInOutCleaningComponent)
   },
   {
+    path: 'services/heavy-condition-cleaning',
+    loadComponent: () => import('./service-page/services/heavy-condition-cleaning/heavy-condition-cleaning.component').then(m => m.HeavyConditionCleaningComponent)
+  },
+  {
     path: 'services/filthy-cleaning',
     loadComponent: () => import('./service-page/services/filthy-cleaning/filthy-cleaning.component').then(m => m.FilthyCleaningComponent)
   },

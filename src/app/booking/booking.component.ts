@@ -2448,16 +2448,15 @@ export class BookingComponent implements OnInit, OnDestroy {
 
   // Handle cleaning type selection
   onCleaningTypeChange(cleaningType: string) {
-    // Remove any existing deep cleaning or super deep cleaning services
+    // Remove any existing deep cleaning services
     this.selectedExtraServices = this.selectedExtraServices.filter(
-      s => !s.extraService.isDeepCleaning && !s.extraService.isSuperDeepCleaning
+      s => !s.extraService.isDeepCleaning
     );
 
     // Add the selected cleaning type if not normal
     if (cleaningType !== 'normal' && this.selectedServiceType) {
       const cleaningService = this.selectedServiceType.extraServices.find(extra => {
         if (cleaningType === 'deep' && extra.isDeepCleaning) return true;
-        if (cleaningType === 'super-deep' && extra.isSuperDeepCleaning) return true;
         return false;
       });
 
@@ -2472,6 +2471,12 @@ export class BookingComponent implements OnInit, OnDestroy {
 
     this.calculateTotal();
     this.saveFormData();
+  }
+
+  selectCleaningType(cleaningType: string) {
+    this.cleaningType.setValue(cleaningType);
+    this.cleaningType.markAsTouched();
+    this.onCleaningTypeChange(cleaningType);
   }
 
   onDurationChange(duration: number) {
@@ -2582,11 +2587,8 @@ export class BookingComponent implements OnInit, OnDestroy {
   // Get current cleaning type from form
   getCurrentCleaningType(): string {
     const deepCleaning = this.selectedExtraServices.find(s => s.extraService.isDeepCleaning);
-    const superDeepCleaning = this.selectedExtraServices.find(s => s.extraService.isSuperDeepCleaning);
     
-    if (superDeepCleaning) {
-      return 'super-deep';
-    } else if (deepCleaning) {
+    if (deepCleaning) {
       return 'deep';
     }
     return 'normal';
@@ -2867,5 +2869,23 @@ export class BookingComponent implements OnInit, OnDestroy {
     if (this.isBrowser) {
       document.body.style.overflow = '';
     }
+  }
+
+  getServiceSpecificInfo(): string {
+    if (!this.selectedServiceType) return '';
+    
+    const serviceName = this.selectedServiceType.name.toLowerCase();
+    
+    if (serviceName.includes('move in') || serviceName.includes('move out') || serviceName.includes('move-in') || serviceName.includes('move-out')) {
+      return 'move-in-out';
+    } else if (serviceName.includes('heavy condition') || serviceName.includes('heavy-condition')) {
+      return 'heavy-condition';
+    } else {
+      return 'standard';
+    }
+  }
+
+  isDeepCleaningSelected(): boolean {
+    return this.selectedExtraServices.some(service => service.extraService.isDeepCleaning);
   }
 }
