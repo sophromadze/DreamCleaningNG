@@ -19,15 +19,19 @@
       </div>
       <div class="stat-card">
         <div class="stat-value">${{ formatCurrency(totalAmount) }}</div>
-        <div class="stat-label">Total Amount</div>
+        <div class="stat-label">Total Amount (No Tips)</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${{ formatCurrency(totalAmountWithoutTaxes) }}</div>
-        <div class="stat-label">Amount (No Tax)</div>
+        <div class="stat-value">${{ formatCurrency(totalTaxes) }}</div>
+        <div class="stat-label">Total Taxes</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">${{ formatCurrency(totalAmountWithoutTips) }}</div>
-        <div class="stat-label">Amount (No Tips)</div>
+        <div class="stat-value">${{ formatCurrency(totalTips) }}</div>
+        <div class="stat-label">Total Tips</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">${{ formatCurrency(totalAmountWithoutTipsAndTaxes) }}</div>
+        <div class="stat-label">Amount (No Tips & Tax)</div>
       </div>
       <div class="stat-card">
         <div class="stat-value">{{ formatTotalDuration(totalDuration) }}</div>

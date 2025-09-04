@@ -93,8 +93,9 @@ export class OrdersComponent implements OnInit {
   isSuperAdmin = false;
   totalOrders = 0;
   totalAmount = 0;
-  totalAmountWithoutTaxes = 0;
-  totalAmountWithoutTips = 0;
+  totalTaxes = 0;
+  totalTips = 0;
+  totalAmountWithoutTipsAndTaxes = 0;
   totalDuration = 0;
 
   constructor(
@@ -200,43 +201,73 @@ export class OrdersComponent implements OnInit {
   }
 
   private calculateStatistics() {
-    this.totalOrders = this.orders.length;
-    this.totalAmount = this.orders.reduce((sum, order) => sum + (order.total || 0), 0);
+    // Filter out pending and cancelled orders for calculations
+    const validOrders = this.orders.filter(order => 
+      order.status && 
+      order.status.toLowerCase() !== 'pending' && 
+      order.status.toLowerCase() !== 'cancelled'
+    );
     
-    // Calculate total amount without taxes (8.887%)
-    const taxRate = 0.08887;
-    this.totalAmountWithoutTaxes = this.totalAmount / (1 + taxRate);
-    
-    // Calculate total amount without tips
-    this.totalAmountWithoutTips = this.orders.reduce((sum, order) => {
+    this.totalOrders = validOrders.length;
+    // Calculate total amount without tips (since tips don't count for taxes)
+    this.totalAmount = validOrders.reduce((sum, order) => {
       const orderTotal = order.total || 0;
       const orderTips = order.tips || 0;
       const orderCompanyTips = order.companyDevelopmentTips || 0;
       return sum + (orderTotal - orderTips - orderCompanyTips);
     }, 0);
     
+    // Calculate total taxes as 8.887% of total amount (no tips)
+    const taxRate = 0.08887;
+    this.totalTaxes = this.totalAmount * taxRate;
+    
+    // Calculate total tips (cleaner tips + company development tips)
+    this.totalTips = validOrders.reduce((sum, order) => {
+      const orderTips = order.tips || 0;
+      const orderCompanyTips = order.companyDevelopmentTips || 0;
+      return sum + orderTips + orderCompanyTips;
+    }, 0);
+    
+    // Calculate total amount without tips and taxes (base service amount)
+    this.totalAmountWithoutTipsAndTaxes = this.totalAmount - this.totalTaxes;
+    
     // Calculate total duration from the totalDuration property
-    this.totalDuration = this.orders.reduce((sum, order) => sum + (order.totalDuration || 0), 0);
+    this.totalDuration = validOrders.reduce((sum, order) => sum + (order.totalDuration || 0), 0);
   }
 
   private calculateStatisticsFromFiltered(filteredOrders: AdminOrderList[]) {
-    this.totalOrders = filteredOrders.length;
-    this.totalAmount = filteredOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+    // Filter out pending and cancelled orders for calculations
+    const validOrders = filteredOrders.filter(order => 
+      order.status && 
+      order.status.toLowerCase() !== 'pending' && 
+      order.status.toLowerCase() !== 'cancelled'
+    );
     
-    // Calculate total amount without taxes (8.887%)
-    const taxRate = 0.08887;
-    this.totalAmountWithoutTaxes = this.totalAmount / (1 + taxRate);
-    
-    // Calculate total amount without tips
-    this.totalAmountWithoutTips = filteredOrders.reduce((sum, order) => {
+    this.totalOrders = validOrders.length;
+    // Calculate total amount without tips (since tips don't count for taxes)
+    this.totalAmount = validOrders.reduce((sum, order) => {
       const orderTotal = order.total || 0;
       const orderTips = order.tips || 0;
       const orderCompanyTips = order.companyDevelopmentTips || 0;
       return sum + (orderTotal - orderTips - orderCompanyTips);
     }, 0);
     
+    // Calculate total taxes as 8.887% of total amount (no tips)
+    const taxRate = 0.08887;
+    this.totalTaxes = this.totalAmount * taxRate;
+    
+    // Calculate total tips (cleaner tips + company development tips)
+    this.totalTips = validOrders.reduce((sum, order) => {
+      const orderTips = order.tips || 0;
+      const orderCompanyTips = order.companyDevelopmentTips || 0;
+      return sum + orderTips + orderCompanyTips;
+    }, 0);
+    
+    // Calculate total amount without tips and taxes (base service amount)
+    this.totalAmountWithoutTipsAndTaxes = this.totalAmount - this.totalTaxes;
+    
     // Calculate total duration from the totalDuration property
-    this.totalDuration = filteredOrders.reduce((sum, order) => sum + (order.totalDuration || 0), 0);
+    this.totalDuration = validOrders.reduce((sum, order) => sum + (order.totalDuration || 0), 0);
   }
 
   // Helper method to refresh a single order's assigned cleaners
