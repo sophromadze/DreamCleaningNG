@@ -5,6 +5,7 @@ import { HeaderComponent } from './header/header.component';
 import { FooterComponent } from './footer/footer.component';
 import { NotificationModalComponent } from './notification-modal/notification-modal.component';
 import { FloatingActionButtonsComponent } from './floating-action-buttons/floating-action-buttons.component';
+import { ContinueBookingComponent } from './continue-booking/continue-booking.component';
 import { AuthService } from './services/auth.service';
 import { TokenRefreshService } from './services/token-refresh.service';
 import { Subscription } from 'rxjs';
@@ -13,12 +14,13 @@ import { Subscription } from 'rxjs';
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule, 
-    RouterOutlet, 
-    HeaderComponent, 
+    CommonModule,
+    RouterOutlet,
+    HeaderComponent,
     FooterComponent,
     NotificationModalComponent,
-    FloatingActionButtonsComponent
+    FloatingActionButtonsComponent,
+    ContinueBookingComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

@@ -1,0 +1,33 @@
+<div class="continue-booking-container" *ngIf="showContinueBooking" [class.expanded]="isExpanded">
+  <!-- Expanded State -->
+  <div class="continue-booking-card" *ngIf="isExpanded">
+    <div class="continue-booking-content">
+      <div class="continue-booking-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="continue-booking-text">
+        <span class="continue-booking-title">Continue Booking</span>
+        <span class="continue-booking-subtitle">Your booking is saved</span>
+      </div>
+    </div>
+    <div class="continue-booking-actions">
+      <button class="continue-booking-btn" (click)="onContinueBooking()">
+        Continue
+      </button>
+      <button class="continue-booking-dismiss" (click)="onDismiss()" aria-label="Collapse">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Toggle Button (Collapsed State) -->
+  <button class="toggle-button" *ngIf="!isExpanded" (click)="toggleExpanded()" title="Continue Booking">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+</div>

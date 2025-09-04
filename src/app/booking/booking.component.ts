@@ -272,6 +272,11 @@ export class BookingComponent implements OnInit, OnDestroy {
     // Load saved form data if exists
     this.loadSavedFormData();
     
+    // Mark booking as started if we have any saved data
+    if (this.formPersistenceService.hasSavedData()) {
+      this.formPersistenceService.markBookingStarted();
+    }
+    
     // Initialize entry method to empty only if no saved data exists
     if (!this.entryMethod.value) {
       this.entryMethod.setValue('');
@@ -761,6 +766,11 @@ export class BookingComponent implements OnInit, OnDestroy {
     };
   
     this.formPersistenceService.saveFormData(formData);
+    
+    // Mark booking as in progress if user is making changes
+    if (this.selectedServiceType) {
+      this.formPersistenceService.markBookingInProgress();
+    }
     
     // Also save the service type control value
     if (this.selectedServiceType) {
@@ -1883,8 +1893,9 @@ export class BookingComponent implements OnInit, OnDestroy {
     }
 
     if (!this.authService.isLoggedIn()) {
-      // Store the current booking state if needed
-      // You could implement a service to save the form state
+      // Mark booking as started and save current form state
+      this.formPersistenceService.markBookingStarted();
+      this.saveFormData();
       
       // Redirect to login with return URL
       this.router.navigate(['/login'], { 
@@ -2026,6 +2037,10 @@ export class BookingComponent implements OnInit, OnDestroy {
     // Store booking data in service instead of creating order immediately
     this.bookingDataService.setBookingData(bookingData);
     this.isLoading = false;
+    
+    // Mark booking as completed and clear form data
+    this.formPersistenceService.markBookingCompleted();
+    this.formPersistenceService.clearFormData();
     
     // Navigate to booking confirmation without creating the order yet
     this.router.navigate(['/booking-confirmation']);

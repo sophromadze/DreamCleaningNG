@@ -52,6 +52,10 @@ export interface BookingFormData {
   
   // Timestamp for when form was saved
   savedAt?: number;
+  
+  // Booking state tracking
+  hasStartedBooking?: boolean;
+  bookingProgress?: 'started' | 'in_progress' | 'completed';
 }
 
 @Injectable({
@@ -178,5 +182,54 @@ export class FormPersistenceService {
     const data = this.getFormData();
     if (!data || !data.savedAt) return 0;
     return Date.now() - data.savedAt;
+  }
+
+  /**
+   * Mark that user has started booking
+   */
+  markBookingStarted(): void {
+    const currentData = this.getFormData() || {};
+    const updatedData = {
+      ...currentData,
+      hasStartedBooking: true,
+      bookingProgress: 'started' as const,
+      savedAt: Date.now()
+    };
+    this.saveFormData(updatedData);
+  }
+
+  /**
+   * Mark that booking is in progress
+   */
+  markBookingInProgress(): void {
+    const currentData = this.getFormData() || {};
+    const updatedData = {
+      ...currentData,
+      hasStartedBooking: true,
+      bookingProgress: 'in_progress' as const,
+      savedAt: Date.now()
+    };
+    this.saveFormData(updatedData);
+  }
+
+  /**
+   * Mark that booking is completed
+   */
+  markBookingCompleted(): void {
+    const currentData = this.getFormData() || {};
+    const updatedData = {
+      ...currentData,
+      bookingProgress: 'completed' as const,
+      savedAt: Date.now()
+    };
+    this.saveFormData(updatedData);
+  }
+
+  /**
+   * Check if user has started booking
+   */
+  hasStartedBooking(): boolean {
+    const data = this.getFormData();
+    return !!(data && data.hasStartedBooking);
   }
 }
