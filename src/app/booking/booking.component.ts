@@ -520,6 +520,17 @@ export class BookingComponent implements OnInit, OnDestroy {
             
             this.calculateTotal();
           }
+        } else {
+          // No saved data, set default to "Residential Cleaning"
+          const residentialCleaning = this.serviceTypes.find(st => 
+            st.name.toLowerCase().includes('residential') && st.name.toLowerCase().includes('cleaning')
+          );
+          
+          if (residentialCleaning) {
+            this.serviceTypeControl.setValue(residentialCleaning.id);
+            this.selectServiceType(residentialCleaning);
+            this.calculateTotal();
+          }
         }
       },
       error: (error) => {
@@ -760,12 +771,58 @@ export class BookingComponent implements OnInit, OnDestroy {
   clearAllFormData() {
     if (confirm('Are you sure you want to clear all form data?')) {
       this.formPersistenceService.clearFormData();
+      
+      // Reset service type selection
       this.serviceTypeControl.setValue('');
-      this.router.navigate(['/booking']).then(() => {
-        if (this.isBrowser) {
-          window.location.reload();
-        }
-      });
+      this.selectedServiceType = null;
+      this.selectedServices = [];
+      this.selectedExtraServices = [];
+      
+      // Reset form to default values
+      this.bookingForm.reset();
+      
+      // Reset custom pricing
+      this.showCustomPricing = false;
+      this.customAmount.setValue('');
+      this.customCleaners.setValue(1);
+      this.customDuration.setValue(60);
+      
+      // Reset special offers and discounts
+      this.selectedSpecialOffer = null;
+      this.specialOfferApplied = false;
+      this.promoCodeApplied = false;
+      this.promoDiscount = 0;
+      this.promoIsPercentage = true;
+      
+      // Reset calculation
+      this.calculation = {
+        subTotal: 0,
+        tax: 0,
+        discountAmount: 0,
+        tips: 0,
+        total: 0,
+        totalDuration: 0
+      };
+      
+      // Reset UI state
+      this.serviceTypeDropdownOpen = false;
+      this.isSummaryCollapsed = false;
+      
+      // Set default date and time
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const year = tomorrow.getFullYear();
+      const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const day = String(tomorrow.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+      
+      this.serviceDate.setValue(formattedDate);
+      this.serviceTime.setValue('08:00');
+      this.cleaningType.setValue('normal');
+      this.tips.setValue(0);
+      this.companyDevelopmentTips.setValue(0);
+      this.smsConsent.setValue(false);
+      this.cancellationConsent.setValue(false);
     }
   }
 
