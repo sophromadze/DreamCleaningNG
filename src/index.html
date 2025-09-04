@@ -226,18 +226,23 @@
     }
   </script>
   
-  <!-- Google Analytics -->
+  <!-- Google tag (gtag.js) - Google Analytics & Google Ads -->
   <script>
     if (typeof window !== 'undefined') {
       const gtagScript = document.createElement('script');
       gtagScript.async = true;
-      gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-M7S3LFJJ36';
+      gtagScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-BTW932CB4K';
       document.head.appendChild(gtagScript);
       
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-M7S3LFJJ36');
+      
+      // Google Analytics
+      gtag('config', 'G-BTW932CB4K');
+      
+      // Google Ads (add your AW- ID here)
+      gtag('config', 'AW-16660459036');
     }
   </script>
   
@@ -250,11 +255,6 @@
       });
     }
   </script>
-  
-  <!-- Google Sign-In - Loaded dynamically in components -->
-  
-  <!-- Stripe -->
-  <!-- <script src="https://js.stripe.com/v3/"></script> -->
 
   <!-- Meta Pixel Code -->
   <script>
