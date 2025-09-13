@@ -17,7 +17,117 @@
           </button>
         </div>
         
-        <!-- Step 1: Service Type Selection - ALWAYS VISIBLE -->
+        <!-- Step 1: Contact Information - ALWAYS VISIBLE when service type is selected -->
+        <section class="booking-section" *ngIf="selectedServiceType">
+          <h2>Contact Information</h2>
+          <div class="contact-privacy-note">
+            <p>We will use this information to stay in touch with you. We don't share your personal information with anyone.</p>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <input type="text" [formControl]="contactFirstName" placeholder="First Name *" id="contactFirstName">
+              <div class="error-message" *ngIf="contactFirstName.invalid && contactFirstName.touched">
+                <div *ngIf="contactFirstName.errors?.['required']">First name is required</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <input type="text" [formControl]="contactLastName" placeholder="Last Name *" id="contactLastName">
+              <div class="error-message" *ngIf="contactLastName.invalid && contactLastName.touched">
+                <div *ngIf="contactLastName.errors?.['required']">Last name is required</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <input type="email" [formControl]="contactEmail" placeholder="Email *" id="contactEmail">
+              <div class="error-message" *ngIf="contactEmail.invalid && contactEmail.touched">
+                <div *ngIf="contactEmail.errors?.['required']">Email is required</div>
+                <div *ngIf="contactEmail.errors?.['email']">Please enter a valid email address</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <input type="tel" [formControl]="contactPhone" placeholder="Phone *" id="contactPhone">
+              <div class="error-message" *ngIf="contactPhone.invalid && contactPhone.touched">
+                <div *ngIf="contactPhone.errors?.['required']">Phone number is required</div>
+                <div *ngIf="contactPhone.errors?.['pattern']">Please enter a valid 10-digit phone number</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 2: Service Address - ALWAYS VISIBLE when service type is selected -->
+        <section class="booking-section" *ngIf="selectedServiceType">
+          <h2>Service Address</h2>
+          
+          <!-- Saved Address Dropdown - Always visible if user has apartments -->
+          <div class="address-options" *ngIf="userApartments.length > 0">
+            <div class="saved-address-container">
+              <div class="dropdown-with-clear">
+                <select [formControl]="selectedApartmentId" (change)="onApartmentSelect($event)">
+                  <option value="">Enter new address</option>
+                  <option *ngFor="let apt of userApartments" [value]="apt.id">
+                    {{ apt.name }} - {{ apt.address }}
+                  </option>
+                </select>
+                <button type="button" 
+                        class="clear-btn" 
+                        *ngIf="selectedApartmentId.value"
+                        (click)="clearApartmentSelection()">
+                  Clear
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Address Name Field - Only show when entering new address -->
+          <div class="form-group" *ngIf="!selectedApartmentId.value">
+            <input type="text" 
+                    [formControl]="apartmentName"
+                    placeholder="Address Name * (e.g., Home, Office, Mom's House)"
+                    maxlength="100"
+                    id="apartmentName">
+            <div class="error-message" *ngIf="apartmentName.invalid && apartmentName.touched">
+              <div *ngIf="apartmentName.errors?.['required']">Address name is required</div>
+            </div>
+          </div>
+          
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <input type="text" [formControl]="serviceAddress" placeholder="Address *" id="serviceAddress">
+              <div class="error-message" *ngIf="serviceAddress.invalid && serviceAddress.touched">
+                <div *ngIf="serviceAddress.errors?.['required']">Service address is required</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <input type="text" [formControl]="aptSuite" placeholder="Apt/Suite">
+            </div>
+            <div class="form-group">
+              <select [formControl]="city" id="city">
+                <option value="">City *</option>
+                <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+              </select>
+              <div class="error-message" *ngIf="city.invalid && city.touched">
+                <div *ngIf="city.errors?.['required']">City is required</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <select [formControl]="state" (change)="onStateChange(state.value)" id="state">
+                <option value="">State *</option>
+                <option *ngFor="let state of states" [value]="state">{{ state }}</option>
+              </select>
+              <div class="error-message" *ngIf="state.invalid && state.touched">
+                <div *ngIf="state.errors?.['required']">State is required</div>
+              </div>
+            </div>
+            <div class="form-group">
+              <input type="text" [formControl]="zipCode" placeholder="Zip Code *" id="zipCode">
+              <div class="error-message" *ngIf="zipCode.invalid && zipCode.touched">
+                <div *ngIf="zipCode.errors?.['required']">Zip code is required</div>
+                <div *ngIf="zipCode.errors?.['pattern']">Please enter a valid 5-digit zip code</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Step 3: Service Type Selection - ALWAYS VISIBLE -->
         <section class="booking-section">
           <h2>Select Service Type</h2>
           <div class="service-type-selection">
@@ -204,7 +314,7 @@
 
         <!-- Regular Booking Sections (ONLY services and extra services - hidden for poll and custom) -->
 <ng-container *ngIf="selectedServiceType && !showPollForm && !showCustomPricing">
-  <!-- Step 2: Services -->
+  <!-- Step 4: Services -->
   <section class="booking-section">
     <h2>Customize Your Service</h2>
     
@@ -250,11 +360,53 @@
     </div>
   </section>
 
-  <!-- Step 3: Extra Services -->
+  <!-- Step 5: Extra Services -->
   <section class="booking-section">
     <h2>Extra Services</h2>
     
-    
+    <!-- General Information -->
+    <div class="extra-services-info" *ngIf="selectedServiceType">
+      <div class="general-info">
+        <h4>What We Bring vs What You Provide?</h4>
+        
+        <div class="expandable-content" [class.collapsed]="!isExtraInfoExpanded" [class.expanded]="isExtraInfoExpanded">
+          <p>Need us to bring cleaning products (sprays, detergents, cloths)? Just add them through the Extras.</p>
+          <p>However, customers are responsible for providing:</p>
+          <ul>
+            <li>A vacuum cleaner or broom</li>
+            <li>Mop & bucket</li>
+            <li>A toilet brush</li>
+          </ul>
+          <p><strong>These tools help our team work efficiently. If you don't have them, just let us know or choose in extras advance!</strong></p>
+        </div>
+      </div>
+      
+      <div class="expandable-content" [class.collapsed]="!isExtraInfoExpanded" [class.expanded]="isExtraInfoExpanded">
+        <div class="additional-reminders">
+          <h4>Additional Reminders</h4>
+          <p><strong>Time Matters</strong><br>
+          Our cleaning time is based on the number of hours booked.<br>
+          If your home hasn't been cleaned in a while or needs extra attention, we recommend booking more hours or requesting a walk-through estimate.</p>
+        </div>
+        
+        <div class="restrictions-info">
+          <h4>We will not be able to do the following:</h4>
+          <ul>
+            <li>Moving Heavy Furniture and Appliances</li>
+            <li>Exterior Window Cleaning</li>
+            <li>Pet Waste</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Button outside of collapsible content so it's always visible -->
+      <button class="see-more-toggle" (click)="toggleExtraInfoExpansion()">
+        <span [class.pulsate-text]="!isExtraInfoExpanded">{{ isExtraInfoExpanded ? 'See Less' : 'Click for More Info' }}</span>
+        <span class="chevron-icon" [class.up]="isExtraInfoExpanded">
+          <i class="fas fa-chevron-down" [class.pulsate]="!isExtraInfoExpanded"></i>
+        </span>
+      </button>
+    </div>
     
     <!-- Cleaning Type Selection -->
     <div class="cleaning-type-selection">
@@ -292,38 +444,7 @@
         <h4>What to Expect</h4>
         <p>Our deep cleaning package includes detailed attention to areas like baseboards and the interior of your fridge.</p>
         <p>If you need oven scrubbing, window, or wall washing, make sure to add them from the Extras section.</p>
-        <p><strong>💡 For larger apartments or heavily used kitchens, please allow extra time for cabinet and wall care to ensure top-quality results.</strong></p>
-      </div>
-    </div>
-
-    <!-- General Information -->
-    <div class="extra-services-info" *ngIf="selectedServiceType">
-      <div class="general-info">
-        <h4>🧼 What We Bring vs What You Provide</h4>
-        <p>Need us to bring cleaning products (sprays, detergents, cloths)? Just add them through the Extras.</p>
-        <p>However, customers are responsible for providing:</p>
-        <ul>
-          <li>A vacuum cleaner or broom</li>
-          <li>Mop & bucket</li>
-          <li>A toilet brush</li>
-        </ul>
-        <p><strong>⚠️ These tools help our team work efficiently. If you don't have them, just let us know or choose in extras advance!</strong></p>
-      </div>
-      
-      <div class="additional-reminders">
-        <h4>📢 Additional Reminders</h4>
-        <p><strong>⏰ Time Matters</strong><br>
-        Our cleaning time is based on the number of hours booked.<br>
-        If your home hasn't been cleaned in a while or needs extra attention, we recommend booking more hours or requesting a walk-through estimate.</p>
-      </div>
-      
-      <div class="restrictions-info">
-        <h4>We will not be able to do the following:</h4>
-        <ul>
-          <li>Moving Heavy Furniture and Appliances</li>
-          <li>Exterior Window Cleaning</li>
-          <li>Pet Waste</li>
-        </ul>
+        <p><strong>For larger apartments or heavily used kitchens, please allow extra time for cabinet and wall care to ensure top-quality results.</strong></p>
       </div>
     </div>
 
@@ -386,7 +507,7 @@
 
 <!-- Common sections for both regular and custom pricing (hidden only for poll) -->
 <ng-container *ngIf="selectedServiceType && !showPollForm">
-  <!-- Step 4/2: Date & Time -->
+  <!-- Step 6: Date & Time -->
   <section class="booking-section">
     <h2>Select Date & Time</h2>
     <div class="date-time-selection">
@@ -416,7 +537,7 @@
     </div>
   </section>
 
-  <!-- Step 5/3: Entry Method & Tips -->
+  <!-- Step 7: Entry Method & Tips -->
   <section class="booking-section">
     <div class="entry-tips-container">
       <!-- Entry Method -->
@@ -498,7 +619,7 @@
     </div>
   </section>
 
-  <!-- Step 6/4: Subscription -->
+  <!-- Step 8: Subscription -->
   <section class="booking-section">
     <h2>Select Subscription</h2>
     <p>Choose a subscription plan to save on your cleaning services</p>
@@ -523,7 +644,7 @@
     </div>
   </section>
 
-  <!-- Step 7/5: Discounts -->
+  <!-- Step 9: Discounts -->
   <section class="booking-section">
     <h2>Apply Discounts</h2>
     
@@ -622,7 +743,7 @@
 
 
 
-  <!-- Step 8/6: Tips for Company Development -->
+  <!-- Step 10: Tips for Company Development -->
   <section class="booking-section" style="display: none;">
     <h2>Tips for Company Development</h2>
     <div class="tips-section">
@@ -648,7 +769,7 @@
     </div>
   </section>
 
-  <!-- Step 9/7: Special Instructions -->
+  <!-- Step 11: Special Instructions -->
   <section class="booking-section">
     <h2>Special Instructions (Optional)</h2>
     <div class="customize-cleaning-text">
@@ -664,128 +785,6 @@
 
 
 
-<!-- Contact Information and Address - ALWAYS VISIBLE when service type is selected -->
-<ng-container *ngIf="selectedServiceType">
-  <!-- Step 10/8: Contact Information -->
-  <section class="booking-section">
-    <h2>Contact Information</h2>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>First Name <span class="required">*</span></label>
-        <input type="text" [formControl]="contactFirstName" id="contactFirstName">
-        <div class="error-message" *ngIf="contactFirstName.invalid && contactFirstName.touched">
-          <div *ngIf="contactFirstName.errors?.['required']">First name is required</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Last Name <span class="required">*</span></label>
-        <input type="text" [formControl]="contactLastName" id="contactLastName">
-        <div class="error-message" *ngIf="contactLastName.invalid && contactLastName.touched">
-          <div *ngIf="contactLastName.errors?.['required']">Last name is required</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Email <span class="required">*</span></label>
-        <input type="email" [formControl]="contactEmail" id="contactEmail">
-        <div class="error-message" *ngIf="contactEmail.invalid && contactEmail.touched">
-          <div *ngIf="contactEmail.errors?.['required']">Email is required</div>
-          <div *ngIf="contactEmail.errors?.['email']">Please enter a valid email address</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Phone <span class="required">*</span></label>
-        <input type="tel" [formControl]="contactPhone" placeholder="1234567890" id="contactPhone">
-        <div class="error-message" *ngIf="contactPhone.invalid && contactPhone.touched">
-          <div *ngIf="contactPhone.errors?.['required']">Phone number is required</div>
-          <div *ngIf="contactPhone.errors?.['pattern']">Please enter a valid 10-digit phone number</div>
-        </div>
-      </div>
-    </div>
-
-    
-  </section>
-
-  <!-- Step 11/9: Service Address -->
-  <section class="booking-section">
-    <h2>Service Address</h2>
-    
-    <!-- Saved Address Dropdown - Always visible if user has apartments -->
-    <div class="address-options" *ngIf="userApartments.length > 0">
-      <div class="saved-address-container">
-        <label>Saved Addresses</label>
-        <div class="dropdown-with-clear">
-          <select [formControl]="selectedApartmentId" (change)="onApartmentSelect($event)">
-            <option value="">Enter new address</option>
-            <option *ngFor="let apt of userApartments" [value]="apt.id">
-              {{ apt.name }} - {{ apt.address }}
-            </option>
-          </select>
-          <button type="button" 
-                  class="clear-btn" 
-                  *ngIf="selectedApartmentId.value"
-                  (click)="clearApartmentSelection()">
-            Clear
-          </button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Address Name Field - Only show when entering new address -->
-    <div class="form-group" *ngIf="!selectedApartmentId.value">
-      <label>Address Name <span class="required">*</span> <small>(e.g., Home, Office, Mom's House)</small></label>
-      <input type="text" 
-              [formControl]="apartmentName"
-              placeholder="Give this address a name"
-              maxlength="100"
-              id="apartmentName">
-      <div class="error-message" *ngIf="apartmentName.invalid && apartmentName.touched">
-        <div *ngIf="apartmentName.errors?.['required']">Address name is required</div>
-      </div>
-    </div>
-    
-    <div class="form-grid">
-      <div class="form-group full-width">
-        <label>Address <span class="required">*</span></label>
-        <input type="text" [formControl]="serviceAddress" id="serviceAddress">
-        <div class="error-message" *ngIf="serviceAddress.invalid && serviceAddress.touched">
-          <div *ngIf="serviceAddress.errors?.['required']">Service address is required</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Apt/Suite</label>
-        <input type="text" [formControl]="aptSuite">
-      </div>
-      <div class="form-group">
-        <label>City <span class="required">*</span></label>
-        <select [formControl]="city" id="city">
-          <option value="">Select city</option>
-          <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
-        </select>
-        <div class="error-message" *ngIf="city.invalid && city.touched">
-          <div *ngIf="city.errors?.['required']">City is required</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>State <span class="required">*</span></label>
-        <select [formControl]="state" (change)="onStateChange(state.value)" id="state">
-          <option value="">Select state</option>
-          <option *ngFor="let state of states" [value]="state">{{ state }}</option>
-        </select>
-        <div class="error-message" *ngIf="state.invalid && state.touched">
-          <div *ngIf="state.errors?.['required']">State is required</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Zip Code <span class="required">*</span></label>
-        <input type="text" [formControl]="zipCode" placeholder="12345" id="zipCode">
-        <div class="error-message" *ngIf="zipCode.invalid && zipCode.touched">
-          <div *ngIf="zipCode.errors?.['required']">Zip code is required</div>
-          <div *ngIf="zipCode.errors?.['pattern']">Please enter a valid 5-digit zip code</div>
-        </div>
-      </div>
-    </div>
-  </section>
-</ng-container>
 
 <!-- Photo Upload Section -->
 <section class="booking-section" *ngIf="selectedServiceType">

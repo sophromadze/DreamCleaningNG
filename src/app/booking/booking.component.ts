@@ -140,6 +140,9 @@ export class BookingComponent implements OnInit, OnDestroy {
   // FAQ functionality
   showFAQ = false;
   
+  // Extra info expansion state
+  isExtraInfoExpanded = false;
+  
   // Saved data for restoration
   savedCustomPricingData: any = null;
   savedPollData: any = null;
@@ -2933,6 +2936,10 @@ export class BookingComponent implements OnInit, OnDestroy {
         document.body.style.overflow = '';
       }
     }
+  }
+
+  toggleExtraInfoExpansion() {
+    this.isExtraInfoExpanded = !this.isExtraInfoExpanded;
   }
 
   closeFAQ(event: Event) {
