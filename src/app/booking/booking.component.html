@@ -13,7 +13,7 @@
       <div class="booking-form">
         <div class="clear-form-section" *ngIf="formPersistenceService.hasSavedData() && selectedServiceType">
           <button class="clear-all-btn" (click)="clearAllFormData()">
-            Reset Form
+            Reset
           </button>
         </div>
         
@@ -1070,7 +1070,7 @@
   <div class="faq-button-container">
     <div class="faq-button" (click)="toggleFAQ()">
       <div class="faq-button-content">
-        <span class="faq-text">❓ Frequently Asked Questions</span>
+        <span class="faq-text">Frequently Asked Questions</span>
         <svg class="faq-plus" [class.expanded]="showFAQ" viewBox="0 0 24 24" fill="currentColor">
           <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
         </svg>
