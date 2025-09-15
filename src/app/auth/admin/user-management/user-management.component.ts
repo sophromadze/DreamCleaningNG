@@ -118,14 +118,19 @@ export class UserManagementComponent implements OnInit {
     this.adminService.getUserOrders(userId).subscribe({
       next: (orders: OrderList[]) => {
         if (this.selectedUser) {
-          this.selectedUser.orders = orders;
-          this.selectedUser.totalOrders = orders.length;
-          this.selectedUser.totalSpent = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+          // Filter out cancelled orders for statistics calculation
+          const validOrders = orders.filter(order => 
+            order.status && order.status.toLowerCase() !== 'cancelled'
+          );
+          
+          this.selectedUser.orders = orders; // Keep all orders for display
+          this.selectedUser.totalOrders = validOrders.length; // Only count non-cancelled orders
+          this.selectedUser.totalSpent = validOrders.reduce((sum, order) => sum + (order.total || 0), 0);
           this.selectedUser.registrationDate = new Date(this.selectedUser.createdAt);
           
-          // Find the most recent order date
-          if (orders.length > 0) {
-            const sortedOrders = orders.sort((a, b) => 
+          // Find the most recent order date from valid orders
+          if (validOrders.length > 0) {
+            const sortedOrders = validOrders.sort((a, b) => 
               new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime()
             );
             this.selectedUser.lastOrderDate = new Date(sortedOrders[0].orderDate);
