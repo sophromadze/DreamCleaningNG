@@ -10,6 +10,7 @@ import { BookingServicesComponent } from './booking-services/booking-services.co
 import { AdminGiftCardsComponent } from './admin-gift-cards/admin-gift-cards.component';
 import { AuditHistoryComponent } from './audit-history/audit-history.component';
 import { SpecialOffersComponent } from './special-offers/special-offers.component';
+import { MailsComponent } from './mails/mails.component';
 
 @Component({
   selector: 'app-admin',
@@ -23,7 +24,8 @@ import { SpecialOffersComponent } from './special-offers/special-offers.componen
     BookingServicesComponent,
     AdminGiftCardsComponent,
     AuditHistoryComponent,
-    SpecialOffersComponent
+    SpecialOffersComponent,
+    MailsComponent 
   ],
   templateUrl: './admin.component.html',
   styleUrls: ['./admin.component.scss']

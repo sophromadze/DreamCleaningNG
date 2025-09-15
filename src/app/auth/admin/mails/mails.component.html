@@ -1,0 +1,448 @@
+<!-- src/app/auth/admin/mails/mails.component.html -->
+<div class="mails-container">
+    <div class="mails-header">
+      <h2>Email Management</h2>
+      <p class="subtitle">Create and schedule emails to different user groups</p>
+    </div>
+  
+    <!-- Permission Error -->
+    <div *ngIf="!canViewMails && errorMessage" class="error-card">
+      <span class="error-icon">⚠️</span>
+      <p>{{ errorMessage }}</p>
+    </div>
+  
+    <!-- Main Content -->
+    <div *ngIf="canViewMails" class="mails-content">
+      
+      <!-- Tab Navigation -->
+      <div class="tab-navigation">
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'compose'"
+          (click)="switchTab('compose')">
+          <span class="tab-icon">✏️</span>
+          Compose
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'scheduled'"
+          (click)="switchTab('scheduled')">
+          <span class="tab-icon">📅</span>
+          Scheduled
+          <span class="badge" *ngIf="mailStats?.scheduledCount">{{ mailStats?.scheduledCount }}</span>
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'sent'"
+          (click)="switchTab('sent')">
+          <span class="tab-icon">✅</span>
+          Sent
+        </button>
+        <button 
+          class="tab-btn" 
+          [class.active]="activeTab === 'stats'"
+          (click)="switchTab('stats')">
+          <span class="tab-icon">📊</span>
+          Statistics
+        </button>
+      </div>
+  
+      <!-- Messages -->
+      <div class="message success" *ngIf="successMessage">
+        <span class="message-icon">✅</span>
+        {{ successMessage }}
+      </div>
+      <div class="message error" *ngIf="errorMessage">
+        <span class="message-icon">❌</span>
+        {{ errorMessage }}
+      </div>
+  
+      <!-- Compose Tab -->
+      <div class="tab-content" *ngIf="activeTab === 'compose'">
+        
+        <!-- Create New Mail Button -->
+        <div *ngIf="!isCreatingMail && canCreateMails" class="action-section">
+          <button class="btn btn-primary" (click)="startNewMail()">
+            <span class="btn-icon">➕</span>
+            Create New Email
+          </button>
+        </div>
+  
+        <!-- Mail Creation Form -->
+        <div *ngIf="isCreatingMail" class="mail-form-card">
+          <h3>{{ isEditingMail ? 'Edit Email' : 'Create New Email' }}</h3>
+          
+          <div class="form-group">
+            <label>Subject *</label>
+            <input 
+              type="text" 
+              [(ngModel)]="newMail.subject" 
+              placeholder="Enter email subject..."
+              class="form-control">
+          </div>
+  
+          <div class="form-group">
+            <label>Content *</label>
+            <textarea 
+              [(ngModel)]="newMail.content" 
+              placeholder="Enter email content..."
+              class="form-control"
+              rows="8"></textarea>
+          </div>
+  
+          <div class="form-group">
+            <label>Target Recipients *</label>
+            <div class="role-grid">
+              <div 
+                *ngFor="let role of availableRoles" 
+                class="role-item"
+                [class.selected]="isRoleSelected(role.value)"
+                (click)="toggleRole(role.value)">
+                <span class="role-icon">{{ role.icon }}</span>
+                <span class="role-label">{{ role.label }}</span>
+                <span class="checkmark" *ngIf="isRoleSelected(role.value)">✔</span>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Schedule Type - Only Scheduled Option -->
+          <div class="form-group">
+            <label>Email will be scheduled for later delivery</label>
+          </div>
+  
+          <!-- Schedule Options -->
+          <div class="schedule-options">
+            
+            <!-- Timezone Selection -->
+            <div class="form-group">
+              <label>Timezone *</label>
+              <select [(ngModel)]="newMail.scheduleTimezone" class="form-control">
+                <option value="">Select timezone</option>
+                <optgroup *ngFor="let region of timezoneRegions" [label]="region.label">
+                  <option *ngFor="let tz of region.timezones" [value]="tz.value">
+                    {{ tz.label }} ({{ getCurrentTimeInTimezone(tz.value) }})
+                  </option>
+                </optgroup>
+              </select>
+              <small class="form-text">
+                <span class="timezone-info">
+                  Your local time: {{ getCurrentLocalTime() }} | 
+                  Server time (NYC): {{ getCurrentServerTime() }}
+                </span>
+              </small>
+            </div>
+            
+            <div class="form-group">
+              <label>Frequency</label>
+              <select [(ngModel)]="newMail.frequency" class="form-control">
+                <option value="once">One Time</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+  
+            <!-- One Time Schedule -->
+            <div *ngIf="newMail.frequency === 'once'" class="form-group">
+              <label>Date & Time (in selected timezone)</label>
+              <input 
+                type="datetime-local" 
+                [(ngModel)]="newMail.scheduledDate"
+                class="form-control">
+              <small class="form-text" *ngIf="newMail.scheduledDate && newMail.scheduleTimezone">
+                This will be sent at: {{ getScheduledTimeDisplay() }}
+              </small>
+            </div>
+  
+            <!-- Weekly Schedule -->
+            <div *ngIf="newMail.frequency === 'weekly'">
+              <div class="form-group">
+                <label>Day of Week</label>
+                <select [(ngModel)]="newMail.dayOfWeek" class="form-control">
+                  <option [value]="null">Select a day</option>
+                  <option *ngFor="let day of daysOfWeek" [value]="day.value">
+                    {{ day.label }}
+                  </option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label>Time (in selected timezone)</label>
+                <input 
+                  type="time" 
+                  [(ngModel)]="newMail.scheduledTime"
+                  class="form-control">
+                <small class="form-text" *ngIf="newMail.scheduledTime && newMail.scheduleTimezone">
+                  Weekly on {{ getSelectedDayName() }} at {{ newMail.scheduledTime }} {{ getTimezoneAbbreviation() }}
+                </small>
+              </div>
+            </div>
+  
+            <!-- Monthly Schedule -->
+            <div *ngIf="newMail.frequency === 'monthly'">
+              <div class="form-group">
+                <label>Day of Month</label>
+                <input 
+                  type="number" 
+                  [(ngModel)]="newMail.dayOfMonth"
+                  min="1" 
+                  max="31"
+                  placeholder="1-31"
+                  class="form-control">
+              </div>
+              
+              <div class="form-group">
+                <label>Time (in selected timezone)</label>
+                <input 
+                  type="time" 
+                  [(ngModel)]="newMail.scheduledTime"
+                  class="form-control">
+                <small class="form-text" *ngIf="newMail.scheduledTime && newMail.scheduleTimezone">
+                  Monthly on day {{ newMail.dayOfMonth }} at {{ newMail.scheduledTime }} {{ getTimezoneAbbreviation() }}
+                </small>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <button class="btn btn-secondary" (click)="cancelMailCreation()">
+              Cancel
+            </button>
+            <button class="btn btn-info" (click)="previewMail()">
+              Preview
+            </button>
+            <button class="btn btn-warning" (click)="saveDraft()">
+              Save as Draft
+            </button>
+            <button 
+              class="btn btn-primary" 
+              (click)="scheduleMail()"
+              [disabled]="loading">
+              Schedule Email
+            </button>
+          </div>
+        </div>
+  
+        <!-- Draft Mails -->
+        <div class="drafts-section" *ngIf="!isCreatingMail">
+          <h3>Drafts</h3>
+          <div class="mail-list">
+            <div *ngFor="let mail of getFilteredMails()" class="mail-item" 
+                 [hidden]="mail.status !== 'draft'">
+              <div class="mail-header">
+                <h4>{{ mail.subject }}</h4>
+                <span class="badge" [ngClass]="getStatusBadgeClass(mail.status)">
+                  {{ mail.status }}
+                </span>
+              </div>
+              <p class="mail-preview">{{ mail.content | slice:0:100 }}...</p>
+              <div class="mail-meta">
+                <span>Recipients: {{ mail.targetRoles.join(', ') }}</span>
+                <span>Created: {{ mail.createdAt | date:'short' }}</span>
+              </div>
+              <div class="mail-actions">
+                <button class="btn btn-sm btn-primary" (click)="editMail(mail)">
+                  Edit
+                </button>
+                <button class="btn btn-sm btn-danger" (click)="deleteMail(mail)" 
+                        *ngIf="canDeleteMails">
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Scheduled Tab -->
+      <div class="tab-content" *ngIf="activeTab === 'scheduled'">
+        <div class="mail-list">
+          <div *ngFor="let mail of getPaginatedMails()" class="mail-item">
+            <div class="mail-header">
+              <h4>{{ mail.subject }}</h4>
+              <span class="badge" [ngClass]="getStatusBadgeClass(mail.status)">
+                {{ mail.status }}
+              </span>
+            </div>
+            <p class="mail-preview">{{ mail.content | slice:0:150 }}...</p>
+            <div class="mail-meta">
+              <span class="meta-item">
+                <strong>Recipients:</strong> {{ mail.targetRoles.join(', ') }}
+              </span>
+              <span class="meta-item">
+                <strong>Schedule:</strong> {{ formatScheduleInfo(mail) }}
+              </span>
+              <span class="meta-item" *ngIf="mail.scheduleTimezone">
+                <strong>Timezone:</strong> {{ mail.scheduleTimezone }}
+              </span>
+              <span class="meta-item" *ngIf="mail.recipientCount">
+                <strong>Recipients Count:</strong> {{ mail.recipientCount }}
+              </span>
+            </div>
+            <div class="mail-actions">
+              <button class="btn btn-sm btn-warning" (click)="cancelScheduledMail(mail)">
+                Cancel Schedule
+              </button>
+              <button class="btn btn-sm btn-primary" (click)="editMail(mail)">
+                Edit
+              </button>
+              <button class="btn btn-sm btn-danger" (click)="deleteMail(mail)" 
+                      *ngIf="canDeleteMails">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="getTotalPages() > 1">
+          <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+            Previous
+          </button>
+          <span>Page {{ currentPage }} of {{ getTotalPages() }}</span>
+          <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === getTotalPages()">
+            Next
+          </button>
+        </div>
+      </div>
+  
+      <!-- Sent Tab -->
+      <div class="tab-content" *ngIf="activeTab === 'sent'">
+        <div class="filters">
+          <input 
+            type="text" 
+            [(ngModel)]="searchTerm" 
+            placeholder="Search emails..."
+            class="search-input">
+        </div>
+        
+        <div class="mail-list">
+          <div *ngFor="let mail of getPaginatedMails()" class="mail-item sent-mail">
+            <div class="mail-header">
+              <h4>{{ mail.subject }}</h4>
+              <span class="badge badge-sent">Sent</span>
+            </div>
+            <p class="mail-preview">{{ mail.content | slice:0:150 }}...</p>
+            <div class="mail-meta">
+              <span class="meta-item">
+                <strong>Recipients:</strong> {{ mail.targetRoles.join(', ') }}
+              </span>
+              <span class="meta-item" *ngIf="mail.recipientCount">
+                <strong>Sent to:</strong> {{ mail.recipientCount }} users
+              </span>
+              <span class="meta-item" *ngIf="mail.sentAt">
+                <strong>Sent:</strong> {{ mail.sentAt | date:'medium' }}
+              </span>
+            </div>
+            <div class="mail-actions">
+              <button class="btn btn-sm btn-info" (click)="selectedMail = mail">
+                View Details
+              </button>
+              <button class="btn btn-sm btn-danger" (click)="deleteMail(mail)" 
+                      *ngIf="canDeleteMails">
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="pagination" *ngIf="getTotalPages() > 1">
+          <button (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1">
+            Previous
+          </button>
+          <span>Page {{ currentPage }} of {{ getTotalPages() }}</span>
+          <button (click)="goToPage(currentPage + 1)" [disabled]="currentPage === getTotalPages()">
+            Next
+          </button>
+        </div>
+      </div>
+  
+      <!-- Statistics Tab -->
+      <div class="tab-content" *ngIf="activeTab === 'stats' && mailStats">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">📧</div>
+            <div class="stat-value">{{ mailStats.totalSent }}</div>
+            <div class="stat-label">Total Emails Sent</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📅</div>
+            <div class="stat-value">{{ mailStats.scheduledCount }}</div>
+            <div class="stat-label">Scheduled Emails</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-value">{{ mailStats.draftCount }}</div>
+            <div class="stat-label">Draft Emails</div>
+          </div>
+        </div>
+  
+        <div class="chart-container">
+          <canvas id="mailChart"></canvas>
+        </div>
+  
+        <div class="recipient-stats">
+          <h3>Recipients by Role</h3>
+          <div class="recipient-list">
+            <div *ngFor="let stat of mailStats.recipientsByRole" class="recipient-item">
+              <span class="role-name">{{ stat.role }}</span>
+              <div class="progress-bar">
+                <div class="progress-fill" 
+                     [style.width.%]="(stat.count / 500) * 100"></div>
+              </div>
+              <span class="role-count">{{ stat.count }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Preview Modal -->
+    <div class="modal-overlay" *ngIf="isPreviewMode" (click)="closePreview()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Email Preview</h3>
+          <button class="close-btn" (click)="closePreview()">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="preview-section">
+            <label>Subject:</label>
+            <p>{{ newMail.subject }}</p>
+          </div>
+          <div class="preview-section">
+            <label>Recipients:</label>
+            <p>{{ newMail.targetRoles.join(', ') }} (Approximately {{ calculateRecipientCount() }} users)</p>
+          </div>
+          <div class="preview-section">
+            <label>Schedule:</label>
+            <p>{{ formatScheduleInfo(newMail) }}</p>
+          </div>
+          <div class="preview-section" *ngIf="newMail.scheduleTimezone">
+            <label>Timezone:</label>
+            <p>{{ newMail.scheduleTimezone }}</p>
+          </div>
+          <div class="preview-section" *ngIf="newMail.scheduleType === 'scheduled' && newMail.scheduledDate">
+            <label>Scheduled Time:</label>
+            <p>{{ getScheduledTimeDisplay() }}</p>
+          </div>
+          <div class="preview-section">
+            <label>Content:</label>
+            <div class="preview-content">{{ newMail.content }}</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="closePreview()">Back to Edit</button>
+          <button class="btn btn-primary" (click)="closePreview(); scheduleMail()">
+            Confirm & Schedule
+          </button>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Processing...</p>
+    </div>
+  </div>

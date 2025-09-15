@@ -117,6 +117,12 @@
             *ngIf="userPermissions?.permissions?.canView">
       Audits
     </button>
+    <button class="tab-btn" 
+            [class.active]="activeTab === 'mails'"
+            (click)="setActiveTab('mails')"
+            *ngIf="userPermissions?.permissions?.canView">
+      Mails
+    </button>
   </div>
 
   <!-- Messages -->
@@ -138,6 +144,7 @@
       <app-subscriptions *ngSwitchCase="'subscriptions'"></app-subscriptions>
       <app-admin-gift-cards *ngSwitchCase="'gift-cards'"></app-admin-gift-cards>
       <app-audit-history *ngSwitchCase="'audit-history'"></app-audit-history>
+      <app-mails *ngSwitchCase="'mails'"></app-mails>
     </ng-container>
   </div>
 </div>
