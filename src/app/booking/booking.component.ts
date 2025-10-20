@@ -98,6 +98,15 @@ export class BookingComponent implements OnInit, OnDestroy {
   calculatedMaidsCount = 1;
   actualTotalDuration: number = 0;
   
+  // Form step tracking
+  currentStep = 1;
+  totalSteps = 3;
+  
+  // Extra services toggle
+  showAllExtraServices = false;
+  extraServicesToShow = 4; // Default for desktop, will be updated based on screen size
+  private resizeHandler = () => this.updateExtraServicesToShow();
+  
   // Debug flags to prevent duplicate logs
 
 
@@ -242,6 +251,9 @@ export class BookingComponent implements OnInit, OnDestroy {
     // Check same day service availability
     this.checkSameDayServiceAvailability();
     
+    // Update extra services to show based on screen size
+    this.updateExtraServicesToShow();
+    
     // Set up periodic check for same day service availability (every minute)
     const intervalId = setInterval(() => {
       this.checkSameDayServiceAvailability();
@@ -251,6 +263,9 @@ export class BookingComponent implements OnInit, OnDestroy {
     this.destroy$.subscribe(() => {
       clearInterval(intervalId);
     });
+    
+    // Add window resize listener for responsive extra services
+    window.addEventListener('resize', this.resizeHandler);
     
     // Set minimum date to tomorrow (not 2 days from now)
     this.minDate = new Date();
@@ -358,6 +373,11 @@ export class BookingComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
+    // Clean up window resize listener
+    if (this.isBrowser) {
+      window.removeEventListener('resize', this.resizeHandler);
+    }
+    
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -1022,6 +1042,26 @@ export class BookingComponent implements OnInit, OnDestroy {
       this.calculateTotal();
     }
     this.saveFormData();
+  }
+
+  incrementServiceQuantity(service: Service) {
+    const selectedService = this.selectedServices.find(s => s.service.id === service.id);
+    if (selectedService) {
+      const maxValue = service.maxValue || 10;
+      const stepValue = service.stepValue || 1;
+      const newQuantity = Math.min(selectedService.quantity + stepValue, maxValue);
+      this.updateServiceQuantity(service, newQuantity);
+    }
+  }
+
+  decrementServiceQuantity(service: Service) {
+    const selectedService = this.selectedServices.find(s => s.service.id === service.id);
+    if (selectedService) {
+      const minValue = service.minValue || 0;
+      const stepValue = service.stepValue || 1;
+      const newQuantity = Math.max(selectedService.quantity - stepValue, minValue);
+      this.updateServiceQuantity(service, newQuantity);
+    }
   }
 
   // New click handler for extra service card
@@ -2102,6 +2142,59 @@ export class BookingComponent implements OnInit, OnDestroy {
     }, 100);
   }
 
+  private scrollToFirstErrorInCurrentStep() {
+    // Mark all form controls as touched to trigger validation
+    this.markFormGroupTouched(this.bookingForm);
+    
+    // Mark service type control as touched
+    this.serviceTypeControl.markAsTouched();
+    
+    // Also mark custom pricing controls if applicable
+    if (this.showCustomPricing) {
+      this.customAmount.markAsTouched();
+      this.customCleaners.markAsTouched();
+      this.customDuration.markAsTouched();
+    }
+
+    // Find the first invalid field in the current step and scroll to it
+    if (!this.isBrowser) return;
+    
+    setTimeout(() => {
+      // Try multiple selectors to find the first error in current step
+      let firstErrorElement = document.querySelector('.form-step.active .ng-invalid.ng-touched');
+      
+      if (!firstErrorElement) {
+        // If no touched invalid elements, look for any invalid elements in current step
+        firstErrorElement = document.querySelector('.form-step.active .ng-invalid');
+      }
+      
+      if (!firstErrorElement) {
+        // If still no invalid elements, look for required fields that are empty in current step
+        const requiredInputs = document.querySelectorAll('.form-step.active input[required], .form-step.active select[required], .form-step.active textarea[required]');
+        for (let input of requiredInputs) {
+          if (!(input as HTMLInputElement).value) {
+            firstErrorElement = input;
+            break;
+          }
+        }
+      }
+      
+      if (firstErrorElement) {
+        firstErrorElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        
+        // Focus the element if it's an input
+        if (firstErrorElement instanceof HTMLInputElement || 
+            firstErrorElement instanceof HTMLSelectElement || 
+            firstErrorElement instanceof HTMLTextAreaElement) {
+          firstErrorElement.focus();
+        }
+      }
+    }, 100);
+  }
+
   private markFormGroupTouched(formGroup: FormGroup) {
     Object.keys(formGroup.controls).forEach(key => {
       const control = formGroup.get(key);
@@ -2109,6 +2202,17 @@ export class BookingComponent implements OnInit, OnDestroy {
         this.markFormGroupTouched(control);
       } else {
         control?.markAsTouched();
+      }
+    });
+  }
+
+  private markFormGroupUntouched(formGroup: FormGroup) {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      if (control instanceof FormGroup) {
+        this.markFormGroupUntouched(control);
+      } else {
+        control?.markAsUntouched();
       }
     });
   }
@@ -2499,6 +2603,43 @@ export class BookingComponent implements OnInit, OnDestroy {
       // Always show same day service (it will be disabled when not available)
       return true;
     });
+  }
+
+  // Get extra services to display (limited or all)
+  getExtraServicesToDisplay(): ExtraService[] {
+    const filteredServices = this.getFilteredExtraServices();
+    
+    if (this.showAllExtraServices) {
+      return filteredServices;
+    } else {
+      return filteredServices.slice(0, this.extraServicesToShow);
+    }
+  }
+
+  // Toggle extra services display
+  toggleExtraServicesDisplay() {
+    this.showAllExtraServices = !this.showAllExtraServices;
+  }
+
+  // Check if there are more services to show
+  hasMoreExtraServices(): boolean {
+    const filteredServices = this.getFilteredExtraServices();
+    return filteredServices.length > this.extraServicesToShow;
+  }
+
+  // Update number of services to show based on screen size
+  updateExtraServicesToShow() {
+    if (!this.isBrowser) return;
+    
+    const width = window.innerWidth;
+    
+    if (width <= 534) {
+      this.extraServicesToShow = 2; // Mobile: 2 per row
+    } else if (width <= 768) {
+      this.extraServicesToShow = 3; // Tablet: 3 per row
+    } else {
+      this.extraServicesToShow = 4; // Desktop: 4 per row
+    }
   }
 
   getExtraServiceTooltip(extra: ExtraService): string {
@@ -2967,4 +3108,126 @@ export class BookingComponent implements OnInit, OnDestroy {
   isDeepCleaningSelected(): boolean {
     return this.selectedExtraServices.some(service => service.extraService.isDeepCleaning);
   }
+
+  // Form step navigation methods
+  nextStep() {
+    if (this.currentStep < this.totalSteps) {
+      // Check if current step is valid before proceeding
+      if (this.canProceedToNextStep()) {
+        // Clear validation errors from current step before moving to next
+        this.clearCurrentStepValidationErrors();
+        this.currentStep++;
+        // Scroll to top when navigating to next step
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        // If step is invalid, scroll to first error
+        this.scrollToFirstErrorInCurrentStep();
+      }
+    }
+  }
+
+  // Handle next button click (works like onSubmit)
+  onNextButtonClick() {
+    // Check if current step is valid before proceeding
+    if (this.canProceedToNextStep()) {
+      this.nextStep();
+    } else {
+      // If step is invalid, scroll to first error in current step
+      this.scrollToFirstErrorInCurrentStep();
+    }
+  }
+
+  previousStep() {
+    if (this.currentStep > 1) {
+      this.currentStep--;
+      // Scroll to top when navigating to previous step
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  // Validation methods for each step
+  isStep1Valid(): boolean {
+    if (!this.selectedServiceType) return false;
+    
+    if (this.showPollForm) {
+      return this.isPollFormValid();
+    }
+    
+    if (this.showCustomPricing) {
+      return this.serviceTypeControl.valid && 
+             this.customAmount.valid &&
+             this.customCleaners.valid &&
+             this.customDuration.valid;
+    }
+    
+    // For regular booking, check service type and cleaning type
+    return this.serviceTypeControl.valid && 
+           this.cleaningType.value !== null;
+  }
+
+  isStep2Valid(): boolean {
+    if (!this.selectedServiceType) return false;
+    
+    if (this.showPollForm) {
+      return true; // Step 2 is not shown for poll forms
+    }
+    
+    return this.selectedSubscription !== null &&
+           this.serviceDate.valid &&
+           this.serviceTime.valid &&
+           this.entryMethod.valid;
+  }
+
+  isStep3Valid(): boolean {
+    if (!this.selectedServiceType) return false;
+    
+    if (this.showPollForm) {
+      return true; // Step 3 is not shown for poll forms
+    }
+    
+    return this.contactFirstName.valid &&
+           this.contactLastName.valid &&
+           this.contactEmail.valid &&
+           this.contactPhone.valid &&
+           this.serviceAddress.valid &&
+           this.city.valid &&
+           this.state.valid &&
+           this.zipCode.valid &&
+           this.smsConsent.value === true &&
+           this.cancellationConsent.value === true;
+  }
+
+  // Check if we can proceed to next step
+  canProceedToNextStep(): boolean {
+    switch (this.currentStep) {
+      case 1:
+        return this.isStep1Valid();
+      case 2:
+        return this.isStep2Valid();
+      case 3:
+        return this.isStep3Valid();
+      default:
+        return false;
+    }
+  }
+
+  // Clear validation errors from current step
+  private clearCurrentStepValidationErrors() {
+    // Mark all form controls as untouched to clear error states
+    this.markFormGroupUntouched(this.bookingForm);
+    
+    // Mark service type control as untouched
+    this.serviceTypeControl.markAsUntouched();
+    
+    // Mark custom pricing controls as untouched if applicable
+    if (this.showCustomPricing) {
+      this.customAmount.markAsUntouched();
+      this.customCleaners.markAsUntouched();
+      this.customDuration.markAsUntouched();
+    }
+    
+    // Reset form submitted flag
+    this.formSubmitted = false;
+  }
+
 }

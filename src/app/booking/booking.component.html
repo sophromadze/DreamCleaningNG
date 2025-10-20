@@ -11,912 +11,954 @@
          [class.has-summary]="selectedServiceType && !showPollForm">
       <!-- Left Side - Service Selection -->
       <div class="booking-form">
-        <div class="clear-form-section" *ngIf="formPersistenceService.hasSavedData() && selectedServiceType">
+        <!-- <div class="clear-form-section" *ngIf="formPersistenceService.hasSavedData() && selectedServiceType">
           <button class="clear-all-btn" (click)="clearAllFormData()">
             Reset
           </button>
-        </div>
+        </div> -->
         
-        <!-- Step 1: Contact Information - ALWAYS VISIBLE when service type is selected -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>Contact Information</h2>
-          <div class="contact-privacy-note">
-            <p>We will use this information to stay in touch with you. We don't share your personal information with anyone.</p>
+        <!-- PART 1: Service Selection and Configuration -->
+        <div class="form-step" [class.active]="currentStep === 1" [class.hidden]="currentStep !== 1">
+          <!-- Special Offers Section - Only visible on Part 1 -->
+          <div class="special-offers-section" *ngIf="userSpecialOffers.length > 0">
+            <div class="special-offers-grid">
+              <div class="special-offer-card"
+                    *ngFor="let offer of userSpecialOffers"
+                    [class.applied]="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
+                <div class="offer-info">
+                  <div class="offer-content">
+                    <div class="offer-badge">
+                      <img src="/images/mark.svg" alt="Special Offer">
+                      <h4>{{ offer.name }}</h4>
+                    </div>
+                    <div class="offer-details">
+                      <p *ngIf="offer.description">{{ offer.description }}</p>
+                      <span class="offer-expiry" *ngIf="offer.expiresAt">
+                        Expires: {{ offer.expiresAt | date: 'MMM d, y' }}
+                      </span>
+                      <span class="offer-minimum" *ngIf="offer.minimumOrderAmount">
+                        Min. order: ${{ offer.minimumOrderAmount }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="offer-actions">
+                  <button
+                    class="apply-btn"
+                    (click)="applySpecialOffer(offer)"
+                    *ngIf="!(specialOfferApplied && selectedSpecialOffer?.id === offer.id)">
+                    Apply
+                  </button>
+                  <button
+                    class="remove-btn"
+                    (click)="removeSpecialOffer()"
+                    *ngIf="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
+                    Remove
+                  </button>
+                  <img class="offer-icon" src="/images/offer_cleaning.svg" alt="Special Offer">
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <input type="text" [formControl]="contactFirstName" placeholder="First Name *" id="contactFirstName">
-              <div class="error-message" *ngIf="contactFirstName.invalid && contactFirstName.touched">
-                <div *ngIf="contactFirstName.errors?.['required']">First name is required</div>
+          <!-- Step 3: Service Type Selection - ALWAYS VISIBLE -->
+          <section class="booking-section">
+            <div class="service-type-selection">
+              <div class="form-group">
+                <label>Select Service Type <span class="required">*</span></label>
+                <div class="service-type-dropdown">
+                  <button 
+                    type="button"
+                    class="dropdown-toggle"
+                    [class.pulsate-soft-red]="!selectedServiceType && (serviceTypeControl.touched || serviceTypeControl.invalid || formSubmitted)"
+                    (click)="toggleServiceTypeDropdown()"
+                    [disabled]="isLoading">
+                    <span>{{ selectedServiceType ? selectedServiceType.name : 'Select a service type' }}</span>
+                    <span class="chevron">▼</span>
+                  </button>
+                  <div class="dropdown-menu" *ngIf="serviceTypeDropdownOpen">
+                    <button 
+                      *ngFor="let type of serviceTypes" 
+                      type="button"
+                      class="dropdown-item"
+                      (click)="selectServiceType(type)">
+                      {{ type.name }}
+                    </button>
+                  </div>
+                </div>
+                <div class="error-message" *ngIf="serviceTypeControl.invalid && serviceTypeControl.touched">
+                  <div *ngIf="serviceTypeControl.errors?.['required']">Service type is required</div>
+                </div>
               </div>
-            </div>
-            <div class="form-group">
-              <input type="text" [formControl]="contactLastName" placeholder="Last Name *" id="contactLastName">
-              <div class="error-message" *ngIf="contactLastName.invalid && contactLastName.touched">
-                <div *ngIf="contactLastName.errors?.['required']">Last name is required</div>
+              
+              <!-- Service Type Description -->
+              <div class="service-type-description" *ngIf="selectedServiceType">
+                <div class="description-content">
+                  <p>{{ selectedServiceType.description }}</p>
+                </div>
               </div>
-            </div>
-            <div class="form-group">
-              <input type="email" [formControl]="contactEmail" placeholder="Email *" id="contactEmail">
-              <div class="error-message" *ngIf="contactEmail.invalid && contactEmail.touched">
-                <div *ngIf="contactEmail.errors?.['required']">Email is required</div>
-                <div *ngIf="contactEmail.errors?.['email']">Please enter a valid email address</div>
-              </div>
-            </div>
-            <div class="form-group">
-              <input type="tel" [formControl]="contactPhone" placeholder="Phone *" id="contactPhone">
-              <div class="error-message" *ngIf="contactPhone.invalid && contactPhone.touched">
-                <div *ngIf="contactPhone.errors?.['required']">Phone number is required</div>
-                <div *ngIf="contactPhone.errors?.['pattern']">Please enter a valid 10-digit phone number</div>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        <!-- Step 2: Service Address - ALWAYS VISIBLE when service type is selected -->
-        <section class="booking-section" *ngIf="selectedServiceType">
-          <h2>Service Address</h2>
-          
-          <!-- Saved Address Dropdown - Always visible if user has apartments -->
-          <div class="address-options" *ngIf="userApartments.length > 0">
-            <div class="saved-address-container">
-              <div class="dropdown-with-clear">
-                <select [formControl]="selectedApartmentId" (change)="onApartmentSelect($event)">
-                  <option value="">Enter new address</option>
-                  <option *ngFor="let apt of userApartments" [value]="apt.id">
-                    {{ apt.name }} - {{ apt.address }}
+              <!-- Important Notes Section -->
+              <div class="important-notes" *ngIf="selectedServiceType">
+                <!-- Move In/Out Cleaning Notes -->
+                <div class="service-notes" *ngIf="getServiceSpecificInfo() === 'move-in-out'">
+                  <h4>Important Notes</h4>
+                  <p>This service includes fridge interior, baseboards, and medium size, empty kitchen cabinet cleaning.</p>
+                  <p><strong>Planning a move?</strong><br>
+                  Don't forget to check off Extras like oven or window cleaning — they're not included by default.</p>
+                  <p><strong>If your home is above average in size, please consider adding more time for detailed cleaning of cabinets and walls.</strong></p>
+                </div>
+
+                <!-- Heavy Condition Cleaning Notes -->
+                <div class="service-notes" *ngIf="getServiceSpecificInfo() === 'heavy-condition'">
+                  <h4>Recommended for homes that haven't been professionally cleaned in months or need extra attention due to heavy buildup and neglected areas.</h4>
+                </div>
+
+
+              </div>
+            </div>
+          </section>
+
+          <!-- Poll Form Section (when service type has poll) -->
+          <section class="booking-section" *ngIf="selectedServiceType && showPollForm">
+            <h2>Tell us about your cleaning needs</h2>
+            <p class="poll-description">
+              Please answer the following questions so we can provide you with a customized quote.
+            </p>
+            
+            <div class="poll-questions">
+              <div class="poll-question" *ngFor="let question of pollQuestions; let questionIndex = index">
+                <label class="question-label">
+                  {{ question.question }}
+                  <span class="required" *ngIf="question.isRequired">*</span>
+                </label>
+                
+                <!-- Text Input -->
+                <input 
+                  *ngIf="question.questionType === 'text'"
+                  type="text" 
+                  [(ngModel)]="pollAnswers[question.id]"
+                  (input)="onPollAnswerChange()"
+                  [required]="question.isRequired"
+                  class="poll-input"
+                  [class.ng-invalid]="pollFormSubmitted && question.isRequired && (!pollAnswers[question.id] || pollAnswers[question.id].trim() === '')">
+                
+                <!-- Textarea -->
+                <textarea 
+                  *ngIf="question.questionType === 'textarea'"
+                  [(ngModel)]="pollAnswers[question.id]"
+                  (input)="onPollAnswerChange()"
+                  [required]="question.isRequired"
+                  rows="3"
+                  class="poll-textarea"
+                  [class.ng-invalid]="pollFormSubmitted && question.isRequired && (!pollAnswers[question.id] || pollAnswers[question.id].trim() === '')"></textarea>
+                
+                <!-- Dropdown -->
+                <select 
+                  *ngIf="question.questionType === 'dropdown'"
+                  [(ngModel)]="pollAnswers[question.id]"
+                  (change)="onPollAnswerChange()"
+                  [required]="question.isRequired"
+                  class="poll-select"
+                  [class.ng-invalid]="pollFormSubmitted && question.isRequired && (!pollAnswers[question.id] || pollAnswers[question.id].trim() === '')">
+                  <option value="">Select an option</option>
+                  <option *ngFor="let option of question.options?.split(',') || []" [value]="option.trim()">
+                    {{ option.trim() }}
                   </option>
                 </select>
-                <button type="button" 
-                        class="clear-btn" 
-                        *ngIf="selectedApartmentId.value"
-                        (click)="clearApartmentSelection()">
-                  Clear
-                </button>
+                
+                <!-- Radio buttons -->
+                <div *ngIf="question.questionType === 'radio'" class="radio-group">
+                  <div *ngFor="let option of question.options?.split(',') || []; let i = index" class="radio-option">
+                    <input 
+                      type="radio" 
+                      [name]="'question_' + question.id"
+                      [id]="'question_' + question.id + '_' + i"
+                      [value]="option.trim()"
+                      [(ngModel)]="pollAnswers[question.id]"
+                      (change)="onPollAnswerChange()"
+                      [required]="question.isRequired">
+                    <label [for]="'question_' + question.id + '_' + i">{{ option.trim() }}</label>
+                  </div>
+                </div>
+                
+                <!-- Single error message per question -->
+                <div class="poll-error-message" 
+                     *ngIf="pollFormSubmitted && question.isRequired && (!pollAnswers[question.id] || pollAnswers[question.id].trim() === '')" 
+                     [attr.data-question-id]="question.id"
+                     [attr.data-question-index]="questionIndex">
+                  Please answer the question
+                </div>
               </div>
             </div>
-          </div>
-          
-          <!-- Address Name Field - Only show when entering new address -->
-          <div class="form-group" *ngIf="!selectedApartmentId.value">
-            <input type="text" 
-                    [formControl]="apartmentName"
-                    placeholder="Address Name * (e.g., Home, Office, Mom's House)"
-                    maxlength="100"
-                    id="apartmentName">
-            <div class="error-message" *ngIf="apartmentName.invalid && apartmentName.touched">
-              <div *ngIf="apartmentName.errors?.['required']">Address name is required</div>
-            </div>
-          </div>
-          
-          <div class="form-grid">
-            <div class="form-group full-width">
-              <input type="text" [formControl]="serviceAddress" placeholder="Address *" id="serviceAddress">
-              <div class="error-message" *ngIf="serviceAddress.invalid && serviceAddress.touched">
-                <div *ngIf="serviceAddress.errors?.['required']">Service address is required</div>
-              </div>
-            </div>
-            <div class="form-group">
-              <input type="text" [formControl]="aptSuite" placeholder="Apt/Suite">
-            </div>
-            <div class="form-group">
-              <select [formControl]="city" id="city">
-                <option value="">City *</option>
-                <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
-              </select>
-              <div class="error-message" *ngIf="city.invalid && city.touched">
-                <div *ngIf="city.errors?.['required']">City is required</div>
-              </div>
-            </div>
-            <div class="form-group">
-              <select [formControl]="state" (change)="onStateChange(state.value)" id="state">
-                <option value="">State *</option>
-                <option *ngFor="let state of states" [value]="state">{{ state }}</option>
-              </select>
-              <div class="error-message" *ngIf="state.invalid && state.touched">
-                <div *ngIf="state.errors?.['required']">State is required</div>
-              </div>
-            </div>
-            <div class="form-group">
-              <input type="text" [formControl]="zipCode" placeholder="Zip Code *" id="zipCode">
-              <div class="error-message" *ngIf="zipCode.invalid && zipCode.touched">
-                <div *ngIf="zipCode.errors?.['required']">Zip code is required</div>
-                <div *ngIf="zipCode.errors?.['pattern']">Please enter a valid 5-digit zip code</div>
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Step 3: Service Type Selection - ALWAYS VISIBLE -->
-        <section class="booking-section">
-          <h2>Select Service Type</h2>
-          <div class="service-type-selection">
-            <div class="form-group">
-              <label>Service Type <span class="required">*</span></label>
-              <div class="service-type-dropdown">
-                <button 
-                  type="button"
-                  class="dropdown-toggle"
-                  [class.pulsate-soft-red]="!selectedServiceType && (serviceTypeControl.touched || serviceTypeControl.invalid || formSubmitted)"
-                  (click)="toggleServiceTypeDropdown()"
-                  [disabled]="isLoading">
-                  <span>{{ selectedServiceType ? selectedServiceType.name : 'Select a service type' }}</span>
-                  <span class="chevron">▼</span>
-                </button>
-                <div class="dropdown-menu" *ngIf="serviceTypeDropdownOpen">
+          <!-- Custom Pricing Section (when service type has custom pricing) -->
+          <section class="booking-section" *ngIf="selectedServiceType && showCustomPricing">
+            <h2>Custom Service Details</h2>
+            <p class="custom-description">
+              Please specify your custom cleaning requirements below.
+            </p>
+
+            <div class="custom-pricing-form">
+              <div class="form-group">
+                <label>Service Amount <span class="required">*</span></label>
+                <div class="input-group">
+                  <input type="number" 
+                         [formControl]="customAmount"
+                         min="0.01"
+                         step="0.01"
+                         placeholder="0.00"
+                         class="amount-input"
+                         id="customAmount">
+                  <span class="input-suffix">$</span>
+                </div>
+                <div class="error-message" *ngIf="customAmount.invalid && customAmount.touched">
+                  <div *ngIf="customAmount.errors?.['required']">Amount is required</div>
+                  <div *ngIf="customAmount.errors?.['min']">Amount must be greater than 0</div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Number of Cleaners <span class="required">*</span></label>
+                <select [formControl]="customCleaners" id="customCleaners">
+                  <option *ngFor="let num of [1,2,3,4,5,6,7,8,9,10]" [value]="num">
+                    {{num}} {{num === 1 ? 'Cleaner' : 'Cleaners'}}
+                  </option>
+                </select>
+                <div class="error-message" *ngIf="customCleaners.invalid && customCleaners.touched">
+                  <div *ngIf="customCleaners.errors?.['required']">Number of cleaners is required</div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Duration <span class="required">*</span></label>
+                <app-duration-selector 
+                  [value]="customDuration.value" 
+                  (valueChange)="onDurationChange($event)">
+                </app-duration-selector>
+                <div class="error-message" *ngIf="customDuration.invalid && customDuration.touched">
+                  <div *ngIf="customDuration.errors?.['required']">Duration is required</div>
+                  <div *ngIf="customDuration.errors?.['min']">Duration must be at least 1 hour</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Regular Booking Sections (ONLY services and extra services - hidden for poll and custom) -->
+          <ng-container *ngIf="selectedServiceType && !showPollForm && !showCustomPricing">
+            <!-- Step 4: Services -->
+            <section class="booking-section">
+              <h2>Tell us about your home</h2>
+              
+              <!-- Office Cleaning Pricing Text -->
+              <div class="service-pricing-info" *ngIf="hasCleanerServices()">
+                <p class="pricing-text" [innerHTML]="getCleanerPricingText()"></p>
+              </div>
+              
+              <div class="services">
+                <div class="service-item" *ngFor="let selected of selectedServices">
+                  <label>{{ selected.service.name }}</label>
+                  
+                  <!-- Quantity Control Input -->
+                  <div class="service-input" *ngIf="selected.service.inputType === 'dropdown'">
+                    <div class="quantity-control">
+                      <div class="control-buttons">
+                        <button (click)="decrementServiceQuantity(selected.service)" 
+                                [disabled]="selected.quantity <= (selected.service.minValue || 0)">-</button>
+                        <span>{{ selected.service.serviceKey === 'bedrooms' && selected.quantity === 0 ? 'Studio' : selected.quantity }}</span>
+                        <button (click)="incrementServiceQuantity(selected.service)" 
+                                [disabled]="selected.quantity >= (selected.service.maxValue || 10)">+</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Slider Input for Square Feet -->
+                  <div class="service-input slider-input" *ngIf="selected.service.isRangeInput">
+                    <div class="slider-container">
+                      <!-- <div class="slider-header">            
+                        
+                      </div>   -->
+                      <input type="range"
+                            [(ngModel)]="selected.quantity"
+                            [min]="selected.service.minValue"
+                            [max]="selected.service.maxValue"
+                            [step]="selected.service.stepValue"
+                            (input)="updateServiceQuantity(selected.service, +selected.quantity)">
+                            <span class="slider-quantity">{{ selected.quantity }} sq ft</span>
+                        <!-- Removed cost display -->
+                    </div>                  
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Step 5: Extra Services -->
+            <section class="booking-section">
+              <h2>Extra Services</h2>
+              
+              <!-- Cleaning Type Selection -->
+              <label>Cleaning Type <span class="required">*</span></label>
+              <div class="cleaning-type-selection">
+                <div class="cleaning-type-buttons">
                   <button 
-                    *ngFor="let type of serviceTypes" 
                     type="button"
-                    class="dropdown-item"
-                    (click)="selectServiceType(type)">
-                    {{ type.name }}
+                    class="cleaning-type-btn"
+                    [class.selected]="cleaningType.value === 'normal'"
+                    (click)="selectCleaningType('normal')">
+                    Regular Cleaning
+                  </button>
+                  <button 
+                    type="button"
+                    class="cleaning-type-btn"
+                    [class.selected]="cleaningType.value === 'deep'"
+                    (click)="selectCleaningType('deep')">
+                    Deep Cleaning
+                  </button>
+                </div>
+                <div class="error-message" *ngIf="cleaningType.invalid && cleaningType.touched">
+                  <div *ngIf="cleaningType.errors?.['required']">Cleaning type is required</div>
+                </div>
+              </div>
+
+              <!-- Cleaning Type Descriptions -->
+              <div class="cleaning-type-info" *ngIf="selectedServiceType">
+                <!-- Regular Cleaning Description -->
+                <div class="cleaning-info-card" *ngIf="cleaningType.value === 'normal'">
+                  <h4>General surface cleaning and tidying for a well-maintained home.</h4>
+                </div>
+
+                <!-- Deep Cleaning Description -->
+                <div class="cleaning-info-card" *ngIf="cleaningType.value === 'deep'">
+                  <h4>What to Expect</h4>
+                  <p>Our deep cleaning package includes detailed attention to areas like baseboards and the interior of your fridge.</p>
+                  <p>If you need oven scrubbing, window, or wall washing, make sure to add them from the Extras section.</p>
+                  <p><strong>For larger apartments or heavily used kitchens, please allow extra time for cabinet and wall care to ensure top-quality results.</strong></p>
+                </div>
+              </div>
+              
+              <!-- General Information -->
+              <div class="extra-services-info" *ngIf="selectedServiceType">
+                <div class="general-info">
+                  <h4>What We Bring vs What You Provide?</h4>
+                  
+                  <div class="expandable-content" [class.collapsed]="!isExtraInfoExpanded" [class.expanded]="isExtraInfoExpanded">
+                    <p>Need us to bring cleaning products (sprays, detergents, cloths)? Just add them through the Extras.</p>
+                    <p>However, customers are responsible for providing:</p>
+                    <ul>
+                      <li>A vacuum cleaner or broom</li>
+                      <li>Mop & bucket</li>
+                      <li>A toilet brush</li>
+                    </ul>
+                    <p><strong>These tools help our team work efficiently. If you don't have them, just let us know or choose in extras advance!</strong></p>
+                  </div>
+                </div>
+                
+                <div class="expandable-content" [class.collapsed]="!isExtraInfoExpanded" [class.expanded]="isExtraInfoExpanded">
+                  <div class="additional-reminders">
+                    <h4>Additional Reminders</h4>
+                    <p><strong>Time Matters</strong><br>
+                    Our cleaning time is based on the number of hours booked.<br>
+                    If your home hasn't been cleaned in a while or needs extra attention, we recommend booking more hours or requesting a walk-through estimate.</p>
+                  </div>
+                  
+                  <div class="restrictions-info">
+                    <h4>We will not be able to do the following:</h4>
+                    <ul>
+                      <li>Moving Heavy Furniture and Appliances</li>
+                      <li>Exterior Window Cleaning</li>
+                      <li>Pet Waste</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                <!-- Button outside of collapsible content so it's always visible -->
+                <button class="see-more-toggle" (click)="toggleExtraInfoExpansion()">
+                  <span [class.pulsate-text]="!isExtraInfoExpanded">{{ isExtraInfoExpanded ? 'See Less' : 'Click for More Info' }}</span>
+                  <span class="chevron-icon" [class.up]="isExtraInfoExpanded">
+                    <i class="fas fa-chevron-down" [class.pulsate]="!isExtraInfoExpanded"></i>
+                  </span>
+                </button>
+              </div>
+              
+
+              <div class="extra-services">
+                <div class="extra-service-card"
+                      *ngFor="let extra of getExtraServicesToDisplay()"
+                      [class.selected]="isExtraServiceSelected(extra)"
+                      [class.mobile-tooltip-visible]="isMobileTooltipVisible(extra.id)"
+                      [class.disabled]="extra.isSameDayService && !isSameDayServiceAvailable"
+                      (click)="onExtraServiceCardClick(extra)"
+                      [attr.data-tooltip]="getExtraServiceTooltip(extra)">
+                  <div class="extra-header">
+                    <div class="extra-top-controls" style="display: none;">
+                      
+                      <div class="checkbox">
+                        <input type="checkbox" 
+                               [checked]="isExtraServiceSelected(extra)" 
+                               [disabled]="extra.isSameDayService && !isSameDayServiceAvailable"
+                               style="pointer-events: none; cursor: default;">
+                      </div>
+                    </div>
+                    <div class="extra-info">
+                      <div class="extra-icon">
+                        <i [class]="getExtraServiceIcon(extra)"></i>
+                      </div>
+                      <h4>{{ extra.name }}</h4>
+                      <div class="extra-details">
+                        <!-- Removed price and duration display -->
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Quantity Control -->
+                  <div class="extra-controls" *ngIf="isExtraServiceSelected(extra) && (extra.hasQuantity || extra.hasHours)">
+                    <div class="quantity-control" *ngIf="extra.hasQuantity">
+                      <label>Quantity:</label>
+                      <div class="control-buttons">
+                        <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
+                                [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
+                        <span>{{ getExtraServiceQuantity(extra) }}</span>
+                        <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1); $event.stopPropagation()">+</button>
+                      </div>
+                    </div>
+                    
+                    <!-- Hours Control -->
+                    <div class="hours-control" *ngIf="extra.hasHours">
+                      <label>Hours:</label>
+                      <div class="control-buttons">
+                        <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) - 0.5); $event.stopPropagation()" 
+                                [disabled]="getExtraServiceHours(extra) <= 0.5">-</button>
+                        <span>{{ getExtraServiceHours(extra) }}</span>
+                        <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) + 0.5); $event.stopPropagation()">+</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Extra Services Toggle Button -->
+              <div class="extra-services-toggle" *ngIf="hasMoreExtraServices()">
+                <button class="toggle-btn" (click)="toggleExtraServicesDisplay()">
+                  <span>{{ showAllExtraServices ? 'See Less Services' : 'See All Extra Services' }}</span>
+                  <i class="fas fa-chevron-down" [class.rotated]="showAllExtraServices"></i>
+                </button>
+              </div>
+            </section>
+          </ng-container>
+
+        </div>
+
+        <!-- PART 2: Subscription and Scheduling -->
+        <div class="form-step" [class.active]="currentStep === 2" [class.hidden]="currentStep !== 2">
+          <!-- Top-left chevron for Part 2 -->
+          <div class="top-left-chevron" (click)="previousStep()">
+            <span class="chevron-left">‹</span>
+          </div>
+          
+          <!-- Common sections for both regular and custom pricing (hidden only for poll) -->
+          <ng-container *ngIf="selectedServiceType && !showPollForm">
+            <!-- Step 6: Subscription -->
+            <section class="booking-section">
+              <h2>Select Subscription</h2>
+              <div class="active-subscription-notice" *ngIf="hasActiveSubscription && userSubscription">
+                <i class="fas fa-info-circle"></i>
+                <span>You have an active {{ userSubscription?.subscriptionName }} subscription 
+                      ({{ userSubscription?.discountPercentage }}% discount)</span>
+              </div>
+              <div class="subscription-options">
+                <div class="subscription-card"
+                     *ngFor="let subscription of subscriptions"
+                     [class.selected]="selectedSubscription?.id === subscription.id"
+                     [class.user-subscription]="hasActiveSubscription && userSubscription?.subscriptionId === subscription.id"
+                     [class.mobile-tooltip-visible]="isMobileTooltipVisible(subscription.id)"
+                     (click)="selectSubscription(subscription)"
+                     [attr.data-tooltip]="getSubscriptionTooltip(subscription)">
+                  <h4>{{ subscription.name }}</h4>
+                  <div class="discount" *ngIf="subscription.discountPercentage > 0">
+                    Save {{ subscription.discountPercentage }}%
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Step 7: Date & Time -->
+            <section class="booking-section">
+              <h2>When would you like us to come?</h2>
+              <div class="date-time-selection">
+                <div class="form-group">
+                  <label>Service Date <span class="required">*</span></label>
+                  <app-date-selector 
+                    [value]="serviceDate.value" 
+                    [minDate]="getMinDateString()"
+                    [isSameDaySelected]="isSameDaySelected"
+                    (valueChange)="onDateSelectorChange($event)">
+                  </app-date-selector>
+                  <div class="error-message" *ngIf="serviceDate.invalid && serviceDate.touched">
+                    <div *ngIf="serviceDate.errors?.['required']">Service date is required</div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>Service Time <span class="required">*</span></label>
+                  <app-time-selector 
+                    [value]="serviceTime.value" 
+                    [availableTimeSlots]="getAvailableTimeSlots()"
+                    (valueChange)="onTimeChange($event)">
+                  </app-time-selector>
+                  <div class="error-message" *ngIf="serviceTime.invalid && serviceTime.touched">
+                    <div *ngIf="serviceTime.errors?.['required']">Service time is required</div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+
+            <!-- Entry Method -->
+            <section class="booking-section">
+              <label>How will we get in? <span class="required">*</span></label>
+              <div class="form-group">
+                <select [formControl]="entryMethod" id="entryMethod">
+                  <option value="">Select entry method</option>
+                  <option *ngFor="let method of entryMethods" [value]="method">{{ method }}</option>
+                </select>
+                <div class="error-message" *ngIf="entryMethod.invalid && entryMethod.touched">
+                  <div *ngIf="entryMethod.errors?.['required']">Entry method is required</div>
+                </div>
+                <input type="text" 
+                        [formControl]="customEntryMethod"
+                        placeholder="Please specify"
+                        *ngIf="entryMethod.value === 'Other'">
+              </div>
+            </section>
+
+            <!-- Step 9: Discounts -->
+            <section class="booking-section">
+              
+              <!-- Show error message if there is one -->
+              <div class="discount-error" *ngIf="errorMessage">
+                <p class="error-message">{{ errorMessage }}</p>
+              </div>
+              
+              <div class="discounts">
+                <!-- Gift Card Applied Message -->
+                <div class="gift-card-applied" *ngIf="giftCardApplied && isGiftCard">
+                  <div class="gift-card-info">
+                    <div class="gift-card-icon">🎁</div>
+                    <div class="gift-card-details">
+                      <div class="gift-card-title">Gift Card Applied</div>
+                      <div class="gift-card-amounts">
+                        <span class="amount-using">${{ getGiftCardDisplayInfo().amountToUse.toFixed(2) }} will be used</span>
+                        <span class="remaining-balance" *ngIf="getGiftCardDisplayInfo().remainingBalance > 0">
+                          ${{ getGiftCardDisplayInfo().remainingBalance.toFixed(2) }} remaining
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+
+
+            <!-- Step 10: Tips for Company Development -->
+            <section class="booking-section" style="display: none;">
+              <h2>Tips for Company Development</h2>
+              <div class="tips-section">
+                <p>Support our company's growth and improvement initiatives!</p>
+                <div class="tip-options">
+                  <button [class.selected]="companyDevelopmentTips.value === 0" 
+                          (click)="companyDevelopmentTips.setValue(0)">$0</button>
+                  <button [class.selected]="companyDevelopmentTips.value === 10" 
+                          (click)="companyDevelopmentTips.setValue(10)">$10</button>
+                  <button [class.selected]="companyDevelopmentTips.value === 15" 
+                          (click)="companyDevelopmentTips.setValue(15)">$15</button>
+                  <button [class.selected]="companyDevelopmentTips.value === 20" 
+                          (click)="companyDevelopmentTips.setValue(20)">$20</button>
+                  <button [class.selected]="companyDevelopmentTips.value === 25" 
+                          (click)="companyDevelopmentTips.setValue(25)">$25</button>
+                  <div class="custom-tip">
+                    <input type="number" [formControl]="companyDevelopmentTips" min="0" placeholder="Custom amount">
+                    <div class="error-message" *ngIf="companyDevelopmentTips.errors?.['minCompanyTipAmount']">
+                      Custom tip amount must be at least $10
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Step 11: Special Instructions -->
+            <section class="booking-section">
+              <h2>Special Instructions (Optional)</h2>
+              <div class="form-group">
+                <textarea [formControl]="specialInstructions"
+                          rows="4" 
+                          placeholder="Any special instructions or requests regarding your cleaning..." 
+                          style="border-radius: 39px;"></textarea>
+              </div>
+            </section>
+          </ng-container>
+
+          <!-- Photo Upload Section -->
+          <section class="booking-section" *ngIf="selectedServiceType">
+            <h2>Upload Photos (Optional)</h2>
+            <p class="upload-description">
+              You can upload up to {{ maxPhotos }} photos to help us better understand your cleaning needs.
+            </p>
+            
+            <div class="photo-upload-section">
+              <div class="upload-container">
+                <!-- Mobile-friendly upload options -->
+                <div class="upload-options" *ngIf="uploadedPhotos.length < maxPhotos">
+                  <!-- Take Photo Button (Mobile Only) -->
+                  <div class="upload-button" *ngIf="isMobileDevice">
+                    <input 
+                      type="file" 
+                      id="camera-capture" 
+                      accept="image/*"
+                      capture="environment"
+                      (change)="onPhotoSelect($event)"
+                      [disabled]="isUploadingPhoto"
+                      #cameraInput
+                    >
+                    <label for="camera-capture" class="upload-label camera">
+                      <div class="upload-icon-outer">
+                        <div class="upload-icon-inner">+</div>
+                      </div>
+                      <span>Take Photo</span>
+                    </label>
+                  </div>
+                  
+                  <!-- Upload from Gallery Button -->
+                  <div class="upload-button">
+                    <input 
+                      type="file" 
+                      id="photo-upload" 
+                      [accept]="acceptedFormats"
+                      multiple
+                      (change)="onPhotoSelect($event)"
+                      [disabled]="isUploadingPhoto"
+                      #photoInput
+                    >
+                    <label for="photo-upload" class="upload-label gallery">
+                      <div class="upload-icon-outer">
+                        <div class="upload-icon-inner">+</div>
+                      </div>
+                      <span>{{ isMobileDevice ? 'Choose from Gallery' : 'Upload Photos' }}</span>
+                      <small>{{ uploadedPhotos.length }}/{{ maxPhotos }}</small>
+                    </label>
+                  </div>
+                </div>
+                
+                <!-- Photo previews -->
+                <div class="photo-previews" *ngIf="uploadedPhotos.length > 0">
+                  <div class="photo-preview" *ngFor="let photo of uploadedPhotos; let i = index">
+                    <img [src]="photo.preview" [alt]="photo.file.name">
+                            <button 
+                    type="button" 
+                    class="remove-photo" 
+                    (click)="removePhoto(i)"
+                    title="Remove photo"
+                  >
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                    </svg>
+                  </button>
+                    <span class="photo-name">{{ photo.file.name }}</span>
+                  </div>
+                </div>
+                
+                <!-- Loading indicator -->
+                <div class="upload-loading" *ngIf="isUploadingPhoto">
+                  <svg class="loading-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z">
+                      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+                    </path>
+                  </svg>
+                  <span>Processing photo...</span>
+                </div>
+                
+                <!-- Error message -->
+                <div class="upload-error" *ngIf="photoUploadError">
+                  <svg class="error-icon" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12,2L13.09,8.26L22,9L13.09,9.74L12,16L10.91,9.74L2,9L10.91,8.26L12,2Z"/>
+                  </svg>
+                  {{ photoUploadError }}
+                </div>
+              </div>
+            </div>
+
+          </section>
+
+        </div>
+
+
+
+
+        <!-- PART 3: Contact Information and Final Details -->
+        <div class="form-step" [class.active]="currentStep === 3" [class.hidden]="currentStep !== 3">
+          <!-- Top-left chevron for Part 3 -->
+          <div class="top-left-chevron" (click)="previousStep()">
+            <span class="chevron-left">‹</span>
+          </div>
+
+          <!-- Contact Information - Moved to bottom -->
+          <section class="booking-section" *ngIf="selectedServiceType">
+            <h2>Contact Information</h2>
+            <div class="contact-privacy-note">
+              <p>We will use this information to stay in touch with you. We don't share your personal information with anyone.</p>
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <input type="text" [formControl]="contactFirstName" placeholder="First Name *" id="contactFirstName">
+                <div class="error-message" *ngIf="contactFirstName.invalid && contactFirstName.touched">
+                  <div *ngIf="contactFirstName.errors?.['required']">First name is required</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <input type="text" [formControl]="contactLastName" placeholder="Last Name *" id="contactLastName">
+                <div class="error-message" *ngIf="contactLastName.invalid && contactLastName.touched">
+                  <div *ngIf="contactLastName.errors?.['required']">Last name is required</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <input type="email" [formControl]="contactEmail" placeholder="Email *" id="contactEmail">
+                <div class="error-message" *ngIf="contactEmail.invalid && contactEmail.touched">
+                  <div *ngIf="contactEmail.errors?.['required']">Email is required</div>
+                  <div *ngIf="contactEmail.errors?.['email']">Please enter a valid email address</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <input type="tel" [formControl]="contactPhone" placeholder="Phone *" id="contactPhone">
+                <div class="error-message" *ngIf="contactPhone.invalid && contactPhone.touched">
+                  <div *ngIf="contactPhone.errors?.['required']">Phone number is required</div>
+                  <div *ngIf="contactPhone.errors?.['pattern']">Please enter a valid 10-digit phone number</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Service Address - Moved to bottom -->
+          <section class="booking-section" *ngIf="selectedServiceType">
+            
+            <!-- Saved Address Dropdown - Always visible if user has apartments -->
+            <div class="address-options" *ngIf="userApartments.length > 0">
+              <div class="saved-address-container">
+                <div class="dropdown-with-clear">
+                  <select [formControl]="selectedApartmentId" (change)="onApartmentSelect($event)">
+                    <option value="">Enter new address</option>
+                    <option *ngFor="let apt of userApartments" [value]="apt.id">
+                      {{ apt.name }} - {{ apt.address }}
+                    </option>
+                  </select>
+                  <button type="button" 
+                          class="clear-btn" 
+                          *ngIf="selectedApartmentId.value"
+                          (click)="clearApartmentSelection()">
+                    Clear
                   </button>
                 </div>
               </div>
-              <div class="error-message" *ngIf="serviceTypeControl.invalid && serviceTypeControl.touched">
-                <div *ngIf="serviceTypeControl.errors?.['required']">Service type is required</div>
+            </div>
+            
+            <!-- Address Name Field - Only show when entering new address -->
+            <div class="form-group" *ngIf="!selectedApartmentId.value">
+              <input type="text" 
+                      [formControl]="apartmentName"
+                      placeholder="Address Name * (e.g., Home, Office, Mom's House)"
+                      maxlength="100"
+                      id="apartmentName">
+              <div class="error-message" *ngIf="apartmentName.invalid && apartmentName.touched">
+                <div *ngIf="apartmentName.errors?.['required']">Address name is required</div>
               </div>
             </div>
             
-            <!-- Service Type Description -->
-            <div class="service-type-description" *ngIf="selectedServiceType">
-              <div class="description-content">
-                <p>{{ selectedServiceType.description }}</p>
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <input type="text" [formControl]="serviceAddress" placeholder="Address *" id="serviceAddress">
+                <div class="error-message" *ngIf="serviceAddress.invalid && serviceAddress.touched">
+                  <div *ngIf="serviceAddress.errors?.['required']">Service address is required</div>
+                </div>
+              </div>
+              <!-- <div class="form-group">
+                <input type="text" [formControl]="aptSuite" placeholder="Apt/Suite">
+              </div> -->
+              <div class="form-group">
+                <select [formControl]="city" id="city">
+                  <option value="">City *</option>
+                  <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+                </select>
+                <div class="error-message" *ngIf="city.invalid && city.touched">
+                  <div *ngIf="city.errors?.['required']">City is required</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <select [formControl]="state" (change)="onStateChange(state.value)" id="state">
+                  <option value="">State *</option>
+                  <option *ngFor="let state of states" [value]="state">{{ state }}</option>
+                </select>
+                <div class="error-message" *ngIf="state.invalid && state.touched">
+                  <div *ngIf="state.errors?.['required']">State is required</div>
+                </div>
+              </div>
+              <div class="form-group">
+                <input type="text" [formControl]="zipCode" placeholder="Zip Code *" id="zipCode">
+                <div class="error-message" *ngIf="zipCode.invalid && zipCode.touched">
+                  <div *ngIf="zipCode.errors?.['required']">Zip code is required</div>
+                  <div *ngIf="zipCode.errors?.['pattern']">Please enter a valid 5-digit zip code</div>
+                </div>
               </div>
             </div>
+          </section>
 
-            <!-- Important Notes Section -->
-            <div class="important-notes" *ngIf="selectedServiceType">
-              <!-- Move In/Out Cleaning Notes -->
-              <div class="service-notes" *ngIf="getServiceSpecificInfo() === 'move-in-out'">
-                <h4>Important Notes</h4>
-                <p>This service includes fridge interior, baseboards, and medium size, empty kitchen cabinet cleaning.</p>
-                <p><strong>Planning a move?</strong><br>
-                Don't forget to check off Extras like oven or window cleaning — they're not included by default.</p>
-                <p><strong>If your home is above average in size, please consider adding more time for detailed cleaning of cabinets and walls.</strong></p>
+          <!-- Tips for Cleaners - Moved to bottom -->
+          <section class="booking-section">
+            <div class="entry-tips-container">
+              <!-- Tips for Cleaners -->
+              <div class="tips-section">
+                <h2>Tips for Cleaners</h2>
+                <p>Your cleaners work hard to make your space shine!</p>
+                <div class="tips-input-container">
+                  <div class="tip-dropdown">
+                    <button type="button" 
+                            class="tip-dropdown-toggle"
+                            (click)="toggleTipDropdown()">
+                      ${{ tips.value || 0 }}
+                      <span class="dropdown-arrow">▼</span>
+                    </button>
+                    <div class="tip-dropdown-menu" *ngIf="tipDropdownOpen">
+                      <button type="button" 
+                              class="tip-dropdown-item"
+                              [class.selected]="tips.value === 0"
+                              (click)="selectTipPreset(0)">
+                        $0
+                      </button>
+                      <button type="button" 
+                              class="tip-dropdown-item"
+                              [class.selected]="tips.value === 10"
+                              (click)="selectTipPreset(10)">
+                        $10
+                      </button>
+                      <button type="button" 
+                              class="tip-dropdown-item"
+                              [class.selected]="tips.value === 15"
+                              (click)="selectTipPreset(15)">
+                        $15
+                      </button>
+                      <button type="button" 
+                              class="tip-dropdown-item"
+                              [class.selected]="tips.value === 20"
+                              (click)="selectTipPreset(20)">
+                        $20
+                      </button>
+                      <button type="button" 
+                              class="tip-dropdown-item"
+                              [class.selected]="tips.value === 25"
+                              (click)="selectTipPreset(25)">
+                        $25
+                      </button>
+                    </div>
+                  </div>
+                  <div class="tip-custom-input">
+                    <input type="number" 
+                           [formControl]="tips" 
+                           min="0" 
+                           placeholder="Or enter custom amount"
+                           class="tip-input">
+                    <div class="error-message" *ngIf="tips.errors?.['minTipAmount']">
+                      Custom tip amount must be at least $10
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <!-- Heavy Condition Cleaning Notes -->
-              <div class="service-notes" *ngIf="getServiceSpecificInfo() === 'heavy-condition'">
-                <h4>Recommended for homes that haven't been professionally cleaned in months or need extra attention due to heavy buildup and neglected areas.</h4>
-              </div>
-
-
             </div>
-          </div>
-        </section>
+          </section>
 
-        <!-- Poll Form Section (when service type has poll) -->
-        <section class="booking-section" *ngIf="selectedServiceType && showPollForm">
-          <h2>Tell us about your cleaning needs</h2>
-          <p class="poll-description">
-            Please answer the following questions so we can provide you with a customized quote.
-          </p>
-          
-          <div class="poll-questions">
-            <div class="poll-question" *ngFor="let question of pollQuestions; let questionIndex = index">
-              <label class="question-label">
-                {{ question.question }}
-                <span class="required" *ngIf="question.isRequired">*</span>
-              </label>
-              
-              <!-- Text Input -->
+          <!-- SMS Consent Checkbox -->
+          <div class="sms-consent-section">
+            <div class="checkbox-group">
               <input 
-                *ngIf="question.questionType === 'text'"
-                type="text" 
-                [(ngModel)]="pollAnswers[question.id]"
-                (input)="onPollAnswerChange()"
-                [required]="question.isRequired"
-                class="poll-input"
-                [class.ng-invalid]="pollFormSubmitted && question.isRequired && (!pollAnswers[question.id] || pollAnswers[question.id].trim() === '')">
-              
-              <!-- Textarea -->
-              <textarea 
-                *ngIf="question.questionType === 'textarea'"
-                [(ngModel)]="pollAnswers[question.id]"
-                (input)="onPollAnswerChange()"
-                [required]="question.isRequired"
-                rows="3"
-                class="poll-textarea"
-                [class.ng-invalid]="pollFormSubmitted && question.isRequired && (!pollAnswers[question.id] || pollAnswers[question.id].trim() === '')"></textarea>
-              
-              <!-- Dropdown -->
-              <select 
-                *ngIf="question.questionType === 'dropdown'"
-                [(ngModel)]="pollAnswers[question.id]"
-                (change)="onPollAnswerChange()"
-                [required]="question.isRequired"
-                class="poll-select"
-                [class.ng-invalid]="pollFormSubmitted && question.isRequired && (!pollAnswers[question.id] || pollAnswers[question.id].trim() === '')">
-                <option value="">Select an option</option>
-                <option *ngFor="let option of question.options?.split(',') || []" [value]="option.trim()">
-                  {{ option.trim() }}
-                </option>
-              </select>
-              
-              <!-- Radio buttons -->
-              <div *ngIf="question.questionType === 'radio'" class="radio-group">
-                <div *ngFor="let option of question.options?.split(',') || []; let i = index" class="radio-option">
-                  <input 
-                    type="radio" 
-                    [name]="'question_' + question.id"
-                    [id]="'question_' + question.id + '_' + i"
-                    [value]="option.trim()"
-                    [(ngModel)]="pollAnswers[question.id]"
-                    (change)="onPollAnswerChange()"
-                    [required]="question.isRequired">
-                  <label [for]="'question_' + question.id + '_' + i">{{ option.trim() }}</label>
-                </div>
-              </div>
-              
-              <!-- Single error message per question -->
-              <div class="poll-error-message" 
-                   *ngIf="pollFormSubmitted && question.isRequired && (!pollAnswers[question.id] || pollAnswers[question.id].trim() === '')" 
-                   [attr.data-question-id]="question.id"
-                   [attr.data-question-index]="questionIndex">
-                Please answer the question
-              </div>
+                type="checkbox" 
+                id="smsConsent" 
+                [formControl]="smsConsent" 
+                class="form-checkbox"
+                [class.error]="smsConsent.invalid && smsConsent.touched">
+              <label for="smsConsent" class="checkbox-label">
+                I consent to receive Customer care text messages from Dream Cleaning. Reply STOP to opt-out; Reply HELP for support; Message and data rates apply; Messaging frequency may vary. Visit 
+                <a routerLink="/privacy-policy" target="_blank">Privacy Policy</a> and 
+                <a routerLink="/terms-and-conditions" target="_blank">Terms of Service</a>. <span class="required">*</span>
+              </label>
+            </div>
+            <div class="error-message" *ngIf="smsConsent.invalid && smsConsent.touched">
+              <div *ngIf="smsConsent.errors?.['required']">SMS consent is required to proceed with booking</div>
             </div>
           </div>
-        </section>
 
-        <!-- Custom Pricing Section (when service type has custom pricing) -->
-        <section class="booking-section" *ngIf="selectedServiceType && showCustomPricing">
-          <h2>Custom Service Details</h2>
-          <p class="custom-description">
-            Please specify your custom cleaning requirements below.
-          </p>
-
-          <div class="custom-pricing-form">
-            <div class="form-group">
-              <label>Service Amount <span class="required">*</span></label>
-              <div class="input-group">
-                <input type="number" 
-                       [formControl]="customAmount"
-                       min="0.01"
-                       step="0.01"
-                       placeholder="0.00"
-                       class="amount-input"
-                       id="customAmount">
-                <span class="input-suffix">$</span>
-              </div>
-              <div class="error-message" *ngIf="customAmount.invalid && customAmount.touched">
-                <div *ngIf="customAmount.errors?.['required']">Amount is required</div>
-                <div *ngIf="customAmount.errors?.['min']">Amount must be greater than 0</div>
-              </div>
+          <!-- Cancellation Fee and Booking Details Consent Checkbox -->
+          <div class="cancellation-consent-section">
+            <div class="checkbox-group">
+              <input 
+                type="checkbox" 
+                id="cancellationConsent" 
+                [formControl]="cancellationConsent" 
+                class="form-checkbox"
+                [class.error]="cancellationConsent.invalid && cancellationConsent.touched">
+              <label for="cancellationConsent" class="checkbox-label">
+                I understand that I will be charged a $70 cancellation fee if I cancel or reschedule my appointment less than 48 hours before the scheduled service. I also confirm that the booking details accurately reflect the cleaning requirements. If the actual condition differs from the described details, Dream Cleaning Team reserves the right to either leave or adjust the services to match the actual condition. I understand, that cleaning lady may arrive within a 30-60 minute window of the scheduled cleaning time. <span class="required">*</span>
+              </label>
             </div>
-
-            <div class="form-group">
-              <label>Number of Cleaners <span class="required">*</span></label>
-              <select [formControl]="customCleaners" id="customCleaners">
-                <option *ngFor="let num of [1,2,3,4,5,6,7,8,9,10]" [value]="num">
-                  {{num}} {{num === 1 ? 'Cleaner' : 'Cleaners'}}
-                </option>
-              </select>
-              <div class="error-message" *ngIf="customCleaners.invalid && customCleaners.touched">
-                <div *ngIf="customCleaners.errors?.['required']">Number of cleaners is required</div>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>Duration <span class="required">*</span></label>
-              <app-duration-selector 
-                [value]="customDuration.value" 
-                (valueChange)="onDurationChange($event)">
-              </app-duration-selector>
-              <div class="error-message" *ngIf="customDuration.invalid && customDuration.touched">
-                <div *ngIf="customDuration.errors?.['required']">Duration is required</div>
-                <div *ngIf="customDuration.errors?.['min']">Duration must be at least 1 hour</div>
-              </div>
+            <div class="error-message" *ngIf="cancellationConsent.invalid && cancellationConsent.touched">
+              <div *ngIf="cancellationConsent.errors?.['required']">Cancellation fee and booking details consent is required to proceed with booking</div>
             </div>
           </div>
-        </section>
 
-        <!-- Regular Booking Sections (ONLY services and extra services - hidden for poll and custom) -->
-<ng-container *ngIf="selectedServiceType && !showPollForm && !showCustomPricing">
-  <!-- Step 4: Services -->
-  <section class="booking-section">
-    <h2>Customize Your Service</h2>
-    
-    <!-- Office Cleaning Pricing Text -->
-    <div class="service-pricing-info" *ngIf="hasCleanerServices()">
-      <p class="pricing-text" [innerHTML]="getCleanerPricingText()"></p>
-    </div>
-    
-    <div class="services">
-      <div class="service-item" *ngFor="let selected of selectedServices">
-        <label>{{ selected.service.name }}</label>
-        
-        <!-- Dropdown Input -->
-        <div class="service-input" *ngIf="selected.service.inputType === 'dropdown'">
-          <select [(ngModel)]="selected.quantity" 
-                  (change)="updateServiceQuantity(selected.service, +selected.quantity)">
-            <option *ngFor="let option of getServiceOptions(selected.service)"
-                    [value]="option">
-              <ng-container *ngIf="selected.service.serviceKey === 'bedrooms' && option === 0">Studio</ng-container>
-              <ng-container *ngIf="!(selected.service.serviceKey === 'bedrooms' && option === 0)">{{ option }}</ng-container>
-            </option>
-          </select>
-          <!-- Removed duration and cost display -->
         </div>
 
-        <!-- Slider Input for Square Feet -->
-        <div class="service-input slider-input" *ngIf="selected.service.isRangeInput">
-          <div class="slider-container">
-            <!-- <div class="slider-header">            
-              
-            </div>   -->
-            <input type="range"
-                  [(ngModel)]="selected.quantity"
-                  [min]="selected.service.minValue"
-                  [max]="selected.service.maxValue"
-                  [step]="selected.service.stepValue"
-                  (input)="updateServiceQuantity(selected.service, +selected.quantity)">
-                  <span class="slider-quantity">{{ selected.quantity }} sq ft</span>
-              <!-- Removed cost display -->
-          </div>                  
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Step 5: Extra Services -->
-  <section class="booking-section">
-    <h2>Extra Services</h2>
-    
-    <!-- General Information -->
-    <div class="extra-services-info" *ngIf="selectedServiceType">
-      <div class="general-info">
-        <h4>What We Bring vs What You Provide?</h4>
-        
-        <div class="expandable-content" [class.collapsed]="!isExtraInfoExpanded" [class.expanded]="isExtraInfoExpanded">
-          <p>Need us to bring cleaning products (sprays, detergents, cloths)? Just add them through the Extras.</p>
-          <p>However, customers are responsible for providing:</p>
-          <ul>
-            <li>A vacuum cleaner or broom</li>
-            <li>Mop & bucket</li>
-            <li>A toilet brush</li>
-          </ul>
-          <p><strong>These tools help our team work efficiently. If you don't have them, just let us know or choose in extras advance!</strong></p>
-        </div>
-      </div>
-      
-      <div class="expandable-content" [class.collapsed]="!isExtraInfoExpanded" [class.expanded]="isExtraInfoExpanded">
-        <div class="additional-reminders">
-          <h4>Additional Reminders</h4>
-          <p><strong>Time Matters</strong><br>
-          Our cleaning time is based on the number of hours booked.<br>
-          If your home hasn't been cleaned in a while or needs extra attention, we recommend booking more hours or requesting a walk-through estimate.</p>
-        </div>
-        
-        <div class="restrictions-info">
-          <h4>We will not be able to do the following:</h4>
-          <ul>
-            <li>Moving Heavy Furniture and Appliances</li>
-            <li>Exterior Window Cleaning</li>
-            <li>Pet Waste</li>
-          </ul>
-        </div>
-      </div>
-      
-      <!-- Button outside of collapsible content so it's always visible -->
-      <button class="see-more-toggle" (click)="toggleExtraInfoExpansion()">
-        <span [class.pulsate-text]="!isExtraInfoExpanded">{{ isExtraInfoExpanded ? 'See Less' : 'Click for More Info' }}</span>
-        <span class="chevron-icon" [class.up]="isExtraInfoExpanded">
-          <i class="fas fa-chevron-down" [class.pulsate]="!isExtraInfoExpanded"></i>
-        </span>
-      </button>
-    </div>
-    
-    <!-- Cleaning Type Selection -->
-    <div class="cleaning-type-selection">
-      <label>Cleaning Type <span class="required">*</span></label>
-      <div class="cleaning-type-buttons">
-        <button 
-          type="button"
-          class="cleaning-type-btn"
-          [class.selected]="cleaningType.value === 'normal'"
-          (click)="selectCleaningType('normal')">
-          Regular Cleaning
-        </button>
-        <button 
-          type="button"
-          class="cleaning-type-btn"
-          [class.selected]="cleaningType.value === 'deep'"
-          (click)="selectCleaningType('deep')">
-          Deep Cleaning
-        </button>
-      </div>
-      <div class="error-message" *ngIf="cleaningType.invalid && cleaningType.touched">
-        <div *ngIf="cleaningType.errors?.['required']">Cleaning type is required</div>
-      </div>
-    </div>
-
-    <!-- Cleaning Type Descriptions -->
-    <div class="cleaning-type-info" *ngIf="selectedServiceType">
-      <!-- Regular Cleaning Description -->
-      <div class="cleaning-info-card" *ngIf="cleaningType.value === 'normal'">
-        <h4>General surface cleaning and tidying for a well-maintained home.</h4>
-      </div>
-
-      <!-- Deep Cleaning Description -->
-      <div class="cleaning-info-card" *ngIf="cleaningType.value === 'deep'">
-        <h4>What to Expect</h4>
-        <p>Our deep cleaning package includes detailed attention to areas like baseboards and the interior of your fridge.</p>
-        <p>If you need oven scrubbing, window, or wall washing, make sure to add them from the Extras section.</p>
-        <p><strong>For larger apartments or heavily used kitchens, please allow extra time for cabinet and wall care to ensure top-quality results.</strong></p>
-      </div>
-    </div>
-
-    <div class="extra-services">
-      <div class="extra-service-card"
-            *ngFor="let extra of getFilteredExtraServices()"
-            [class.selected]="isExtraServiceSelected(extra)"
-            [class.mobile-tooltip-visible]="isMobileTooltipVisible(extra.id)"
-            [class.disabled]="extra.isSameDayService && !isSameDayServiceAvailable"
-            (click)="onExtraServiceCardClick(extra)"
-            [attr.data-tooltip]="getExtraServiceTooltip(extra)">
-        <div class="extra-header">
-          <div class="extra-top-controls" style="display: none;">
-            
-            <div class="checkbox">
-              <input type="checkbox" 
-                     [checked]="isExtraServiceSelected(extra)" 
-                     [disabled]="extra.isSameDayService && !isSameDayServiceAvailable"
-                     style="pointer-events: none; cursor: default;">
-            </div>
-          </div>
-          <div class="extra-info">
-            <div class="extra-icon">
-              <i [class]="getExtraServiceIcon(extra)"></i>
-            </div>
-            <h4>{{ extra.name }}</h4>
-            <div class="extra-details">
-              <!-- Removed price and duration display -->
-            </div>
-          </div>
-        </div>
-        
-        <!-- Quantity Control -->
-        <div class="extra-controls" *ngIf="isExtraServiceSelected(extra) && (extra.hasQuantity || extra.hasHours)">
-          <div class="quantity-control" *ngIf="extra.hasQuantity">
-            <label>Quantity:</label>
-            <div class="control-buttons">
-              <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) - 1); $event.stopPropagation()" 
-                      [disabled]="getExtraServiceQuantity(extra) <= 1">-</button>
-              <span>{{ getExtraServiceQuantity(extra) }}</span>
-              <button (click)="updateExtraServiceQuantity(extra, getExtraServiceQuantity(extra) + 1); $event.stopPropagation()">+</button>
-            </div>
+        <!-- Step Navigation - Always visible -->
+        <div class="step-navigation">
+          <!-- Part 1 Navigation -->
+          <div *ngIf="currentStep === 1">
+            <button 
+              type="button" 
+              class="next-btn" 
+              [disabled]="isLoading"
+              (click)="onNextButtonClick()"
+              [class.disabled]="!canProceedToNextStep() || isLoading">
+              Next
+            </button>
           </div>
           
-          <!-- Hours Control -->
-          <div class="hours-control" *ngIf="extra.hasHours">
-            <label>Hours:</label>
-            <div class="control-buttons">
-              <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) - 0.5); $event.stopPropagation()" 
-                      [disabled]="getExtraServiceHours(extra) <= 0.5">-</button>
-              <span>{{ getExtraServiceHours(extra) }}</span>
-              <button (click)="updateExtraServiceHours(extra, getExtraServiceHours(extra) + 0.5); $event.stopPropagation()">+</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-</ng-container>
-
-<!-- Common sections for both regular and custom pricing (hidden only for poll) -->
-<ng-container *ngIf="selectedServiceType && !showPollForm">
-  <!-- Step 6: Date & Time -->
-  <section class="booking-section">
-    <h2>Select Date & Time</h2>
-    <div class="date-time-selection">
-      <div class="form-group">
-        <label>Service Date <span class="required">*</span></label>
-        <app-date-selector 
-          [value]="serviceDate.value" 
-          [minDate]="getMinDateString()"
-          [isSameDaySelected]="isSameDaySelected"
-          (valueChange)="onDateSelectorChange($event)">
-        </app-date-selector>
-        <div class="error-message" *ngIf="serviceDate.invalid && serviceDate.touched">
-          <div *ngIf="serviceDate.errors?.['required']">Service date is required</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Service Time <span class="required">*</span></label>
-        <app-time-selector 
-          [value]="serviceTime.value" 
-          [availableTimeSlots]="getAvailableTimeSlots()"
-          (valueChange)="onTimeChange($event)">
-        </app-time-selector>
-        <div class="error-message" *ngIf="serviceTime.invalid && serviceTime.touched">
-          <div *ngIf="serviceTime.errors?.['required']">Service time is required</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Step 7: Entry Method & Tips -->
-  <section class="booking-section">
-    <div class="entry-tips-container">
-      <!-- Entry Method -->
-      <div class="entry-method-section">
-        <h2>Entry Method</h2>
-        <p>How should the cleaner get in? <span class="required">*</span></p>
-        <div class="form-group">
-          <select [formControl]="entryMethod" id="entryMethod">
-            <option value="">Select entry method</option>
-            <option *ngFor="let method of entryMethods" [value]="method">{{ method }}</option>
-          </select>
-          <div class="error-message" *ngIf="entryMethod.invalid && entryMethod.touched">
-            <div *ngIf="entryMethod.errors?.['required']">Entry method is required</div>
-          </div>
-          <input type="text" 
-                  [formControl]="customEntryMethod"
-                  placeholder="Please specify"
-                  *ngIf="entryMethod.value === 'Other'">
-        </div>
-      </div>
-
-      <!-- Tips for Cleaners -->
-      <div class="tips-section">
-        <h2>Tips for Cleaners</h2>
-        <p>Your cleaners work hard to make your space shine!</p>
-        <div class="tips-input-container">
-          <div class="tip-dropdown">
-            <button type="button" 
-                    class="tip-dropdown-toggle"
-                    (click)="toggleTipDropdown()">
-              ${{ tips.value || 0 }}
-              <span class="dropdown-arrow">▼</span>
-            </button>
-            <div class="tip-dropdown-menu" *ngIf="tipDropdownOpen">
-              <button type="button" 
-                      class="tip-dropdown-item"
-                      [class.selected]="tips.value === 0"
-                      (click)="selectTipPreset(0)">
-                $0
-              </button>
-              <button type="button" 
-                      class="tip-dropdown-item"
-                      [class.selected]="tips.value === 10"
-                      (click)="selectTipPreset(10)">
-                $10
-              </button>
-              <button type="button" 
-                      class="tip-dropdown-item"
-                      [class.selected]="tips.value === 15"
-                      (click)="selectTipPreset(15)">
-                $15
-              </button>
-              <button type="button" 
-                      class="tip-dropdown-item"
-                      [class.selected]="tips.value === 20"
-                      (click)="selectTipPreset(20)">
-                $20
-              </button>
-              <button type="button" 
-                      class="tip-dropdown-item"
-                      [class.selected]="tips.value === 25"
-                      (click)="selectTipPreset(25)">
-                $25
-              </button>
-            </div>
-          </div>
-          <div class="tip-custom-input">
-            <input type="number" 
-                   [formControl]="tips" 
-                   min="0" 
-                   placeholder="Or enter custom amount"
-                   class="tip-input">
-            <div class="error-message" *ngIf="tips.errors?.['minTipAmount']">
-              Custom tip amount must be at least $10
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Step 8: Subscription -->
-  <section class="booking-section">
-    <h2>Select Subscription</h2>
-    <p>Choose a subscription plan to save on your cleaning services</p>
-    <div class="active-subscription-notice" *ngIf="hasActiveSubscription && userSubscription">
-      <i class="fas fa-info-circle"></i>
-      <span>You have an active {{ userSubscription?.subscriptionName }} subscription 
-            ({{ userSubscription?.discountPercentage }}% discount)</span>
-    </div>
-    <div class="subscription-options">
-      <div class="subscription-card"
-           *ngFor="let subscription of subscriptions"
-           [class.selected]="selectedSubscription?.id === subscription.id"
-           [class.user-subscription]="hasActiveSubscription && userSubscription?.subscriptionId === subscription.id"
-           [class.mobile-tooltip-visible]="isMobileTooltipVisible(subscription.id)"
-           (click)="selectSubscription(subscription)"
-           [attr.data-tooltip]="getSubscriptionTooltip(subscription)">
-        <h4>{{ subscription.name }}</h4>
-        <div class="discount" *ngIf="subscription.discountPercentage > 0">
-          Save {{ subscription.discountPercentage }}%
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Step 9: Discounts -->
-  <section class="booking-section">
-    <h2>Apply Discounts</h2>
-    
-    <!-- Show error message if there is one -->
-    <div class="discount-error" *ngIf="errorMessage">
-      <p class="error-message">{{ errorMessage }}</p>
-    </div>
-    
-    <div class="discounts">
-      <!-- Special Offers Section -->
-      <div class="special-offers-section" *ngIf="userSpecialOffers.length > 0">
-        <h3>Available Special Offers</h3>
-        <div class="special-offers-grid">
-          <div class="special-offer-card"
-                *ngFor="let offer of userSpecialOffers"
-                [class.applied]="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
-            <div class="offer-info">
-              <span class="offer-badge" [style.background-color]="offer.badgeColor || '#28a745'">
-                <i class="fas fa-gift"></i>
-              </span>
-              <div class="offer-content">
-                <h4>{{ offer.name }}:</h4>
-                <div class="offer-details">
-                  <p *ngIf="offer.description">{{ offer.description }}</p>
-                  <span class="offer-expiry" *ngIf="offer.expiresAt">
-                    Expires: {{ offer.expiresAt | date: 'MMM d, y' }}
-                  </span>
-                  <span class="offer-minimum" *ngIf="offer.minimumOrderAmount">
-                    Min. order: ${{ offer.minimumOrderAmount }}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div class="offer-actions">
-              <button
-                class="apply-btn"
-                (click)="applySpecialOffer(offer)"
-                [disabled]="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
-                {{ (specialOfferApplied && selectedSpecialOffer?.id === offer.id) ? 'Applied' : 'Apply' }}
-              </button>
-              <button
-                class="remove-btn"
-                (click)="removeSpecialOffer()"
-                *ngIf="specialOfferApplied && selectedSpecialOffer?.id === offer.id">
-                Remove
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Promo Code Section -->
-      <div class="promo-code-section">
-        <div class="promo-code">
-          <label>Promo Code or Gift Card</label>
-          <div class="promo-input">
-            <input
-              type="text"
-              [formControl]="promoCode"
-              placeholder="Enter promo code or gift card code">
-            <button
-              (click)="applyPromoCode()"
-              [disabled]="isPromoCodeDisabled()">
-              Apply
-            </button>
-            <button
-              class="remove-btn"
-              (click)="removePromoCode()"
-              *ngIf="promoCodeApplied || giftCardApplied">
-              Remove
+          <!-- Part 2 Navigation -->
+          <div *ngIf="currentStep === 2">
+            <button 
+              type="button" 
+              class="back-btn" 
+              (click)="previousStep()">
+              Back
             </button>
           </div>
-          <p class="promo-note" *ngIf="specialOfferApplied">
-            <i class="fas fa-info-circle"></i> Remove special offer to use a promo code
-          </p>
-        </div>
-      </div>
-      
-      <!-- Gift Card Applied Message -->
-      <div class="gift-card-applied" *ngIf="giftCardApplied && isGiftCard">
-        <div class="gift-card-info">
-          <div class="gift-card-icon">🎁</div>
-          <div class="gift-card-details">
-            <div class="gift-card-title">Gift Card Applied</div>
-            <div class="gift-card-amounts">
-              <span class="amount-using">${{ getGiftCardDisplayInfo().amountToUse.toFixed(2) }} will be used</span>
-              <span class="remaining-balance" *ngIf="getGiftCardDisplayInfo().remainingBalance > 0">
-                ${{ getGiftCardDisplayInfo().remainingBalance.toFixed(2) }} remaining
-              </span>
-            </div>
+          <div *ngIf="currentStep === 2">
+            <button 
+              type="button" 
+              class="next-btn" 
+              [disabled]="isLoading"
+              (click)="onNextButtonClick()"
+              [class.disabled]="!canProceedToNextStep() || isLoading">
+              Next
+            </button>
+          </div>
+          
+          <!-- Part 3 Navigation -->
+          <div *ngIf="currentStep === 3">
+            <button 
+              type="button" 
+              class="back-btn" 
+              (click)="previousStep()">
+              Back
+            </button>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
 
-
-
-  <!-- Step 10: Tips for Company Development -->
-  <section class="booking-section" style="display: none;">
-    <h2>Tips for Company Development</h2>
-    <div class="tips-section">
-      <p>Support our company's growth and improvement initiatives!</p>
-      <div class="tip-options">
-        <button [class.selected]="companyDevelopmentTips.value === 0" 
-                (click)="companyDevelopmentTips.setValue(0)">$0</button>
-        <button [class.selected]="companyDevelopmentTips.value === 10" 
-                (click)="companyDevelopmentTips.setValue(10)">$10</button>
-        <button [class.selected]="companyDevelopmentTips.value === 15" 
-                (click)="companyDevelopmentTips.setValue(15)">$15</button>
-        <button [class.selected]="companyDevelopmentTips.value === 20" 
-                (click)="companyDevelopmentTips.setValue(20)">$20</button>
-        <button [class.selected]="companyDevelopmentTips.value === 25" 
-                (click)="companyDevelopmentTips.setValue(25)">$25</button>
-        <div class="custom-tip">
-          <input type="number" [formControl]="companyDevelopmentTips" min="0" placeholder="Custom amount">
-          <div class="error-message" *ngIf="companyDevelopmentTips.errors?.['minCompanyTipAmount']">
-            Custom tip amount must be at least $10
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Step 11: Special Instructions -->
-  <section class="booking-section">
-    <h2>Special Instructions (Optional)</h2>
-    <div class="customize-cleaning-text">
-      <p>Every space is different. Want us to focus on specific areas like baseboards, inside cabinets, or pet-related mess? Be sure to leave notes when booking or contact us directly — we're happy to personalize your cleaning!</p>
-    </div>
-    <div class="form-group">
-      <textarea [formControl]="specialInstructions"
-                rows="4" 
-                placeholder="Any special instructions for the cleaners..."></textarea>
-    </div>
-  </section>
-</ng-container>
-
-
-
-
-<!-- Photo Upload Section -->
-<section class="booking-section" *ngIf="selectedServiceType">
-  <h2>Upload Photos (Optional)</h2>
-  <p class="upload-description">
-    You can upload up to {{ maxPhotos }} photos to help us better understand your cleaning needs.
-  </p>
-  
-  <div class="photo-upload-section">
-    <div class="upload-container">
-      <!-- Mobile-friendly upload options -->
-      <div class="upload-options" *ngIf="uploadedPhotos.length < maxPhotos">
-        <!-- Take Photo Button (Mobile Only) -->
-        <div class="upload-button" *ngIf="isMobileDevice">
-          <input 
-            type="file" 
-            id="camera-capture" 
-            accept="image/*"
-            capture="environment"
-            (change)="onPhotoSelect($event)"
-            [disabled]="isUploadingPhoto"
-            #cameraInput
-          >
-          <label for="camera-capture" class="upload-label camera">
-            <svg class="upload-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 15.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/>
-              <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
-            </svg>
-            <span>Take Photo</span>
-          </label>
-        </div>
-        
-        <!-- Upload from Gallery Button -->
-        <div class="upload-button">
-          <input 
-            type="file" 
-            id="photo-upload" 
-            [accept]="acceptedFormats"
-            multiple
-            (change)="onPhotoSelect($event)"
-            [disabled]="isUploadingPhoto"
-            #photoInput
-          >
-          <label for="photo-upload" class="upload-label gallery">
-            <svg class="upload-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M19,3H5C3.89,3 3,3.89 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,5V19H5V5H19M17,13H13V17H11V13H7V11H11V7H13V11H17V13Z"/>
-            </svg>
-            <span>{{ isMobileDevice ? 'Choose from Gallery' : 'Upload Photos' }}</span>
-            <small>{{ uploadedPhotos.length }}/{{ maxPhotos }}</small>
-          </label>
-        </div>
-      </div>
-      
-      <!-- Photo previews -->
-      <div class="photo-previews" *ngIf="uploadedPhotos.length > 0">
-        <div class="photo-preview" *ngFor="let photo of uploadedPhotos; let i = index">
-          <img [src]="photo.preview" [alt]="photo.file.name">
-                  <button 
-          type="button" 
-          class="remove-photo" 
-          (click)="removePhoto(i)"
-          title="Remove photo"
-        >
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
-          </svg>
-        </button>
-          <span class="photo-name">{{ photo.file.name }}</span>
-        </div>
-      </div>
-      
-      <!-- Loading indicator -->
-      <div class="upload-loading" *ngIf="isUploadingPhoto">
-        <svg class="loading-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z">
-            <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
-          </path>
-        </svg>
-        <span>Processing photo...</span>
-      </div>
-      
-      <!-- Error message -->
-      <div class="upload-error" *ngIf="photoUploadError">
-        <svg class="error-icon" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12,2L13.09,8.26L22,9L13.09,9.74L12,16L10.91,9.74L2,9L10.91,8.26L12,2Z"/>
-        </svg>
-        {{ photoUploadError }}
-      </div>
-    </div>
-  </div>
-
-  <!-- SMS Consent Checkbox -->
-  <div class="sms-consent-section">
-    <div class="checkbox-group">
-      <input 
-        type="checkbox" 
-        id="smsConsent" 
-        [formControl]="smsConsent" 
-        class="form-checkbox"
-        [class.error]="smsConsent.invalid && smsConsent.touched">
-      <label for="smsConsent" class="checkbox-label">
-        I consent to receive Customer care text messages from Dream Cleaning. Reply STOP to opt-out; Reply HELP for support; Message and data rates apply; Messaging frequency may vary. Visit 
-        <a routerLink="/privacy-policy" target="_blank">Privacy Policy</a> and 
-        <a routerLink="/terms-and-conditions" target="_blank">Terms of Service</a>. <span class="required">*</span>
-      </label>
-    </div>
-    <div class="error-message" *ngIf="smsConsent.invalid && smsConsent.touched">
-      <div *ngIf="smsConsent.errors?.['required']">SMS consent is required to proceed with booking</div>
-    </div>
-  </div>
-
-  <!-- Cancellation Fee and Booking Details Consent Checkbox -->
-  <div class="cancellation-consent-section">
-    <div class="checkbox-group">
-      <input 
-        type="checkbox" 
-        id="cancellationConsent" 
-        [formControl]="cancellationConsent" 
-        class="form-checkbox"
-        [class.error]="cancellationConsent.invalid && cancellationConsent.touched">
-              <label for="cancellationConsent" class="checkbox-label">
-          I understand that I will be charged a $70 cancellation fee if I cancel or reschedule my appointment less than 48 hours before the scheduled service. I also confirm that the booking details accurately reflect the cleaning requirements. If the actual condition differs from the described details, Dream Cleaning Team reserves the right to either leave or adjust the services to match the actual condition. I understand, that cleaning lady may arrive within a 30-60 minute window of the scheduled cleaning time. <span class="required">*</span>
-        </label>
-    </div>
-    <div class="error-message" *ngIf="cancellationConsent.invalid && cancellationConsent.touched">
-      <div *ngIf="cancellationConsent.errors?.['required']">Cancellation fee and booking details consent is required to proceed with booking</div>
-    </div>
-  </div>
-</section>
-
-        <!-- Book Now Button -->
-        <div class="book-now-section" *ngIf="selectedServiceType">
+        <!-- Original Book Now Button - Only visible on step 3 -->
+        <div class="book-now-section" *ngIf="selectedServiceType && currentStep === 3">
           <button class="book-now-btn" 
                   [disabled]="isLoading"
                   (click)="onSubmit()"
@@ -936,6 +978,32 @@
 <div class="booking-summary" *ngIf="selectedServiceType && !showPollForm">
   <div class="summary-card" [class.collapsed]="isSummaryCollapsed">
     <h3>Booking Summary</h3>
+    
+    <!-- Promo Code Section - Moved to booking summary -->
+    <div class="promo-code-section" [class.hidden]="isSummaryCollapsed">
+      <div class="promo-code">
+        <div class="promo-input">
+          <input
+            type="text"
+            [formControl]="promoCode"
+            placeholder="Promo/Gift card code">
+          <button
+            (click)="applyPromoCode()"
+            [disabled]="isPromoCodeDisabled()">
+            Apply
+          </button>
+          <button
+            class="remove-btn"
+            (click)="removePromoCode()"
+            *ngIf="promoCodeApplied || giftCardApplied">
+            Remove
+          </button>
+        </div>
+        <p class="promo-note" *ngIf="specialOfferApplied">
+          <i class="fas fa-info-circle"></i> Remove special offer to use a promo code
+        </p>
+      </div>
+    </div>
     
     <div class="summary-details" [class.hidden]="isSummaryCollapsed">
       <div class="summary-item">
