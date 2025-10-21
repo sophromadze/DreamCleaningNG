@@ -101,6 +101,11 @@ export const routes: Routes = [
     loadComponent: () => import('./terms-and-conditions/terms-and-conditions.component').then(m => m.TermsAndConditionsComponent)
   },
   {
+    path: 'faq',
+    loadComponent: () => import('./faq/faq.component').then(m => m.FaqComponent),
+    canActivate: [maintenanceGuard]
+  },
+  {
     path: 'login',
     canActivate: [noAuthGuard],
     loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)

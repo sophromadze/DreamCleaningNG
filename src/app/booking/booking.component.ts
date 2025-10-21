@@ -146,8 +146,6 @@ export class BookingComponent implements OnInit, OnDestroy {
   // Booking summary collapse state
   isSummaryCollapsed = true;
   
-  // FAQ functionality
-  showFAQ = false;
   
   // Extra info expansion state
   isExtraInfoExpanded = false;
@@ -3065,31 +3063,11 @@ export class BookingComponent implements OnInit, OnDestroy {
     return `${roundedHour.toString().padStart(2, '0')}:${roundedMinute.toString().padStart(2, '0')}`;
   }
 
-  // FAQ Methods
-  toggleFAQ() {
-    this.showFAQ = !this.showFAQ;
-    if (this.isBrowser) {
-      if (this.showFAQ) {
-        // Prevent body scroll when FAQ is open
-        document.body.style.overflow = 'hidden';
-      } else {
-        // Restore body scroll when FAQ is closed
-        document.body.style.overflow = '';
-      }
-    }
-  }
 
   toggleExtraInfoExpansion() {
     this.isExtraInfoExpanded = !this.isExtraInfoExpanded;
   }
 
-  closeFAQ(event: Event) {
-    this.showFAQ = false;
-    // Restore body scroll only in browser
-    if (this.isBrowser) {
-      document.body.style.overflow = '';
-    }
-  }
 
   getServiceSpecificInfo(): string {
     if (!this.selectedServiceType) return '';
